@@ -32,12 +32,12 @@ F30 Lista de bairros atendidos,checkout,must,yes,no,dado da loja
 F31 Agendamento por data e intervalo com antecedência mínima,checkout,must,yes,no,ver ACHADOS P5
 F32 Pagamento na entrega: dinheiro com troco Pix e cartão com bandeira,checkout,must,yes,no,lido no código
 F33 Pagar com duas formas,checkout,could,yes,no,lido no código
-F34 Pagamento online com cartão,checkout,could,yes,no,depende de provedor de pagamento
+F34 Pagamento online (Pix e cartão) como primeira opção do checkout,checkout,must,yes,no,decisão dele em 2026-10-14: priorizar o online; depende de contratar provedor de pagamento
 F35 Taxa da maquininha e taxa adicional,checkout,could,yes,no,lido no código
 F36 Pedido mínimo e entrega grátis a partir de um valor,regras,should,yes,no,campos da loja vazios nesta loja
 F37 Envio do pedido e mensagem pronta para o WhatsApp da loja,checkout,must,yes,no,ver ACHADOS P6
 F38 Tela de pedido enviado e acompanhar pedido,pedido,must,yes,no,lido no código
-F39 Aguardando pagamento do Pix,pedido,should,yes,no,lido no código
+F39 Aguardando pagamento do Pix,pedido,must,yes,no,lido no código; sobe junto com F34
 F40 Meus pedidos: pendentes e finalizados,conta,should,yes,no,S10; finalizados pedem senha
 F41 Avaliação do pedido,pedido,could,yes,no,lido no código
 F42 Fidelidade por pontos e prêmios,conta,could,yes,no,desligado nesta loja

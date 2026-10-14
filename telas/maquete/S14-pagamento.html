@@ -15,10 +15,9 @@
   .forma.on .ic:first-child { color: var(--accent); }
   .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
   .radio.on { border: 7px solid var(--accent); }
-  .troco { margin-top: 8px; padding: 12px; border-radius: var(--r-md); background: var(--surface-muted); }
-  .troco p { font: 500 14px/20px Rubik; color: var(--text-strong); }
-  .troco .in { margin-top: 8px; height: 44px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); padding: 0 12px; display: flex; align-items: center; font-size: 15px; color: var(--text-strong); }
-  .troco small { display: block; margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+  .forma .rotulo small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .nota { margin-top: 8px; padding: 12px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .nota b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); margin-bottom: 2px; }
   .resumo { margin: 0 12px; padding: 14px; }
   .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text-muted); }
   .tl.total { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font: 600 18px/28px Rubik; color: var(--text-strong); }
@@ -28,16 +27,10 @@
   <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Pagamento</h1></div>
 
   <div class="bloco cartao">
-    <div class="abas"><span class="on">Pagar na entrega</span><span>Pagar online</span></div>
-    <div class="forma on"><i data-ic="dinheiro"></i><span class="rotulo">Dinheiro</span><span class="radio on"></span></div>
-    <div class="troco">
-      <p>Vai precisar de troco?</p>
-      <div class="in">Troco para R$ 100,00</div>
-      <small>Seu troco: R$ 43,10</small>
-    </div>
-    <div class="forma"><i data-ic="pix"></i><span class="rotulo">Pix</span><span class="radio"></span></div>
-    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito</span><span class="radio"></span></div>
-    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de débito</span><span class="radio"></span></div>
+    <div class="abas"><span class="on">Pagar online</span><span>Pagar na entrega</span></div>
+    <div class="forma on"><i data-ic="pix"></i><span class="rotulo">Pix<small>Aprovação na hora</small></span><span class="radio on"></span></div>
+    <div class="nota"><b>Como funciona</b>Depois de revisar o pedido, aparecem o QR Code e o código copia e cola. O restaurante começa a preparar assim que o pagamento é confirmado.</div>
+    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito<small>Adicionar cartão</small></span><span class="radio"></span></div>
   </div>
 
   <div class="resumo cartao">
