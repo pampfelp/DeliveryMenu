@@ -6,10 +6,26 @@ hash de cada um em `SHA256SUMS.txt` ali). Respostas da API guardadas em
 `C:\rea-trabalho\DeliveryMenu\api\`. Nada disso entra no repositório.
 
 Ferramentas: navegador do Claude Desktop (observação da tela e da lista de
-requisições) e leitura estática dos arquivos (busca de texto com `grep` e
-`node`). **O REA ainda não foi rodado**: a análise com
-`rea-agents@6.4.0 analyze-javascript-application` espera a aprovação dele
-para baixar o pacote.
+requisições), leitura estática dos arquivos (busca de texto com `grep` e
+`node`) e REA 6.4.0 (Node 24.18, Windows dele, via `npx`, autorizado por
+ele em 2026-10-14). A 6.5.0 saiu no mesmo dia e não foi usada, porque a
+versão fica fixada.
+
+REA, duas rodadas:
+
+- Pasta inteira (35 arquivos JS): `ev_04df32d2...`, 4 min, 50 MB de
+  Evidence. Cobertura da aplicação `partial`; semântica truncada; 10.370
+  desconhecidos semânticos. A análise semântica do `index-CVhO1mfm.js`
+  nem começou (orçamento esgotado), e outros 14 arquivos tiveram a
+  semântica cortada.
+- Só o `index-CVhO1mfm.js`, com 4 GB de memória: `ev_1398cc6c...`, 4,5
+  min. O worker esgotou a memória de novo na análise semântica. Ficaram os
+  fatos estáticos: 38 endpoints, 7 usos de armazenamento, 2 registros de
+  service worker.
+
+Conclusão prática: num bundle minificado de 1,4 MB, o REA 6.4.0 entrega o
+inventário (endpoints, armazenamento, service worker) e não entrega o
+rastreio. As respostas de P3 e P5 vieram da leitura direta do código.
 
 Hashes dos arquivos citados abaixo:
 
@@ -61,17 +77,28 @@ dízima; não foi montado um caso na tela.
 
 ## P3. Quando um preço promocional ou um item vale?
 
-Status: parcial.
+Status: respondida.
 
-Observação: cada item tem `promotional_price_active`, o preço promocional,
-os dias em que vale e uma agenda por dia com início e fim. Itens e
-categorias têm `allowed_times` (dia, início, fim) e `available_for` (tipos
-de pedido).
+Observação (`index-CVhO1mfm.js`, perto do caractere 452.300 e 455.300):
 
-Inferência: o preço riscado só aparece dentro da agenda.
+- Promoção: vale se o item tem uma linha na agenda para o dia da semana de
+  agora. Linha sem início e sem fim vale o dia todo; com os dois, vale de
+  `início:00` até `fim:59`, no fuso da loja. Sem agenda nenhuma, a
+  promoção não vale.
+- Item e categoria com `allowed_times` vazio aparecem sempre. Com
+  horários, aparecem se alguma linha for do dia da semana de agora e
+  `início <= HH:mm <= fim` (comparação de texto `HH:mm`). Categoria que
+  falha esconde todos os itens dela; categoria sem nenhum item visível some.
+- Item com promoção ligada fora da agenda aparece com a promoção desligada.
+- Uma terceira função procura, nos próximos 7 dias, o próximo início ou
+  fim de promoção ou de horário de item.
 
-Desconhecido: a função que decide isso não foi localizada no código; a
-regra de virada de meia-noite também não.
+Inferência: essa terceira função marca quando o cardápio precisa ser
+filtrado de novo sem recarregar a página. Uma janela que passa da
+meia-noite (22:00 às 02:00) não funciona nessa regra, porque `início <=
+agora <= fim` nunca é verdade; a loja precisa dividir em duas linhas.
+
+Desconhecido: quem chama a terceira função; não foi seguido.
 
 ## P4. Como sai a taxa de entrega?
 
@@ -92,18 +119,31 @@ endereços de teste para a API deles, e isso não foi feito.
 
 ## P5. Como funciona o agendamento?
 
-Status: parcial.
+Status: respondida no navegador; em aberto no servidor.
 
-Observação: a loja guarda antecedência mínima em horas, máximo de dias,
-intervalo em minutos, limite de pedidos por intervalo, "só o próximo dia
-disponível" e a janela de entrega de cada dia. Os textos do código incluem
-"O horário escolhido não está disponível" e "Apenas agendamento".
+Observação (`index-CVhO1mfm.js`, perto do caractere 1.146.000):
 
-Inferência: os horários oferecidos são os intervalos da janela do dia,
-começando depois da antecedência, e somem quando enchem.
+1. Começo = agora + antecedência em horas. Fim = hoje + máximo de dias
+   (45 se não houver), à meia-noite.
+2. Para cada dia entre os dois: as janelas vêm da data especial, se houver,
+   ou da janela daquele dia da semana (a lista vem achatada e é lida de
+   dois em dois: início, fim).
+3. Cada janela é cortada em faixas do tamanho do intervalo, no formato
+   `HH:mm-HH:mm`; a última faixa termina no fim da janela, mesmo se ficar
+   menor.
+4. Sai a faixa que começa antes da hora do cursor (no primeiro dia, a hora
+   de agora + antecedência; nos outros, meia-noite) e a faixa que já tem o
+   limite de pedidos. A contagem por data e faixa vem pronta nos dados da
+   loja.
+5. Dia sem faixa nenhuma não aparece. "Bloquear o mesmo dia" tira hoje; "só
+   o próximo dia disponível" deixa só o primeiro dia da lista.
 
-Desconhecido: a conta exata dos intervalos e se o limite é conferido no
-envio.
+Inferência: a contagem de lotação só é atualizada quando os dados da loja
+são carregados de novo, então duas pessoas podem escolher a última vaga ao
+mesmo tempo.
+
+Desconhecido: se o servidor confere a lotação no envio ("O horário
+escolhido não está disponível" sugere que sim, mas não foi visto).
 
 ## P6. O que acontece ao enviar o pedido?
 
@@ -138,16 +178,39 @@ código do cliente, confirmação no iFood).
 Desconhecido: as telas e as regras de cada um; só os textos e as chamadas
 foram vistos.
 
+## P8. O que o REA achou que a leitura manual não tinha visto?
+
+Status: respondida.
+
+Observação (REA, `ev_1398cc6c...`, fatos estáticos):
+
+- Dois registros de service worker: a loja é instalável como app.
+- Armazenamento local: `localStorage` (leitura, escrita e remoção) e
+  `sessionStorage`, incluindo a chave `plus_eighteen`, ligada ao aviso de
+  item só para maiores.
+- Junto do código de horários (leitura manual) aparecem os modos do
+  cardápio: só visualização, mesa, balcão, delivery, local, entrega e
+  totem, escolhidos por um trecho da URL.
+
+Inferência: a sacola fica no `localStorage`, o que explica ela continuar
+depois de recarregar (F23). O aviso de maiores vale só para a aba aberta.
+
+Desconhecido: quais chaves guardam a sacola; o REA registrou a chamada mas
+não o nome da chave.
+
 ## Checklist
 
 | Pergunta | Status |
 |---|---|
 | P1 carregamento do cardápio | respondida |
 | P2 preço com adicionais | respondida |
-| P3 promoção e disponibilidade por horário | parcial |
-| P4 taxa de entrega | parcial |
-| P5 agendamento | parcial |
+| P3 promoção e disponibilidade por horário | respondida |
+| P4 taxa de entrega | parcial (regra no servidor deles) |
+| P5 agendamento | respondida no navegador; servidor em aberto |
 | P6 envio do pedido | respondida |
 | P7 recursos além da loja | em aberto |
+| P8 achados do REA | respondida |
 
-A investigação não está completa: P3, P4, P5 e P7 seguem abertas.
+A investigação não está completa: P4 e P7 seguem abertas, e P5 no lado do
+servidor. P4 e P5 não impedem o app dele, porque nele a regra da taxa e a
+conferência de lotação vão ser escritas do zero, no Firestore.

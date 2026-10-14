@@ -50,3 +50,5 @@ F48 Painel da loja: cardápio categorias adicionais esgotado e promoções,paine
 F49 Painel da loja: horários fechar temporariamente taxas bairros agendamento e pagamentos,painel,must,yes,no,não observado; deduzido dos campos da loja
 F50 Várias lojas no mesmo sistema com endereço próprio por loja,plataforma,must,yes,no,decisão dele em 2026-10-14
 F51 Cor da loja configurável,plataforma,should,yes,no,a loja tem uma cor própria nos dados
+F52 Modos do cardápio por endereço: só visualização mesa balcão e totem,plataforma,could,yes,no,lido no código (P8)
+F53 Instalável como app (service worker),plataforma,must,yes,no,REA P8; crença 39
