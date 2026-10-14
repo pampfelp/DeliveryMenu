@@ -1,0 +1,52 @@
+feature,area,priority,original,clone,notes
+F01 Página da loja com logo nome cidade e situação (aberta fechada ou só agendamento),cardapio,must,yes,no,S01
+F02 Seletor de categorias que leva até a seção,cardapio,must,yes,no,S01
+F03 Destaques em faixa horizontal,cardapio,should,yes,no,S01; item marcado como destaque
+F04 Busca de produto com estado de nada encontrado,cardapio,must,yes,no,S03
+F05 Card de produto com foto nome descrição preço e selo (recomendado ou oferta),cardapio,must,yes,no,S01
+F06 Preço promocional riscado com porcentagem de desconto,cardapio,must,yes,no,S01 e S02
+F07 Item esgotado aparece marcado e não entra na sacola,cardapio,must,yes,no,status MISSING
+F08 Detalhe do produto em tela cheia com link próprio,produto,must,yes,no,S04; endereço com ?id= do item
+F09 Grupos de adicionais: escolha única e quantidade somável com mínimo e máximo,produto,must,yes,no,S04; contador x/y; obrigatório; em falta por opção
+F10 Regra de preço do grupo: soma média menor ou maior (pizza meio a meio),produto,must,yes,no,ver ACHADOS P2
+F11 Observação por item,produto,should,yes,no,campo pode ser escondido por item
+F12 Quantidade e botão Adicionar com o total,produto,must,yes,no,S04
+F13 Combo montado em etapas,produto,should,yes,no,combo_steps; não aberto na observação
+F14 Preço promocional válido só em dias e horários definidos,regras,should,yes,no,ver ACHADOS P3
+F15 Item disponível só em certos horários e tipos de pedido,regras,should,yes,no,ver ACHADOS P3
+F16 Janela de promoções ao abrir a loja,cardapio,could,yes,no,S02; pode ser desligada por loja
+F17 Mais informações: sobre contato endereço horários e formas de pagamento,loja,must,yes,no,S05 a S07; o dia de hoje fica destacado
+F18 Barra Ver sacola com contador e total,sacola,must,yes,no,S01 com item
+F19 Sacola com editar remover limpar e adicionar mais itens,sacola,must,yes,no,S08
+F20 Sugestões Peça também na sacola,sacola,could,yes,no,S08
+F21 Subtotal taxa de entrega e total,sacola,must,yes,no,S08; taxa A definir antes do endereço
+F22 Cupom de desconto,sacola,should,yes,no,verificado no servidor
+F23 Sacola continua depois de recarregar a página,sacola,must,yes,no,observado ao recarregar
+F24 Identificação por telefone antes do checkout,checkout,must,yes,no,S09
+F25 Cadastro com nome e senha opcional; login; recuperar senha por SMS,conta,should,yes,no,lido no código; não executado
+F26 Tipo de pedido: entrega retirada ou consumo no local,checkout,must,yes,no,lido no código
+F27 Endereço por CEP ou rua e número ou localização atual com conferência no mapa,checkout,must,yes,no,lido no código; ponto de referência pode ser obrigatório
+F28 Endereços salvos do cliente,checkout,should,yes,no,lido no código
+F29 Taxa e tempo de entrega por endereço com fora da área fora do horário e a combinar,checkout,must,yes,no,calculado no servidor; ver ACHADOS P4
+F30 Lista de bairros atendidos,checkout,must,yes,no,dado da loja
+F31 Agendamento por data e intervalo com antecedência mínima,checkout,must,yes,no,ver ACHADOS P5
+F32 Pagamento na entrega: dinheiro com troco Pix e cartão com bandeira,checkout,must,yes,no,lido no código
+F33 Pagar com duas formas,checkout,could,yes,no,lido no código
+F34 Pagamento online com cartão,checkout,could,yes,no,depende de provedor de pagamento
+F35 Taxa da maquininha e taxa adicional,checkout,could,yes,no,lido no código
+F36 Pedido mínimo e entrega grátis a partir de um valor,regras,should,yes,no,campos da loja vazios nesta loja
+F37 Envio do pedido e mensagem pronta para o WhatsApp da loja,checkout,must,yes,no,ver ACHADOS P6
+F38 Tela de pedido enviado e acompanhar pedido,pedido,must,yes,no,lido no código
+F39 Aguardando pagamento do Pix,pedido,should,yes,no,lido no código
+F40 Meus pedidos: pendentes e finalizados,conta,should,yes,no,S10; finalizados pedem senha
+F41 Avaliação do pedido,pedido,could,yes,no,lido no código
+F42 Fidelidade por pontos e prêmios,conta,could,yes,no,desligado nesta loja
+F43 Cashback,conta,could,yes,no,lido no código
+F44 Aviso de status por notificação push,pedido,could,yes,no,lido no código
+F45 Pedido na mesa ou comanda,mesa,could,yes,no,lido no código
+F46 App do entregador: pegar pedido despachar e confirmar entrega com código,entregador,could,yes,no,lido no código
+F47 Painel da loja: receber pedidos e mudar o status,painel,must,yes,no,não observado; deduzido dos campos do pedido
+F48 Painel da loja: cardápio categorias adicionais esgotado e promoções,painel,must,yes,no,não observado; deduzido dos campos do cardápio
+F49 Painel da loja: horários fechar temporariamente taxas bairros agendamento e pagamentos,painel,must,yes,no,não observado; deduzido dos campos da loja
+F50 Várias lojas no mesmo sistema com endereço próprio por loja,plataforma,must,yes,no,decisão dele em 2026-10-14
+F51 Cor da loja configurável,plataforma,should,yes,no,a loja tem uma cor própria nos dados
