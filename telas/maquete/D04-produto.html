@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>D04 Produto no computador</title>
+<link rel="stylesheet" href="_pc.css?v=1">
+<style>
+  .fundo { position: absolute; inset: 0; width: 1440px; height: 900px; border: 0; }
+  .veu { position: absolute; inset: 0; background: var(--overlay); }
+  .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 880px; height: 640px; display: grid; grid-template-columns: 400px 1fr; background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+  .lado-foto { padding: 20px; display: flex; align-items: center; }
+  .lado-foto .foto { width: 360px; height: 360px; border-radius: var(--r-md); }
+  .lado-foto .foto svg.ic { width: 44px; height: 44px; }
+  .det { position: relative; display: flex; flex-direction: column; border-left: 1px solid var(--border); min-height: 0; }
+  .det .cab { display: flex; align-items: center; justify-content: space-between; height: 64px; padding: 0 20px; background: var(--surface-muted); border-bottom: 1px solid var(--border); }
+  .det .cab h2 { font: 500 16px/24px Rubik; color: var(--text-strong); }
+  .rolagem { flex: 1; overflow: hidden; }
+  .info { padding: 18px 20px; }
+  .info h1 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .info p { margin-top: 4px; font-size: 14px; line-height: 20px; }
+  .info .preco { margin-top: 10px; }
+  .grupo { background: var(--surface-muted); padding: 12px 20px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .grupo .t { flex: 1; }
+  .grupo h3 { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .grupo small { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .chip { font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: #fff; background: #4b5563; display: inline-flex; align-items: center; gap: 4px; }
+  .chip.ok { background: var(--success); }
+  .chip.ok svg.ic { width: 12px; height: 12px; stroke-width: 3; }
+  .op { display: flex; align-items: center; gap: 12px; padding: 0 20px; height: 50px; border-bottom: 1px solid var(--border); }
+  .op .n { flex: 1; font-size: 15px; color: var(--text); }
+  .op .v { font-size: 13px; color: var(--text-muted); }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
+  .radio.on { border: 7px solid var(--accent); }
+  .passo { display: flex; align-items: center; gap: 10px; color: var(--accent); }
+  .passo b { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .falta { font: 500 12px/16px Rubik; color: var(--warning); }
+  .rodape { display: flex; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface); }
+  .qtd { width: 112px; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-md); color: var(--accent); }
+  .qtd b { font: 500 16px/24px Rubik; color: var(--text-strong); }
+  .qtd .menos { color: var(--text-muted); }
+  .rodape .btn { flex: 1; justify-content: space-between; padding: 0 16px; }
+</style></head>
+<body><div class="pc">
+  <iframe class="fundo" src="D01-inicio.html" tabindex="-1"></iframe>
+  <div class="veu"></div>
+  <div class="modal">
+    <div class="lado-foto"><div class="foto"><i data-ic="foto"></i></div></div>
+    <div class="det">
+      <div class="cab"><h2>Detalhes do produto</h2><div class="fechar"><i data-ic="x"></i></div></div>
+      <div class="rolagem">
+        <div class="info">
+          <h1>Clássico da Casa</h1>
+          <p class="muted leve">Pão brioche, blend de 160 g, queijo prato, alface, tomate e molho especial da casa</p>
+          <div class="preco">R$ 27,00</div>
+        </div>
+        <div class="grupo"><div class="t"><h3>Ponto da carne</h3><small>Escolha 1 opção</small></div><span class="chip ok"><i data-ic="check"></i>1/1</span></div>
+        <div class="op"><span class="n">Ao ponto</span><span class="radio on"></span></div>
+        <div class="op"><span class="n">Bem passado</span><span class="radio"></span></div>
+        <div class="grupo"><div class="t"><h3>Adicionais</h3><small>Escolha até 5</small></div><span class="chip">1/5</span></div>
+        <div class="op"><span class="n">Bacon <span class="v">+ R$ 4,00</span></span><span class="passo"><i data-ic="menos"></i><b>1</b><i data-ic="mais"></i></span></div>
+        <div class="op"><span class="n">Cheddar extra <span class="v">+ R$ 3,00</span></span><span class="passo"><i data-ic="mais"></i></span></div>
+        <div class="op"><span class="n">Ovo <span class="v">+ R$ 2,50</span></span><span class="falta">EM FALTA</span></div>
+      </div>
+      <div class="rodape">
+        <div class="qtd"><span class="menos"><i data-ic="menos"></i></span><b>1</b><i data-ic="mais"></i></div>
+        <div class="btn btn-accent"><span>Adicionar</span><span>R$ 31,00</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>
