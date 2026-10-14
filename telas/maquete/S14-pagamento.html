@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S14 Pagamento</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .topo .voltar { color: var(--text-strong); }
+  .bloco { margin: 12px; padding: 14px; }
+  .bloco h2 { font: 500 16px/24px Rubik; color: var(--text-strong); margin-bottom: 10px; }
+  .abas { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: var(--r-md); padding: 4px; margin-bottom: 12px; }
+  .abas span { height: 36px; display: grid; place-items: center; border-radius: var(--r-sm); font: 500 14px/20px Rubik; color: var(--text-muted); }
+  .abas span.on { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-sm); }
+  .forma { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-md); margin-top: 8px; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .forma .rotulo { flex: 1; }
+  .forma .ic:first-child { color: var(--text-muted); }
+  .forma.on { border: 2px solid var(--accent); }
+  .forma.on .ic:first-child { color: var(--accent); }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
+  .radio.on { border: 7px solid var(--accent); }
+  .troco { margin-top: 8px; padding: 12px; border-radius: var(--r-md); background: var(--surface-muted); }
+  .troco p { font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .troco .in { margin-top: 8px; height: 44px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); padding: 0 12px; display: flex; align-items: center; font-size: 15px; color: var(--text-strong); }
+  .troco small { display: block; margin-top: 6px; font-size: 12px; color: var(--text-muted); }
+  .resumo { margin: 0 12px; padding: 14px; }
+  .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text-muted); }
+  .tl.total { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font: 600 18px/28px Rubik; color: var(--text-strong); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Pagamento</h1></div>
+
+  <div class="bloco cartao">
+    <div class="abas"><span class="on">Pagar na entrega</span><span>Pagar online</span></div>
+    <div class="forma on"><i data-ic="dinheiro"></i><span class="rotulo">Dinheiro</span><span class="radio on"></span></div>
+    <div class="troco">
+      <p>Vai precisar de troco?</p>
+      <div class="in">Troco para R$ 100,00</div>
+      <small>Seu troco: R$ 43,10</small>
+    </div>
+    <div class="forma"><i data-ic="pix"></i><span class="rotulo">Pix</span><span class="radio"></span></div>
+    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito</span><span class="radio"></span></div>
+    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de débito</span><span class="radio"></span></div>
+  </div>
+
+  <div class="resumo cartao">
+    <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+    <div class="tl"><span>Taxa de entrega</span><span>R$ 6,00</span></div>
+    <div class="tl total"><span>Total</span><span>R$ 56,90</span></div>
+  </div>
+
+  <div class="rodape"><div class="btn btn-accent">Revisar pedido</div></div>
+</div>
+<script src="_icones.js"></script>
+</body></html>

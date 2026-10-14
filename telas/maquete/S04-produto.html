@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S04 Produto</title>
+<link rel="stylesheet" href="_base.css">
+<style>
+  .tela { background: var(--surface); }
+  .hero { height: 240px; border-radius: 0; }
+  .hero svg.ic { width: 40px; height: 40px; }
+  .x { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.92); display: grid; place-items: center; color: var(--text-strong); box-shadow: var(--shadow-sm); }
+  .info { padding: 16px; }
+  .info h1 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .info p { margin-top: 4px; font-size: 14px; line-height: 20px; }
+  .info .preco { margin-top: 10px; }
+  .grupo { background: var(--surface-muted); padding: 12px 16px; display: flex; align-items: center; gap: 8px; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .grupo .t { flex: 1; }
+  .grupo h2 { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .grupo small { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .chip { font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: #fff; background: #4b5563; }
+  .chip.ok { background: var(--success); display: inline-flex; align-items: center; gap: 4px; }
+  .chip.ok svg.ic { width: 12px; height: 12px; stroke-width: 3; }
+  .op { display: flex; align-items: center; gap: 12px; padding: 0 16px; height: 52px; border-bottom: 1px solid var(--border); }
+  .op .n { flex: 1; font-size: 15px; color: var(--text); }
+  .op .v { font-size: 13px; color: var(--text-muted); }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
+  .radio.on { border: 7px solid var(--accent); }
+  .falta { font: 500 12px/16px Rubik; color: var(--warning); }
+  .passo { display: flex; align-items: center; gap: 10px; color: var(--accent); }
+  .passo b { font: 500 15px/20px Rubik; color: var(--text-strong); min-width: 10px; text-align: center; }
+  .obs { padding: 14px 16px 0; }
+  .obs label { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .obs div { margin-top: 8px; height: 64px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 10px 12px; color: var(--text-muted); font-size: 14px; }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; display: flex; gap: 12px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .qtd { width: 112px; height: 48px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-md); color: var(--accent); }
+  .qtd b { font: 500 16px/24px Rubik; color: var(--text-strong); }
+  .qtd .menos { color: var(--text-muted); }
+  .rodape .btn { flex: 1; justify-content: space-between; padding: 0 16px; }
+</style></head>
+<body><div class="tela">
+  <div class="hero foto"><i data-ic="foto"></i></div>
+  <div class="x"><i data-ic="x"></i></div>
+  <div class="info">
+    <h1>Clássico da Casa</h1>
+    <p class="muted leve">Pão brioche, blend de 160 g, queijo prato, alface, tomate e molho especial da casa</p>
+    <div class="preco">R$ 27,00</div>
+  </div>
+
+  <div class="grupo"><div class="t"><h2>Ponto da carne</h2><small>Escolha 1 opção</small></div><span class="chip ok"><i data-ic="check"></i>1/1</span></div>
+  <div class="op"><span class="n">Ao ponto</span><span class="radio on"></span></div>
+  <div class="op"><span class="n">Bem passado</span><span class="radio"></span></div>
+
+  <div class="grupo"><div class="t"><h2>Adicionais</h2><small>Escolha até 5</small></div><span class="chip">1/5</span></div>
+  <div class="op"><span class="n">Bacon <span class="v">+ R$ 4,00</span></span><span class="passo"><i data-ic="menos"></i><b>1</b><i data-ic="mais"></i></span></div>
+  <div class="op"><span class="n">Cheddar extra <span class="v">+ R$ 3,00</span></span><span class="passo"><i data-ic="mais"></i></span></div>
+  <div class="op"><span class="n">Ovo <span class="v">+ R$ 2,50</span></span><span class="falta">EM FALTA</span></div>
+
+  <div class="obs"><label>Alguma observação?</label><div>Ex.: sem cebola, molho à parte</div></div>
+
+  <div class="rodape">
+    <div class="qtd"><span class="menos"><i data-ic="menos"></i></span><b>1</b><i data-ic="mais"></i></div>
+    <div class="btn btn-accent"><span>Adicionar</span><span>R$ 31,00</span></div>
+  </div>
+</div>
+<script src="_icones.js"></script>
+</body></html>

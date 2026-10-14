@@ -1,0 +1,70 @@
+/* Maquete das telas do DeliveryMenu. Valores de replica/design/tokens.json. */
+@import url('https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap');
+
+:root {
+  --bg: #f3f4f6;
+  --surface: #ffffff;
+  --surface-muted: #f4f5f7;
+  --border: #e0e0e0;
+  --border-input: #6b7280;
+  --text: #374151;
+  --text-strong: #1f2937;
+  --text-muted: #666d7a;
+  --accent: #991b1b;
+  --on-accent: #ffffff;
+  --danger: #dc2626;
+  --success: #15803d;
+  --success-bg: #dcfce7;
+  --info: #1d4ed8;
+  --info-bg: #dbeafe;
+  --warning: #a16207;
+  --overlay: rgba(0,0,0,0.45);
+  --shadow-sm: 0 1px 2px 0 rgba(0,0,0,0.05);
+  --shadow-card: 0 1px 3px 0 rgba(0,0,0,0.1), 0 1px 2px -1px rgba(0,0,0,0.1);
+  --shadow-raised: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+  --shadow-bar: 0 -4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -1px rgba(0,0,0,0.06);
+  --r-sm: 6px; --r-md: 8px; --r-lg: 12px; --r-xl: 16px;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body { width: 390px; }
+body {
+  font-family: Rubik, system-ui, sans-serif;
+  font-size: 14px; line-height: 20px; color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+}
+.tela { position: relative; width: 390px; height: 844px; overflow: hidden; background: var(--bg); }
+svg.ic { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+
+/* foto e logo reservados: o restaurante coloca os seus pelo app */
+.foto { background: linear-gradient(135deg, #e5e7eb, #d1d5db); display: grid; place-items: center; color: #9ca3af; }
+.foto svg.ic { width: 28px; height: 28px; stroke-width: 1.4; }
+
+/* barra de baixo */
+.nav { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; background: var(--surface); box-shadow: var(--shadow-bar); display: grid; grid-template-columns: repeat(4, 1fr); }
+.nav a { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-size: 10px; line-height: 12px; font-weight: 500; color: var(--text-muted); text-decoration: none; }
+.nav a.on { color: var(--accent); }
+.nav a svg.ic { width: 22px; height: 22px; }
+
+/* botões */
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; border-radius: var(--r-md); border: 0; font: 500 16px/24px Rubik, sans-serif; }
+.btn-accent { background: var(--accent); color: var(--on-accent); }
+.btn-ghost { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
+
+/* cabeçalho de tela interna */
+.topo { height: 56px; background: var(--surface); display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+.topo h1 { font: 500 18px/28px Rubik, sans-serif; color: var(--text-strong); flex: 1; }
+.fechar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--text-muted); }
+.fechar svg.ic { width: 18px; height: 18px; }
+
+.preco { font: 500 16px/24px Rubik, sans-serif; color: var(--text-strong); }
+.preco-promo { color: var(--success); }
+.riscado { font-size: 13px; color: var(--text-muted); text-decoration: line-through; font-weight: 400; }
+.desconto { font: 500 12px/16px Rubik, sans-serif; color: var(--success); background: var(--success-bg); padding: 2px 6px; border-radius: var(--r-sm); }
+.selo { display: inline-block; font: 500 10px/12px Rubik, sans-serif; letter-spacing: .02em; text-transform: uppercase; color: var(--info); background: var(--info-bg); padding: 4px 8px; border-radius: var(--r-sm); }
+.selo-oferta { color: var(--accent); background: #fde8e8; }
+.cartao { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+.secao { font: 600 20px/28px Rubik, sans-serif; color: var(--text-strong); }
+.muted { color: var(--text-muted); }
+.leve { font-weight: 300; }
