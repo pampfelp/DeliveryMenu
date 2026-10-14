@@ -1,0 +1,5 @@
+# Saída bruta de engenharia reversa: contém código de terceiro e não vai
+# para repositório público. O lugar dela é C:\rea-trabalho\DeliveryMenu\.
+rea/evidencias/
+rea/*.json
+*.asar
