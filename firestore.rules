@@ -1,0 +1,60 @@
+// Padrão consolidado — ver padroes/dados-e-seguranca.md
+// Antes de publicar: PERGUNTAR ao Felipe se este projeto precisa de
+// autenticação real (ver decisoes.md #1). Este arquivo traz as duas
+// variantes: a de baixo (ativa) é para uso pessoal/grupo de confiança.
+
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isNonEmptyString(v, maxLen) {
+      return v is string && v.size() > 0 && v.size() <= maxLen;
+    }
+
+    // ===================================================================
+    // VARIANTE ATIVA: uso pessoal / grupo pequeno de confiança.
+    // Valida só FORMATO dos dados, não identidade de quem escreve.
+    // Qualquer um com o link consegue ler/escrever — aceitável só quando
+    // não há dado sensível nem gente de fora do círculo de confiança.
+    // ===================================================================
+    match /itens/{id} {
+      allow read: if true;
+      // hasOnly() bloqueia mass assignment — sem isso, um create/update
+      // malicioso poderia mandar campos extras não previstos aqui (ex.:
+      // um "isAdmin:true" em coleções que tiverem esse tipo de campo em
+      // outro projeto). Sempre listar exatamente os campos esperados.
+      allow create, update: if request.resource.data.keys().hasOnly(["nome", "createdAt"])
+        && isNonEmptyString(request.resource.data.nome, 200);
+      allow delete: if true;
+    }
+
+    // Coleções de log/histórico: append-only. Se a entidade pai puder ser
+    // excluída em cascata, mantenha "delete: if true" mesmo aqui — ver a
+    // lição documentada em padroes/dados-e-seguranca.md sobre o bug do
+    // SmashUpPickBan (excluir sala falhava com subcoleção "delete: if false").
+    match /itens/{itemId}/historico/{logId} {
+      allow read: if true;
+      allow create: if true;
+      allow update, delete: if false;
+    }
+
+    // ===================================================================
+    // VARIANTE COM FIREBASE AUTH (descomentar e adaptar quando o projeto
+    // precisar de acesso real — troque a coleção "itens" acima por esta):
+    // ===================================================================
+    // function isSignedIn() { return request.auth != null; }
+    // function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+    //
+    // match /itens/{id} {
+    //   allow read: if isSignedIn();
+    //   allow create: if isSignedIn()
+    //     && request.resource.data.keys().hasOnly(["nome", "createdAt", "donoId"])
+    //     && request.resource.data.donoId == request.auth.uid
+    //     && isNonEmptyString(request.resource.data.nome, 200);
+    //   allow update: if isSignedIn() && resource.data.donoId == request.auth.uid
+    //     && request.resource.data.keys().hasOnly(["nome", "createdAt", "donoId"])
+    //     && request.resource.data.donoId == resource.data.donoId; // não deixa "roubar" o dono trocando o campo
+    //   allow delete: if isSignedIn() && resource.data.donoId == request.auth.uid;
+    // }
+  }
+}

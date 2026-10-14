@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Nome do App</title>
+
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#9B5DE5" />
+<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
+<!-- iOS: sem estas tags o app abre dentro do Safari, com barra de endereço -->
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black" />
+<meta name="apple-mobile-web-app-title" content="Nome do App" />
+<link rel="icon" href="./favicon.ico" />
+
+<link rel="stylesheet" href="./style.css?v=1" />
+</head>
+<body>
+
+<div class="app">
+  <!-- ===== sidebar (desktop) / drawer (mobile) ===== -->
+  <aside class="sidebar">
+    <div class="brand">Nome do App</div>
+    <nav>
+      <button class="nav-item" data-view="itens">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
+        <span class="nav-label">Itens</span>
+      </button>
+      <button class="nav-item" data-view="painel">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
+        <span class="nav-label">Painel</span>
+      </button>
+    </nav>
+  </aside>
+  <div class="sidebar-backdrop"></div>
+
+  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
+    <div class="mobile-topbar">
+      <button type="button" data-abrir-menu aria-label="Abrir menu">
+        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
+      </button>
+      <strong>Nome do App</strong>
+    </div>
+
+    <main class="content">
+      <!-- ===== view: Itens ===== -->
+      <section class="view" id="view-itens">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+          <h1>Itens</h1>
+          <button class="btn primary" id="btn-novo-item">+ Adicionar</button>
+        </div>
+        <div class="card">
+          <div class="table-wrap">
+            <table>
+              <thead>
+                <tr><th>Nome</th><th>Criado em</th><th></th></tr>
+              </thead>
+              <tbody id="tbody-itens"></tbody>
+            </table>
+          </div>
+          <div id="empty-itens" class="empty-state" style="display:none;">
+            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></div>
+            <p>Nenhum item ainda. Toque em "+ Adicionar" para criar o primeiro.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== view: Painel ===== -->
+      <section class="view" id="view-painel">
+        <h1 style="margin-bottom:16px;">Painel</h1>
+        <div class="kpi-grid">
+          <div class="kpi-card">
+            <div class="valor num" id="kpi-total">0</div>
+            <div class="label">Itens cadastrados</div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+</div>
+
+<script type="module" src="./painel.js?v=1"></script>
+<script>
+  if ("serviceWorker" in navigator) {
+    window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
+  }
+</script>
+</body>
+</html>
