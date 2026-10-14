@@ -1,0 +1,26 @@
+/*
+  Aparência de esqueleto (passo 2 do imagem-primeiro): caixas cinza e o
+  rótulo de cada componente. Sai quando a primeira camada (fundo) entrar.
+*/
+@import url("./loja.css?v=1");
+
+body.esqueleto { font-family: system-ui, sans-serif; color: #444; background: #fafafa; }
+.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
+/* :where zera a especificidade: o posicionamento de loja.css (fixed, absolute) continua valendo */
+:where(.esqueleto [data-c]) { position: relative; }
+.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333; background: #ffe58a; padding: 0 3px; pointer-events: none; }
+.esqueleto .foto, .esqueleto .logo, .esqueleto .hero, .esqueleto .selo-ok { background: #ddd; }
+.esqueleto .faixa { background: #bbb; }
+.esqueleto .cabeca, .esqueleto .linha-taxa, .esqueleto .dest, .esqueleto .item, .esqueleto .it,
+.esqueleto .bloco, .esqueleto .agendar, .esqueleto .num, .esqueleto .passos, .esqueleto .sel,
+.esqueleto .lupa, .esqueleto .c { background: #fff; border: 1px solid #ccc; }
+.esqueleto .grupo, .esqueleto .nota, .esqueleto .resultado, .esqueleto .abas { background: #eee; }
+.esqueleto .op, .esqueleto .forma, .esqueleto .tipos button, .esqueleto input, .esqueleto textarea,
+.esqueleto .cep button { border: 1px solid #ccc; background: #fff; }
+.esqueleto .radio { border: 2px solid #888; }
+.esqueleto .radio.on, .esqueleto .forma.on, .esqueleto .tipos .on, .esqueleto .abas .on { outline: 2px solid #555; }
+.esqueleto .btn, .esqueleto .barra-sacola { background: #777; color: #fff; }
+.esqueleto .nav, .esqueleto .rodape, .esqueleto .totais, .esqueleto .topo { background: #fff; border-top: 1px solid #ccc; }
+.esqueleto .x { background: #fff; border: 1px solid #ccc; }
+.esqueleto .riscado { text-decoration: line-through; }
+.esqueleto .esgotado { opacity: .55; }

@@ -1,0 +1,144 @@
+/*
+  loja.css: estrutura das telas do cliente (posição, tamanho, espaço).
+  Construído por camadas a partir das imagens validadas em telas/*.png:
+  esqueleto -> fundo -> cartões e blocos -> imagens -> tipografia.
+  Nesta etapa só há estrutura; a aparência do esqueleto vem de esqueleto.css.
+*/
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button { font: inherit; background: none; border: 0; text-align: inherit; color: inherit; cursor: pointer; }
+a { color: inherit; text-decoration: none; }
+input, textarea { font: inherit; }
+
+#app { position: relative; max-width: 480px; margin: 0 auto; min-height: 100vh; }
+.tela { display: none; position: relative; min-height: 100vh; padding-bottom: 140px; }
+.tela.ativa { display: block; }
+
+/* navegação só no início */
+.nav { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px; height: 64px; display: none; grid-template-columns: repeat(4, 1fr); }
+body[data-tela="inicio"] .nav { display: grid; }
+.nav a { display: flex; align-items: center; justify-content: center; font-size: 10px; }
+
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; height: 48px; font-size: 16px; }
+
+/* S01 */
+.cabeca { position: relative; margin: 52px 12px 0; padding: 52px 16px 16px; text-align: center; }
+.cabeca .faixa { position: absolute; left: -12px; right: -12px; top: -52px; height: 96px; z-index: -1; }
+.cabeca .logo { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 84px; height: 84px; border-radius: 50%; }
+.cabeca h1 { font-size: 20px; line-height: 28px; }
+.linha-info { margin-top: 4px; font-size: 14px; }
+.situacao { margin-top: 6px; font-size: 13px; }
+.linha-taxa { display: flex; width: calc(100% - 24px); margin: 12px 12px 0; padding: 14px 12px; font-size: 14px; }
+.filtros { display: flex; gap: 8px; margin: 16px 12px 0; }
+.filtros .sel { flex: 1; height: 44px; padding: 0 12px; }
+.filtros .lupa { width: 44px; height: 44px; font-size: 0; }
+.secao { margin: 20px 12px 10px; font-size: 20px; line-height: 28px; }
+.faixa-h { display: flex; gap: 10px; padding: 0 12px; overflow-x: auto; }
+.dest { width: 150px; flex: none; overflow: hidden; }
+.dest .foto { height: 108px; }
+.dest .corpo { padding: 10px; }
+.dest h3 { font-size: 15px; margin-top: 6px; }
+.dest p { font-size: 13px; line-height: 18px; height: 36px; overflow: hidden; }
+.dest .preco { margin-top: 8px; }
+.item { display: flex; gap: 12px; margin: 0 12px 10px; padding: 12px; }
+.item .txt { flex: 1; min-width: 0; }
+.item h3 { font-size: 16px; line-height: 22px; }
+.item p { font-size: 13px; line-height: 18px; margin-top: 2px; }
+.item .valores { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+.item .foto { width: 88px; height: 88px; flex: none; }
+.barra-sacola { position: fixed; left: 50%; transform: translateX(-50%); bottom: 76px; width: calc(100% - 24px); max-width: 456px; height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 12px; }
+.barra-sacola .rotulo { flex: 1; text-align: center; }
+
+/* S04 */
+.hero { height: 240px; }
+.x { position: absolute; top: 12px; right: 12px; width: 36px; height: 36px; border-radius: 50%; display: grid; place-items: center; }
+.info { padding: 16px; }
+.info h1 { font-size: 20px; line-height: 28px; }
+.info p { margin-top: 4px; font-size: 14px; }
+.info .preco { margin-top: 10px; }
+.grupo { display: flex; align-items: center; gap: 8px; padding: 12px 16px; }
+.grupo .t { flex: 1; }
+.grupo h2 { font-size: 15px; }
+.grupo small { font-size: 12px; }
+.op { display: flex; align-items: center; gap: 12px; height: 52px; padding: 0 16px; }
+.op .n { flex: 1; font-size: 15px; }
+.radio { width: 22px; height: 22px; border-radius: 50%; }
+.passo { display: flex; align-items: center; gap: 10px; }
+.obs { padding: 14px 16px 0; }
+.obs label { display: block; font-size: 15px; }
+.obs textarea { display: block; width: 100%; height: 64px; margin-top: 8px; padding: 10px 12px; resize: none; }
+#tela-produto .rodape { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px; padding: 12px 16px 20px; display: flex; gap: 12px; }
+#tela-produto .rodape .qtd { width: 112px; height: 48px; display: flex; align-items: center; justify-content: center; }
+#tela-produto .rodape .btn { flex: 1; justify-content: space-between; padding: 0 16px; }
+
+/* S08 */
+.topo { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; }
+.topo h1 { flex: 1; font-size: 18px; }
+#tela-sacola .linha-taxa { width: 100%; margin: 0; padding: 14px 16px; }
+.cab { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 8px; }
+.cab h2 { font-size: 18px; }
+.it { display: flex; gap: 12px; margin: 0 16px 10px; padding: 12px; }
+.it .t { flex: 1; }
+.it h3 { font-size: 15px; }
+.it h3 b { margin-right: 4px; }
+.it p { font-size: 13px; margin-top: 2px; }
+.it .acoes { display: flex; gap: 16px; margin-top: 8px; font-size: 13px; }
+.it .lado { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.it .foto { width: 56px; height: 56px; }
+.mais-itens { display: block; text-align: center; padding: 10px; font-size: 14px; }
+.sug-t { padding: 8px 16px; font-size: 16px; }
+.sug { display: flex; gap: 10px; padding: 0 16px; overflow-x: auto; }
+.sug .c { width: 112px; flex: none; overflow: hidden; }
+.sug .foto { height: 76px; }
+.sug .c > div:last-child { padding: 8px; font-size: 13px; }
+.sug .c b { display: block; margin-top: 4px; font-size: 14px; }
+.totais { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px; padding: 12px 16px 20px; }
+.tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 22px; }
+.tl.total { margin-top: 4px; font-size: 18px; line-height: 28px; }
+.cupom { display: block; width: 100%; margin: 12px 0; padding: 10px 0; font-size: 14px; }
+.cupom small { display: block; font-size: 12px; }
+#tela-sacola { padding-bottom: 260px; }
+
+/* S12 e S14 */
+.bloco { margin: 12px; padding: 14px; }
+.bloco h2 { font-size: 16px; margin-bottom: 10px; }
+.tipos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.tipos button { height: 72px; text-align: center; font-size: 13px; }
+.campo { margin-top: 10px; }
+.campo label { display: block; font-size: 12px; margin-bottom: 4px; }
+.campo input { display: block; width: 100%; height: 44px; padding: 0 12px; }
+.dupla { display: grid; grid-template-columns: 1fr 96px; gap: 8px; }
+.cep { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+.cep button { height: 44px; padding: 0 14px; }
+.loc { display: block; margin-top: 12px; font-size: 14px; }
+.resultado { display: flex; align-items: center; gap: 10px; margin: 0 12px; padding: 12px 14px; font-size: 14px; }
+.resultado span:first-child { flex: 1; }
+.agendar { display: block; width: calc(100% - 24px); margin: 12px; padding: 14px; font-size: 14px; }
+.agendar small { display: block; font-size: 12px; }
+.rodape { position: fixed; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px; padding: 12px 16px 20px; }
+.abas { display: grid; grid-template-columns: 1fr 1fr; padding: 4px; margin-bottom: 12px; }
+.abas button { height: 36px; text-align: center; font-size: 14px; }
+.forma { display: flex; align-items: center; gap: 12px; width: 100%; height: 56px; padding: 0 12px; margin-top: 8px; font-size: 15px; }
+.forma .rotulo { flex: 1; }
+.forma small { display: block; font-size: 12px; }
+.nota { margin-top: 8px; padding: 12px; font-size: 13px; line-height: 18px; }
+.nota b { display: block; font-size: 14px; margin-bottom: 2px; }
+.resumo { margin-top: 0; }
+.resumo .tl { line-height: 24px; }
+.resumo .tl.total { margin-top: 6px; padding-top: 8px; }
+
+/* S16 */
+.topo-x { height: 56px; display: flex; align-items: center; justify-content: flex-end; padding: 0 16px; }
+.ok { text-align: center; }
+.ok .selo-ok { width: 88px; height: 88px; margin: 24px auto 0; border-radius: 50%; }
+.ok h1 { margin-top: 16px; font-size: 20px; line-height: 28px; }
+.ok p { margin: 6px 32px 0; font-size: 14px; }
+.num { display: flex; justify-content: space-between; margin: 20px 16px 0; padding: 14px; }
+.num small { display: block; font-size: 12px; }
+.num b { font-size: 18px; }
+.num > div:last-child { text-align: right; }
+.passos { list-style: none; margin: 16px 16px 0; padding: 14px; }
+.passos li { padding: 0 0 16px 36px; font-size: 14px; }
+.passos li:last-child { padding-bottom: 0; }
+.passos small { display: block; font-size: 12px; }
+.rodape.duplo { display: grid; gap: 10px; }

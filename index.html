@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Cardápio</title>
+
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#991b1b" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<link rel="stylesheet" href="./esqueleto.css?v=1" />
+</head>
+<body class="esqueleto">
+<div id="app">
+
+  <!-- S01 Início -->
+  <section class="tela" id="tela-inicio">
+    <header data-c="A1 cabeçalho da loja" class="cabeca">
+      <div class="faixa"></div>
+      <div class="logo" data-c="A1.1 logo"></div>
+      <h1 id="loja-nome"></h1>
+      <div class="linha-info"><span id="loja-cidade"></span> • <a href="#" data-c="A1.2">Mais informações</a></div>
+      <div class="situacao" id="loja-situacao"></div>
+    </header>
+    <button class="linha-taxa" data-c="A2 taxa">Calcular taxa e tempo de entrega</button>
+    <div class="filtros" data-c="A3 filtros">
+      <button class="sel">Categorias</button>
+      <button class="lupa" aria-label="Buscar">Buscar</button>
+    </div>
+    <h2 class="secao">Destaques</h2>
+    <div class="faixa-h" id="destaques" data-c="A4 destaques"></div>
+    <div id="categorias" data-c="A5 categorias"></div>
+    <a class="barra-sacola" href="#sacola" data-c="A6 barra da sacola"><span class="qtd" id="barra-qtd"></span><span class="rotulo">Ver sacola</span><strong id="barra-total"></strong></a>
+  </section>
+
+  <!-- S04 Produto -->
+  <section class="tela" id="tela-produto">
+    <div class="hero" data-c="B1 foto"></div>
+    <a class="x" href="#inicio" data-c="B2 fechar" aria-label="Fechar">X</a>
+    <div class="info" data-c="B3 informações" id="produto-info"></div>
+    <div id="produto-grupos" data-c="B4/B5 grupos e opções"></div>
+    <div class="obs" data-c="B6 observação"><label for="obs">Alguma observação?</label><textarea id="obs" placeholder="Ex.: sem cebola, molho à parte"></textarea></div>
+    <div class="rodape" data-c="B7 rodapé"><div class="qtd">- 1 +</div><button class="btn" id="btn-adicionar"></button></div>
+  </section>
+
+  <!-- S08 Sacola -->
+  <section class="tela" id="tela-sacola">
+    <div class="topo" data-c="C1 topo"><h1 id="sacola-loja"></h1><a href="#inicio" aria-label="Fechar">X</a></div>
+    <button class="linha-taxa" data-c="C2 taxa">Calcular taxa e tempo de entrega</button>
+    <div class="cab" data-c="C3"><h2>Sua sacola</h2><button>LIMPAR</button></div>
+    <div id="sacola-itens" data-c="C4 itens"></div>
+    <a class="mais-itens" href="#inicio" data-c="C5">ADICIONAR MAIS ITENS</a>
+    <h3 class="sug-t">Peça também</h3>
+    <div class="sug" id="sugestoes" data-c="C6 sugestões"></div>
+    <div class="totais" data-c="C7 totais e cupom">
+      <div class="tl"><span>Subtotal</span><span id="sacola-subtotal"></span></div>
+      <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
+      <div class="tl total"><span>Total</span><span id="sacola-total"></span></div>
+      <button class="cupom">Tem um cupom? <small>Toque e digite o código</small></button>
+      <a class="btn" href="#entrega">Continuar pedido</a>
+    </div>
+  </section>
+
+  <!-- S12 Entrega -->
+  <section class="tela" id="tela-entrega">
+    <div class="topo" data-c="D1 topo"><a href="#sacola" aria-label="Voltar">&lt;</a><h1>Como receber</h1></div>
+    <div class="bloco" data-c="D2 tipo de pedido">
+      <h2>Como você quer receber o pedido?</h2>
+      <div class="tipos"><button class="on">Entrega</button><button>Retirada</button><button>No local</button></div>
+    </div>
+    <div class="bloco" data-c="D3 endereço">
+      <h2>Endereço de entrega</h2>
+      <div class="campo"><label>CEP</label><div class="cep"><input value="66000-000" /><button>Buscar CEP</button></div></div>
+      <div class="campo dupla"><div><label>Rua *</label><input value="Travessa das Flores" /></div><div><label>Número *</label><input value="120" /></div></div>
+      <div class="campo dupla"><div><label>Bairro *</label><input value="Centro" /></div><div><label>Compl.</label><input placeholder="Apto" /></div></div>
+      <div class="campo"><label>Ponto de referência *</label><input value="Em frente à praça" /></div>
+      <button class="loc">Usar minha localização</button>
+    </div>
+    <div class="resultado" data-c="D4 resultado da taxa"><span>Entregamos no seu endereço</span><span>R$ 6,00 • 35-45 min</span></div>
+    <button class="agendar" data-c="D5 agendar">Agendar pedido <small>Receber agora ou escolher um horário</small></button>
+    <div class="rodape" data-c="D6"><a class="btn" href="#pagamento">Continuar</a></div>
+  </section>
+
+  <!-- S14 Pagamento -->
+  <section class="tela" id="tela-pagamento">
+    <div class="topo" data-c="E1 topo"><a href="#entrega" aria-label="Voltar">&lt;</a><h1>Pagamento</h1></div>
+    <div class="bloco" data-c="E2/E3 formas">
+      <div class="abas" data-c="E2 abas"><button class="on">Pagar online</button><button>Pagar na entrega</button></div>
+      <button class="forma on"><span class="rotulo">Pix <small>Aprovação na hora</small></span><span class="radio on"></span></button>
+      <div class="nota"><b>Como funciona</b>Depois de revisar o pedido, aparecem o QR Code e o código copia e cola. O restaurante começa a preparar assim que o pagamento é confirmado.</div>
+      <button class="forma"><span class="rotulo">Cartão de crédito <small>Adicionar cartão</small></span><span class="radio"></span></button>
+    </div>
+    <div class="bloco resumo" data-c="E4 resumo">
+      <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+      <div class="tl"><span>Taxa de entrega</span><span>R$ 6,00</span></div>
+      <div class="tl total"><span>Total</span><span>R$ 56,90</span></div>
+    </div>
+    <div class="rodape" data-c="E5"><a class="btn" href="#enviado">Revisar pedido</a></div>
+  </section>
+
+  <!-- S16 Pedido enviado -->
+  <section class="tela" id="tela-enviado">
+    <div class="topo-x" data-c="F1"><a href="#inicio" aria-label="Fechar">X</a></div>
+    <div class="ok" data-c="F2 confirmação"><div class="selo-ok"></div><h1>Pedido enviado!</h1><p>O restaurante já recebeu seu pedido e vai começar a preparar.</p></div>
+    <div class="num" data-c="F3 número e previsão"><div><small>Pedido</small><b>#1048</b></div><div><small>Previsão de entrega</small><b>19h40 - 19h50</b></div></div>
+    <ol class="passos" data-c="F4 linha do tempo">
+      <li class="feito">Pedido recebido <small>19h05</small></li>
+      <li class="atual">Em preparo <small>Aguardando o restaurante confirmar</small></li>
+      <li>Saiu para entrega</li>
+      <li>Entregue</li>
+    </ol>
+    <div class="rodape duplo" data-c="F5 ações"><button class="btn">Falar com o restaurante</button><button class="btn">Acompanhar pedido</button></div>
+  </section>
+
+  <nav class="nav" data-c="A7 navegação">
+    <a href="#inicio">Início</a><a href="#promocoes">Promoções</a><a href="#pedidos">Pedidos</a><a href="#perfil">Perfil</a>
+  </nav>
+</div>
+
+<script type="module" src="./app.js?v=1"></script>
+</body>
+</html>
