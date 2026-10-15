@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P20 Cardápio no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--bg); }
+  .barra-topo { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--accent); color: #fff; }
+  .barra-topo b { flex: 1; font: 600 17px/22px Rubik; }
+  .barra-topo .novo { height: 34px; padding: 0 12px; display: flex; align-items: center; gap: 6px; border-radius: var(--r-md); background: #fff; color: var(--accent); font: 500 14px/20px Rubik; }
+  .barra-topo .novo svg.ic { width: 18px; height: 18px; }
+  .kpis { display: flex; gap: 10px; padding: 12px 16px 0; overflow: hidden; }
+  .kpi { flex: none; width: 150px; padding: 10px 12px; }
+  .kpi b { font-size: 18px; line-height: 24px; margin-top: 2px; }
+  .busca { margin: 12px 16px 0; height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 14px; color: var(--text-muted); }
+  .busca svg.ic { width: 18px; height: 18px; }
+  .abas { display: flex; gap: 6px; padding: 12px 16px 10px; overflow: hidden; }
+  .abas span { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--text); }
+  .abas span.on { background: var(--text-strong); border-color: var(--text-strong); color: #fff; }
+  .abas span.on .cont { background: var(--accent); color: #fff; }
+  .lista-cab { display: flex; align-items: center; gap: 8px; padding: 2px 16px 8px; }
+  .lista-cab b { font: 600 16px/22px Rubik; color: var(--text-strong); }
+  .lista-cab small { font-size: 13px; color: var(--text-muted); }
+  .lista-cab a { margin-left: auto; font: 500 13px/18px Rubik; color: var(--accent); }
+  .lista { margin: 0 16px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .linha { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+  .linha:last-child { border-bottom: 0; }
+  .linha .foto { width: 52px; height: 52px; border-radius: var(--r-sm); flex: none; }
+  .linha .foto svg.ic { width: 18px; height: 18px; }
+  .linha .t { flex: 1; min-width: 0; }
+  .linha .nome { font: 500 15px/20px Rubik; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .linha .v { margin-top: 2px; display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .linha .v.promo { color: var(--success); }
+  .linha .v s { font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .linha .v .selo-m { font: 500 11px/14px Rubik; padding: 2px 6px; border-radius: 4px; color: var(--info); background: var(--info-bg); }
+  .linha .v .selo-m.oferta { color: var(--accent); background: #fde8e8; }
+  .trilho { width: 36px; height: 22px; border-radius: 11px; background: var(--success); position: relative; flex: none; }
+  .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .trilho.off { background: #c4c8cf; }
+  .trilho.off::after { right: 17px; }
+  .linha.esgot .foto, .linha.esgot .t { opacity: .55; }
+  .linha .esg { font: 500 11px/14px Rubik; color: var(--text-muted); }
+  .nav-p { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: grid; grid-template-columns: repeat(4, 1fr); background: var(--surface); box-shadow: var(--shadow-bar); }
+  .nav-p a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 10px/12px Rubik; color: var(--text-muted); }
+  .nav-p a.on { color: var(--accent); }
+  .nav-p a svg.ic { width: 22px; height: 22px; }
+  .nav-p .cont { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; font-size: 11px; line-height: 18px; padding: 0 5px; }
+</style></head>
+<body><div class="tela">
+  <div class="barra-topo"><b>Cardápio</b><span class="novo"><i data-ic="mais"></i>Novo item</span></div>
+  <div class="kpis">
+    <div class="kpi"><small>Itens no cardápio</small><b>9</b></div>
+    <div class="kpi"><small>Esgotados agora</small><b>1</b></div>
+    <div class="kpi"><small>Em promoção</small><b>2</b></div>
+  </div>
+  <div class="busca"><i data-ic="busca"></i>Buscar item</div>
+  <div class="abas">
+    <span class="on">Burgers<span class="cont">5</span></span>
+    <span>Pizzas<span class="cont">1</span></span>
+    <span>Acompanhamentos<span class="cont">3</span></span>
+  </div>
+  <div class="lista-cab"><b>Burgers</b><small>toque no item para editar</small><a>Categorias</a></div>
+  <div class="lista">
+    <div class="linha"><div class="foto"><i data-ic="foto"></i></div><div class="t"><div class="nome">Clássico da Casa</div><div class="v">R$ 27,00<span class="selo-m">Recomendado</span></div></div><span class="trilho"></span></div>
+    <div class="linha"><div class="foto"><i data-ic="foto"></i></div><div class="t"><div class="nome">Combo Dupla</div><div class="v promo">R$ 59,90<s>R$ 68,00</s><span class="selo-m oferta">Oferta</span></div></div><span class="trilho"></span></div>
+    <div class="linha"><div class="foto"><i data-ic="foto"></i></div><div class="t"><div class="nome">Bacon Duplo</div><div class="v">R$ 34,00<span class="selo-m">Novo</span></div></div><span class="trilho"></span></div>
+    <div class="linha"><div class="foto"><i data-ic="foto"></i></div><div class="t"><div class="nome">Smash Simples</div><div class="v promo">R$ 19,90<s>R$ 24,00</s></div></div><span class="trilho"></span></div>
+    <div class="linha esgot"><div class="foto"><i data-ic="foto"></i></div><div class="t"><div class="nome">Costela Desfiada</div><div class="v">R$ 36,00</div></div><span class="esg">Esgotado</span><span class="trilho off"></span></div>
+  </div>
+  <nav class="nav-p">
+    <a><i data-ic="sacola"></i>Pedidos<span class="cont forte">2</span></a>
+    <a class="on"><i data-ic="lista"></i>Cardápio</a>
+    <a><i data-ic="entrega"></i>Entregas</a>
+    <a><i data-ic="loja"></i>Ajustes</a>
+  </nav>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>
