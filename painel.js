@@ -15,7 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=1";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=2";
 import { PEDIDOS_EXEMPLO } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";

@@ -207,7 +207,7 @@ async function mudarStatus(p, status) {
   catch { toast("Não deu para atualizar. Tente de novo.", "erro", 4000); }
 }
 async function recusar(p) {
-  if (!(await confirmar("Recusar este pedido? O cliente precisa ser avisado pelo WhatsApp.", { textoConfirmar: "Recusar" }))) return;
+  if (!(await confirmar("Recusar este pedido? O cliente vê na tela do pedido que ele não foi aceito.", { textoConfirmar: "Recusar" }))) return;
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
   const batch = writeBatch(db);
   const { id, ...dados } = p;
