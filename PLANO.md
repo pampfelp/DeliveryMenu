@@ -76,6 +76,11 @@ Todas lidas no original e descritas em `rea/ACHADOS.md`.
 
 ### Fase 4. Painel do restaurante
 
+Andamento (2026-10-15, noite): pedido de verdade no ar. A loja com
+?loja=<link> lê o restaurante no Firestore, grava em pedidosEntrada e o
+cliente acompanha pelo id; testado de ponta a ponta com recusa na Casa
+Jambu. Falta o editor de cardápio para a loja real ter itens.
+
 Andamento (2026-10-15): login e cadastro do dono no ar e testados por ele
 (loja Casa Jambu criada). Imagens da tela de pedidos e do detalhe do pedido
 (PD10, PD11, P10, P11) feitas e esperando validação. Ao gravar pedidos de
