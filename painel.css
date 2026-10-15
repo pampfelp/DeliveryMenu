@@ -165,15 +165,14 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .m-corpo { overflow-y: auto; }
 .bloco-t { font-weight: 600; font-size: 13px; line-height: 18px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
 .item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
-.item b { font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.item b { display: block; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
 .item b span { color: var(--text-muted); margin-right: 4px; }
 .item p { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
 .item p.obs { color: var(--warning); font-weight: 500; }
 .item .v { font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); white-space: nowrap; }
 .totais { margin-top: 12px; }
 .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text-muted); }
-.pag-cel { margin-top: 10px; }
-.pag-cel .pag { font-size: 13px; line-height: 18px; padding: 4px 8px; }
+.pag-cel { margin-top: 8px; font-size: 13px; line-height: 18px; }
 .tl.total { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border); font-weight: 600; font-size: 18px; line-height: 28px; color: var(--text-strong); }
 .d-lado { display: grid; gap: 16px; align-content: start; }
 .caixa { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
@@ -223,6 +222,12 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .d-lado > div, .d-itens { margin: 12px 12px 0; padding: 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
   .d-lado .caixa { border: 0; padding: 0; }
   .bloco-t { font-size: 12px; line-height: 16px; margin-bottom: 6px; }
+  .m-cab .estado { padding: 3px 8px; }
+  .item { gap: 10px; padding: 8px 0; }
+  .item .v { font-size: 14px; }
+  .totais { margin-top: 8px; }
+  .tl { font-size: 13px; line-height: 22px; }
+  .tl.total { padding-top: 6px; font-size: 17px; line-height: 26px; }
   .m-pe { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; box-shadow: var(--shadow-bar); border-top: 0; }
   .m-pe .btn { flex: 1; }
 }
@@ -264,14 +269,3 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   body.com-detalhe .detalhe { box-shadow: none; width: auto; max-height: none; }
   body.com-detalhe .m-pe, body.com-detalhe .fechar, body.com-detalhe .voltar, body.com-detalhe .acoes-c { display: none !important; }
 }
-
-/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .lateral, .esqueleto .barra-topo, .esqueleto .btn:not(.fantasma), .esqueleto .cont.forte { background: #8a8a8a !important; }
-.esqueleto .lateral *, .esqueleto .barra-topo *, .esqueleto .btn:not(.fantasma) { color: #fff !important; }
-.esqueleto .ped.novo { border-left-color: #777 !important; }
-.esqueleto .abas .on, .esqueleto .abas .on * { color: #fff !important; }
-.esqueleto .pag, .esqueleto .chave .trilho, .esqueleto .estado { background: #ddd !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }

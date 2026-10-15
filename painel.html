@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=5" />
+<link rel="stylesheet" href="./painel.css?v=6" />
 </head>
 <body data-tela="carregando">
 
@@ -87,7 +87,7 @@
 </div>
 
 <!-- PD10 / P10 Pedidos, depois do login -->
-<div class="app esqueleto" id="tela-painel">
+<div class="app" id="tela-painel">
   <aside class="lateral so-pc" data-c="M menu">
     <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
     <nav class="menu">
@@ -128,7 +128,7 @@
 
 <!-- PD11 / P11 Detalhe do pedido: janela no computador, tela cheia no celular -->
 <div class="detalhe-veu" id="detalhe" hidden>
-  <section class="detalhe esqueleto" role="dialog" aria-modal="true" aria-labelledby="d-titulo" data-c="D detalhe">
+  <section class="detalhe" role="dialog" aria-modal="true" aria-labelledby="d-titulo" data-c="D detalhe">
     <div class="m-cab"><button type="button" class="voltar so-cel" data-fechar aria-label="Voltar"><i data-ic="esquerda"></i></button><h2 id="d-titulo"></h2><span class="estado" id="d-estado"></span><span class="hora" id="d-hora"></span><button type="button" class="fechar so-pc" data-fechar aria-label="Fechar"><i data-ic="x"></i></button></div>
     <div class="m-corpo" id="d-corpo"></div>
     <div class="m-pe" id="d-pe"></div>
