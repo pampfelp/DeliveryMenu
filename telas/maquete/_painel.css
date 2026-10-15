@@ -1,0 +1,35 @@
+/* Partes comuns das maquetes do painel do restaurante (login e cadastro). */
+@import url("_base.css?v=1");
+
+.marca { display: flex; align-items: center; gap: 10px; color: #fff; }
+.marca .selo-marca { width: 40px; height: 40px; border-radius: var(--r-md); background: rgba(255,255,255,.16); display: grid; place-items: center; }
+.marca .selo-marca svg.ic { width: 22px; height: 22px; }
+.marca b { display: block; font: 600 20px/24px Rubik; }
+.marca small { display: block; font: 400 13px/18px Rubik; opacity: .85; }
+
+.form h1 { font: 600 22px/30px Rubik; color: var(--text-strong); }
+.form .sub { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.campo { margin-top: 14px; }
+.campo label { display: block; font: 500 13px/18px Rubik; color: var(--text); margin-bottom: 6px; }
+.campo label i { font-style: normal; color: var(--danger); }
+.in { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); font-size: 15px; color: var(--text-strong); }
+.in.vazio { color: var(--text-muted); }
+.in.foco { border: 2px solid var(--accent); padding: 0 13px; }
+.in svg.ic { color: var(--text-muted); width: 20px; height: 20px; }
+.in span { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.in .pre { flex: none; color: var(--text-muted); }
+.ajuda { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.ajuda b { font-weight: 500; color: var(--text); }
+.linha-entre { display: flex; justify-content: flex-end; margin-top: 10px; font: 500 14px/20px Rubik; color: var(--accent); }
+.form .btn { margin-top: 20px; width: 100%; }
+.ou { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; font-size: 13px; color: var(--text-muted); }
+.ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.passos-cad { display: flex; align-items: center; gap: 8px; font: 500 13px/18px Rubik; color: var(--text-muted); }
+.passos-cad .barra { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.passos-cad .barra i { display: block; height: 100%; background: var(--accent); }
+.aceite { display: flex; gap: 10px; margin-top: 16px; font-size: 13px; line-height: 18px; color: var(--text); }
+.aceite .caixa { width: 20px; height: 20px; flex: none; border-radius: 4px; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.aceite .caixa svg.ic { width: 14px; height: 14px; stroke-width: 3; }
+.aceite a { color: var(--accent); font-weight: 500; }
+.dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dupla .campo { margin-top: 14px; }

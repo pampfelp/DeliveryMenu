@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P02 Cadastro, passo 1</title>
+<link rel="stylesheet" href="_painel.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .topo .voltar { color: var(--text-strong); }
+  .form { padding: 18px 20px 0; }
+  .passos-cad { margin-bottom: 18px; }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .rodape .ja { margin-top: 10px; text-align: center; font-size: 13px; color: var(--text-muted); }
+  .rodape .ja b { font-weight: 500; color: var(--accent); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Cadastrar restaurante</h1></div>
+  <div class="form">
+    <div class="passos-cad"><span>Passo 1 de 2</span><span class="barra"><i style="width:50%"></i></span><span>Seus dados</span></div>
+    <h1>Quem vai cuidar do painel</h1>
+    <p class="sub">É a conta do dono. Depois você convida a equipe.</p>
+    <div class="campo"><label>Nome completo <i>*</i></label><div class="in"><span>Nome Sobrenome</span></div></div>
+    <div class="campo"><label>E-mail <i>*</i></label><div class="in"><i data-ic="email"></i><span>dono@restaurante.com</span></div></div>
+    <div class="campo"><label>WhatsApp <i>*</i></label><div class="in"><i data-ic="fone"></i><span>(91) 90000-0000</span></div></div>
+    <div class="campo"><label>Senha <i>*</i></label><div class="in foco"><i data-ic="cadeado"></i><span>••••••••••</span><i data-ic="olho"></i></div>
+      <p class="ajuda">Pelo menos 8 caracteres.</p></div>
+    <div class="campo"><label>Confirmar senha <i>*</i></label><div class="in"><i data-ic="cadeado"></i><span class="muted">Digite de novo</span></div></div>
+  </div>
+  <div class="rodape">
+    <div class="btn btn-accent">Continuar</div>
+    <p class="ja">Já tem conta? <b>Entrar</b></p>
+  </div>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P03 Cadastro, passo 2</title>
+<link rel="stylesheet" href="_painel.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .topo .voltar { color: var(--text-strong); }
+  .form { padding: 18px 20px 0; }
+  .passos-cad { margin-bottom: 18px; }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .rodape .btn { margin-top: 0; }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Cadastrar restaurante</h1></div>
+  <div class="form">
+    <div class="passos-cad"><span>Passo 2 de 2</span><span class="barra"><i style="width:100%"></i></span><span>Restaurante</span></div>
+    <h1>Seu restaurante</h1>
+    <p class="sub">Dá para mudar tudo depois, nas configurações.</p>
+    <div class="campo"><label>Nome do restaurante <i>*</i></label><div class="in"><i data-ic="loja"></i><span>Nome do Restaurante</span></div></div>
+    <div class="campo"><label>Link do cardápio <i>*</i></label><div class="in foco"><i data-ic="link"></i><span>nome-do-restaurante</span></div>
+      <p class="ajuda">Seus clientes abrem em <b>pampfelp.github.io/DeliveryMenu/?loja=nome-do-restaurante</b></p></div>
+    <div class="dupla">
+      <div class="campo"><label>Cidade <i>*</i></label><div class="in"><span>Belém - PA</span></div></div>
+      <div class="campo"><label>Bairro <i>*</i></label><div class="in"><span>Centro</span></div></div>
+    </div>
+    <p class="ajuda">O bairro do restaurante tem a entrega de R$ 3,00; os outros bairros pagam pela distância.</p>
+    <div class="aceite"><span class="caixa"><i data-ic="check"></i></span><span>Li e aceito os <a>termos de uso</a> e a <a>política de privacidade</a>.</span></div>
+  </div>
+  <div class="rodape"><div class="btn btn-accent">Criar conta e abrir o painel</div></div>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>
