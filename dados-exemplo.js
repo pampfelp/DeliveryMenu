@@ -155,3 +155,35 @@ export const SACOLA_EXEMPLO = [
   { itemId: "classico", qtd: 1, escolhas: { ponto: { "ao-ponto": 1 }, adicionais: { bacon: 1 } }, obs: "" },
   { itemId: "smash", qtd: 1, escolhas: {}, obs: "Sem picles" },
 ];
+
+// Pedidos das imagens validadas do painel (PD10, PD11, P10, P11). Só entram com
+// ?exemplo=painel na URL do painel; nada disso vai para o Firestore.
+const as = (hm) => new Date(`2026-10-15T${hm}:00`);
+const item = (qtd, nome, total, resumo = "", obs = "") => ({ qtd, nome, total, resumo, obs });
+const end = (rua, numero, bairro, complemento, referencia, km) => ({ rua, numero, bairro, complemento, referencia, km });
+export const PEDIDOS_EXEMPLO = {
+  agora: "2026-10-15T19:13:00",
+  entrada: [
+    { id: "1051", status: "novo", tipo: "entrega", criadoEm: as("19:12"), cliente: { nome: "Ana P.", telefone: "91900000000" },
+      endereco: end("Travessa das Flores", "120", "Jardim das Flores", "apto 302", "em frente à praça", 1.6),
+      itens: [item(2, "Clássico da Casa", 6200, "Ao ponto, 1 bacon", "sem cebola em um deles"), item(1, "Batata média", 1400)],
+      subtotal: 7600, taxa: 550, desconto: 800, cupom: "PRIMEIRA", total: 7350, pagamento: { forma: "Pix", pago: true } },
+    { id: "1050", status: "novo", tipo: "retirada", criadoEm: as("19:10"), cliente: { nome: "Carlos M.", telefone: "91900000000" },
+      itens: [item(1, "Pizza meio a meio", 5500, "Mussarela, Frango com catupiry")], subtotal: 5500, taxa: 0, total: 5500, pagamento: { forma: "Dinheiro" } },
+  ],
+  pedidos: [
+    { id: "1049", numero: 1049, status: "preparo", tipo: "entrega", criadoEm: as("19:01"), cliente: { nome: "Júlia R.", telefone: "91900000000" },
+      endereco: end("Rua do Exemplo", "45", "Centro", "", "", 0), itens: [item(1, "Combo Dupla", 5990), item(2, "Refrigerante lata", 1200, "Cola")],
+      subtotal: 7190, taxa: 300, total: 7490, pagamento: { forma: "Pix", pago: true } },
+    { id: "1047", numero: 1047, status: "preparo", tipo: "entrega", criadoEm: as("18:44"), cliente: { nome: "Pedro A.", telefone: "91900000000" },
+      endereco: end("Rua do Exemplo", "300", "Parque Sul", "", "", 5.1), itens: [item(3, "Smash Simples", 5970), item(1, "Onion rings", 1600)],
+      subtotal: 7570, taxa: 1100, total: 8670, pagamento: { forma: "Cartão" } },
+    { id: "1046", numero: 1046, status: "saiu", tipo: "entrega", criadoEm: as("18:38"), saiuEm: as("19:02"), cliente: { nome: "Luana S.", telefone: "91900000000" },
+      endereco: end("Rua do Exemplo", "12", "Vila Nova", "", "", 3.1), itens: [item(2, "Bacon Duplo", 6800)],
+      subtotal: 6800, taxa: 800, total: 7600, pagamento: { forma: "Dinheiro", troco: 10000 } },
+    { id: "1045", numero: 1045, status: "entregue", tipo: "entrega", criadoEm: as("18:20"), saiuEm: as("18:40"), concluidoEm: as("18:52"), cliente: { nome: "Cliente" }, itens: [item(1, "Bacon Duplo", 3400)], subtotal: 3400, taxa: 0, total: 3400, pagamento: { forma: "Pix", pago: true } },
+    { id: "1044", numero: 1044, status: "entregue", tipo: "retirada", criadoEm: as("18:15"), concluidoEm: as("18:40"), cliente: { nome: "Cliente" }, itens: [item(1, "Clássico da Casa", 2700)], subtotal: 2700, taxa: 0, total: 2700, pagamento: { forma: "Pix", pago: true } },
+    { id: "1043", numero: 1043, status: "cancelado", tipo: "entrega", criadoEm: as("18:10"), concluidoEm: as("18:30"), cliente: { nome: "Cliente" }, itens: [item(1, "Pizza meio a meio", 4500)], subtotal: 4500, taxa: 0, total: 4500, pagamento: { forma: "Pix" } },
+    { id: "1042", numero: 1042, status: "entregue", tipo: "entrega", criadoEm: as("17:55"), saiuEm: as("18:10"), concluidoEm: as("18:21"), cliente: { nome: "Cliente" }, itens: [item(2, "Smash Simples", 3980)], subtotal: 5840, taxa: 300, total: 6140, pagamento: { forma: "Pix", pago: true } },
+  ],
+};

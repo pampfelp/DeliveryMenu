@@ -7,7 +7,7 @@
 */
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
-import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES, SACOLA_EXEMPLO } from "./dados-exemplo.js?v=5";
+import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES, SACOLA_EXEMPLO } from "./dados-exemplo.js?v=6";
 import { pintarIcones } from "./icones.js?v=2";
 
 const reais = (centavos) => fmtMoeda(centavos / 100);

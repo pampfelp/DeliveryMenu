@@ -1,5 +1,6 @@
 /*
   painel.js: entrada do painel do restaurante (imagens P01 a P03, PD01, PD02).
+  Depois do login, a tela de pedidos mora em pedidos.js.
   Cadastro do dono pelo próprio app (crença 38): cria a conta no Firebase
   Auth, a loja em lojas/{link} (o link é o id, então dois restaurantes não
   pegam o mesmo) e os dados privados em donos/{uid}.
@@ -14,11 +15,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=1";
+import { PEDIDOS_EXEMPLO } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
 const $ = (id) => document.getElementById(id);
 const valor = (id) => $(id).value.trim();
 const STATE = { user: null, loja: null, passo: 1, ocupado: false };
+const EXEMPLO_PAINEL = new URLSearchParams(location.search).get("exemplo") === "painel"; // pedidos das imagens, sem login e sem Firestore
 
 /* ===== mensagens do Firebase em português ===== */
 function mensagemErro(err) {
@@ -35,9 +39,9 @@ function mensagemErro(err) {
 /* ===== navegação por hash: #entrar, #cadastro/1, #cadastro/2, #painel ===== */
 function irParaHash() {
   let [tela, passo] = (location.hash.slice(1) || "entrar").split("/");
-  if (STATE.user) {
+  if (STATE.user || EXEMPLO_PAINEL) {
     tela = "painel";
-    if (location.hash !== "#painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
+    if (!location.hash.startsWith("#painel")) history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
   }
   else if (!["entrar", "cadastro"].includes(tela)) tela = "entrar";
   if (tela === "cadastro") {
@@ -48,6 +52,9 @@ function irParaHash() {
   }
   document.body.dataset.tela = tela;
   document.querySelectorAll(".direita > .form").forEach((f) => (f.hidden = f.id !== `tela-${tela}`));
+  $("tela-painel").hidden = tela !== "painel";
+  document.querySelector(".auth").hidden = tela === "painel";
+  if (tela === "painel" && passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
 
@@ -92,7 +99,7 @@ function formatarTelefone(t) {
 $("c-whats").addEventListener("input", (e) => (e.target.value = formatarTelefone(e.target.value)));
 
 // link do cardápio: minúsculas, sem acento, só letras, números e hífen
-const virarLink = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase()
+const virarLink = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()
   .replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40);
 let linkEditado = false;
 $("c-loja").addEventListener("input", () => { if (!linkEditado) $("c-slug").value = virarLink(valor("c-loja")); mostrarLink(); });
@@ -167,25 +174,34 @@ $("tela-cadastro").addEventListener("submit", async (e) => {
   }
 });
 
-/* ===== depois do login ===== */
+/* ===== depois do login: tela de pedidos ===== */
 async function abrirPainel(user) {
   const achadas = await getDocs(query(collection(db, "lojas"), where("donoId", "==", user.uid), limit(1)));
   STATE.loja = achadas.empty ? null : { id: achadas.docs[0].id, ...achadas.docs[0].data() };
-  $("painel-loja").textContent = STATE.loja ? STATE.loja.nome : "Conta sem restaurante";
-  $("painel-link").textContent = STATE.loja ? BASE_LOJA + STATE.loja.id : "Nenhum restaurante ligado a esta conta.";
-  location.hash = "#painel";
+  if (!STATE.loja) { toast("Esta conta não tem restaurante ligado.", "erro", 5000); await signOut(auth); return; }
+  iniciarPedidos(STATE.loja);
+  if (!location.hash.startsWith("#painel")) location.hash = "#painel";
   irParaHash();
 }
-$("btn-sair").addEventListener("click", async () => { await signOut(auth); location.hash = "#entrar"; });
+document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
+  pararPedidos();
+  await signOut(auth);
+  location.hash = "#entrar";
+}));
 
 // se o Firebase demorar a responder (rede lenta), mostra a entrada em vez de tela vazia
 setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash(); }, 1500);
 
-onAuthStateChanged(auth, async (user) => {
-  STATE.user = user;
-  if (user && !STATE.ocupado) await abrirPainel(user);
-  else irParaHash();
-});
+if (EXEMPLO_PAINEL) {
+  iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
+  irParaHash();
+} else {
+  onAuthStateChanged(auth, async (user) => {
+    STATE.user = user;
+    if (user && !STATE.ocupado) await abrirPainel(user);
+    else { pararPedidos(); irParaHash(); }
+  });
+}
 
 // ?exemplo=1 preenche os campos como nas imagens validadas (para conferir a tela)
 if (new URLSearchParams(location.search).has("exemplo")) {

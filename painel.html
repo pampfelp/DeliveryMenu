@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=4" />
+<link rel="stylesheet" href="./painel.css?v=5" />
 </head>
 <body data-tela="carregando">
 
@@ -83,16 +83,58 @@
       </div>
     </form>
 
-    <!-- Depois do login: o painel ainda não tem imagem aprovada (PLANO.md, fase 4) -->
-    <section class="form" id="tela-painel" data-c="X provisório">
-      <h1 id="painel-loja"></h1>
-      <p class="sub">Conta criada e restaurante cadastrado. As telas do painel (pedidos, cardápio, configurações) são a próxima etapa.</p>
-      <p class="ajuda">Link do cardápio: <b id="painel-link"></b></p>
-      <button class="btn fantasma" type="button" id="btn-sair">Sair</button>
-    </section>
   </main>
 </div>
 
-<script type="module" src="./painel.js?v=6"></script>
+<!-- PD10 / P10 Pedidos, depois do login -->
+<div class="app esqueleto" id="tela-painel">
+  <aside class="lateral so-pc" data-c="M menu">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <nav class="menu">
+      <a class="on" href="#painel"><i data-ic="sacola"></i>Pedidos<span class="cont" data-novos></span></a>
+      <button type="button" data-em-breve><i data-ic="lista"></i>Cardápio</button>
+      <button type="button" data-em-breve><i data-ic="entrega"></i>Entregas e bairros</button>
+      <button type="button" data-em-breve><i data-ic="loja"></i>Configurações</button>
+    </nav>
+    <div class="loja-atual"><b class="nome-loja"></b><small>Você está como dono · <button type="button" data-sair>Sair</button></small></div>
+  </aside>
+
+  <main class="principal">
+    <div class="barra-topo so-cel" data-c="T topo"><b class="nome-loja"></b><button type="button" class="chave" data-chave aria-pressed="true"><span class="trilho"></span><span class="chave-txt">Aberto</span></button></div>
+    <div class="cab so-pc" data-c="T cabeçalho">
+      <h1>Pedidos</h1>
+      <div class="sel"><i data-ic="agenda"></i>Hoje<i data-ic="baixo"></i></div>
+      <button type="button" class="chave" data-chave aria-pressed="true"><span class="trilho"></span><span class="chave-txt">Recebendo pedidos</span></button>
+    </div>
+
+    <div class="kpis" data-c="K indicadores">
+      <div class="kpi"><small>Pedidos hoje</small><b id="k-qtd">0</b><em class="so-pc" id="k-qtd-ontem"></em></div>
+      <div class="kpi"><small>Faturamento</small><b id="k-fat">R$ 0,00</b><em class="so-pc">sem as taxas de entrega</em></div>
+      <div class="kpi"><small>Ticket médio</small><b id="k-ticket">R$ 0,00</b></div>
+      <div class="kpi so-pc"><small>Tempo médio até sair</small><b id="k-tempo">-</b></div>
+    </div>
+
+    <div class="abas so-cel" id="abas" data-c="A abas"></div>
+    <div class="quadro" id="quadro" data-c="Q quadro de pedidos"></div>
+  </main>
+
+  <nav class="nav-p so-cel" data-c="N navegação">
+    <a class="on" href="#painel"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
+    <button type="button" data-em-breve><i data-ic="lista"></i>Cardápio</button>
+    <button type="button" data-em-breve><i data-ic="entrega"></i>Entregas</button>
+    <button type="button" data-em-breve><i data-ic="loja"></i>Ajustes</button>
+  </nav>
+</div>
+
+<!-- PD11 / P11 Detalhe do pedido: janela no computador, tela cheia no celular -->
+<div class="detalhe-veu" id="detalhe" hidden>
+  <section class="detalhe esqueleto" role="dialog" aria-modal="true" aria-labelledby="d-titulo" data-c="D detalhe">
+    <div class="m-cab"><button type="button" class="voltar so-cel" data-fechar aria-label="Voltar"><i data-ic="esquerda"></i></button><h2 id="d-titulo"></h2><span class="estado" id="d-estado"></span><span class="hora" id="d-hora"></span><button type="button" class="fechar so-pc" data-fechar aria-label="Fechar"><i data-ic="x"></i></button></div>
+    <div class="m-corpo" id="d-corpo"></div>
+    <div class="m-pe" id="d-pe"></div>
+  </section>
+</div>
+
+<script type="module" src="./painel.js?v=7"></script>
 </body>
 </html>
