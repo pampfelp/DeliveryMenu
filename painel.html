@@ -3,89 +3,96 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Nome do App</title>
-
-<link rel="manifest" href="./manifest.json" />
-<meta name="theme-color" content="#9B5DE5" />
-<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
-<!-- iOS: sem estas tags o app abre dentro do Safari, com barra de endereço -->
-<meta name="apple-mobile-web-app-capable" content="yes" />
-<meta name="mobile-web-app-capable" content="yes" />
-<meta name="apple-mobile-web-app-status-bar-style" content="black" />
-<meta name="apple-mobile-web-app-title" content="Nome do App" />
-<link rel="icon" href="./favicon.ico" />
-
-<link rel="stylesheet" href="./style.css?v=1" />
+<title>Painel do restaurante | Cardápio Delivery</title>
+<meta name="theme-color" content="#991b1b" />
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
+<link rel="stylesheet" href="./tokens.css?v=1" />
+<link rel="stylesheet" href="./painel.css?v=2" />
 </head>
-<body>
+<body class="esqueleto" data-tela="carregando">
 
-<div class="app">
-  <!-- ===== sidebar (desktop) / drawer (mobile) ===== -->
-  <aside class="sidebar">
-    <div class="brand">Nome do App</div>
-    <nav>
-      <button class="nav-item" data-view="itens">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg></span>
-        <span class="nav-label">Itens</span>
-      </button>
-      <button class="nav-item" data-view="painel">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></span>
-        <span class="nav-label">Painel</span>
-      </button>
-    </nav>
+<div class="auth">
+  <!-- P01/PD01 e PD02: a marca. No celular só aparece no login, como faixa do topo -->
+  <aside class="lado" data-c="L lado da marca">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <h2 class="so-pc lema-entrar">Seu delivery, do pedido à entrega.</h2>
+    <h2 class="so-pc lema-cadastro">Falta pouco para abrir o seu cardápio.</h2>
+    <p class="so-cel lema-entrar">Receba os pedidos, cuide do cardápio e das entregas num lugar só.</p>
+    <p class="so-pc lema-cadastro">Com o restaurante cadastrado, você já pode montar as categorias, os itens e os bairros de entrega.</p>
+    <ul class="recursos so-pc lema-entrar" data-c="L1 recursos">
+      <li><span><i data-ic="sino"></i></span>Pedido chega na hora, com som</li>
+      <li><span><i data-ic="lista"></i></span>Cardápio com fotos, adicionais e promoções</li>
+      <li><span><i data-ic="entrega"></i></span>Taxa calculada pelo bairro do cliente</li>
+    </ul>
+    <p class="pe so-pc">Cardápio Delivery</p>
   </aside>
-  <div class="sidebar-backdrop"></div>
 
-  <div style="flex:1; min-width:0; display:flex; flex-direction:column;">
-    <div class="mobile-topbar">
-      <button type="button" data-abrir-menu aria-label="Abrir menu">
-        <span class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg></span>
-      </button>
-      <strong>Nome do App</strong>
-    </div>
+  <main class="direita">
+    <!-- P01 / PD01 Entrar -->
+    <form class="form" id="tela-entrar" data-c="E entrar" novalidate>
+      <h1>Entrar</h1>
+      <p class="sub">Use o e-mail e a senha do seu cadastro.</p>
+      <div class="campo"><label for="e-email">E-mail</label>
+        <div class="in"><i data-ic="email"></i><input id="e-email" type="email" autocomplete="email" placeholder="seu@email.com" /></div></div>
+      <div class="campo"><label for="e-senha">Senha</label>
+        <div class="in"><i data-ic="cadeado"></i><input id="e-senha" type="password" autocomplete="current-password" /><button type="button" class="ver-senha" aria-label="Mostrar senha"><i data-ic="olho"></i></button></div></div>
+      <div class="linha-entre"><button type="button" id="btn-esqueci">Esqueci minha senha</button></div>
+      <button class="btn" type="submit" id="btn-entrar">Entrar</button>
+      <div class="ou">Ainda não tem conta?</div>
+      <a class="btn fantasma" href="#cadastro/1">Cadastrar meu restaurante</a>
+      <p class="rodape-txt so-cel">Cardápio Delivery</p>
+    </form>
 
-    <main class="content">
-      <!-- ===== view: Itens ===== -->
-      <section class="view" id="view-itens">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
-          <h1>Itens</h1>
-          <button class="btn primary" id="btn-novo-item">+ Adicionar</button>
-        </div>
-        <div class="card">
-          <div class="table-wrap">
-            <table>
-              <thead>
-                <tr><th>Nome</th><th>Criado em</th><th></th></tr>
-              </thead>
-              <tbody id="tbody-itens"></tbody>
-            </table>
-          </div>
-          <div id="empty-itens" class="empty-state" style="display:none;">
-            <div class="ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7z"/></svg></div>
-            <p>Nenhum item ainda. Toque em "+ Adicionar" para criar o primeiro.</p>
-          </div>
-        </div>
-      </section>
+    <!-- P02, P03 / PD02 Cadastro em dois passos -->
+    <form class="form" id="tela-cadastro" data-c="C cadastro" novalidate>
+      <div class="topo so-cel" data-c="C0 topo"><a class="voltar" href="#entrar" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Cadastrar restaurante</h1></div>
+      <div class="corpo">
+        <div class="passos-cad" data-c="C1 passos"><span id="passo-n">Passo 1 de 2</span><span class="barra"><i id="passo-barra"></i></span><span id="passo-nome">Seus dados</span></div>
 
-      <!-- ===== view: Painel ===== -->
-      <section class="view" id="view-painel">
-        <h1 style="margin-bottom:16px;">Painel</h1>
-        <div class="kpi-grid">
-          <div class="kpi-card">
-            <div class="valor num" id="kpi-total">0</div>
-            <div class="label">Itens cadastrados</div>
+        <fieldset class="passo" id="passo-1" data-c="C2 passo 1">
+          <h1>Quem vai cuidar do painel</h1>
+          <p class="sub">É a conta do dono. Depois você convida a equipe.</p>
+          <div class="campo"><label for="c-nome">Nome completo <i class="obrig">*</i></label><div class="in"><input id="c-nome" autocomplete="name" maxlength="80" /></div></div>
+          <div class="campo"><label for="c-email">E-mail <i class="obrig">*</i></label><div class="in"><i data-ic="email"></i><input id="c-email" type="email" autocomplete="email" /></div></div>
+          <div class="campo"><label for="c-whats">WhatsApp <i class="obrig">*</i></label><div class="in"><i data-ic="fone"></i><input id="c-whats" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div></div>
+          <div class="campo"><label for="c-senha">Senha <i class="obrig">*</i></label><div class="in"><i data-ic="cadeado"></i><input id="c-senha" type="password" autocomplete="new-password" /><button type="button" class="ver-senha" aria-label="Mostrar senha"><i data-ic="olho"></i></button></div>
+            <p class="ajuda">Pelo menos 8 caracteres.</p></div>
+          <div class="campo"><label for="c-senha2">Confirmar senha <i class="obrig">*</i></label><div class="in"><i data-ic="cadeado"></i><input id="c-senha2" type="password" autocomplete="new-password" placeholder="Digite de novo" /></div></div>
+        </fieldset>
+
+        <fieldset class="passo" id="passo-2" data-c="C3 passo 2">
+          <h1>Seu restaurante</h1>
+          <p class="sub">Dá para mudar tudo depois, nas configurações.</p>
+          <div class="campo"><label for="c-loja">Nome do restaurante <i class="obrig">*</i></label><div class="in"><i data-ic="loja"></i><input id="c-loja" maxlength="120" /></div></div>
+          <div class="campo"><label for="c-slug">Link do cardápio <i class="obrig">*</i></label><div class="in"><i data-ic="link"></i><input id="c-slug" maxlength="40" autocapitalize="off" spellcheck="false" /></div>
+            <p class="ajuda">Seus clientes abrem em <b id="c-link"></b></p></div>
+          <div class="dupla">
+            <div class="campo"><label for="c-cidade">Cidade <i class="obrig">*</i></label><div class="in"><input id="c-cidade" maxlength="60" placeholder="Belém - PA" /></div></div>
+            <div class="campo"><label for="c-bairro">Bairro <i class="obrig">*</i></label><div class="in"><input id="c-bairro" maxlength="60" /></div></div>
           </div>
-        </div>
-      </section>
-    </main>
-  </div>
+          <p class="ajuda">O bairro do restaurante tem a entrega de R$ 3,00; os outros bairros pagam pela distância.</p>
+          <label class="aceite"><input type="checkbox" id="c-aceite" /><span class="caixa"><i data-ic="check"></i></span><span>Li e aceito os termos de uso e a política de privacidade.</span></label>
+        </fieldset>
+      </div>
+      <div class="rodape" data-c="C4 rodapé">
+        <a class="btn fantasma so-pc" href="#cadastro/1" id="btn-voltar">Voltar</a>
+        <button class="btn" type="submit" id="btn-cadastro">Continuar</button>
+        <p class="ja so-cel" id="ja-tem">Já tem conta? <a href="#entrar">Entrar</a></p>
+      </div>
+    </form>
+
+    <!-- Depois do login: o painel ainda não tem imagem aprovada (PLANO.md, fase 4) -->
+    <section class="form" id="tela-painel" data-c="X provisório">
+      <h1 id="painel-loja"></h1>
+      <p class="sub">Conta criada e restaurante cadastrado. As telas do painel (pedidos, cardápio, configurações) são a próxima etapa.</p>
+      <p class="ajuda">Link do cardápio: <b id="painel-link"></b></p>
+      <button class="btn fantasma" type="button" id="btn-sair">Sair</button>
+    </section>
+  </main>
 </div>
 
-<script type="module" src="./painel.js?v=1"></script>
-<script>
-  if ("serviceWorker" in navigator) {
-    window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js"));
-  }
-</script>
+<script type="module" src="./painel.js?v=4"></script>
 </body>
 </html>

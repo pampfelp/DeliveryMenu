@@ -5,6 +5,8 @@
 // - Pedido do cliente (anônimo): só cria, e só numa antessala da loja
 //   (pedidosEntrada), no formato certo (crença 12). Ler, mudar e apagar é do dono.
 // - Pedidos já aceitos (pedidos): só o dono.
+// - Dados pessoais do dono (donos/{uid}): só o próprio dono.
+// - O id da loja é o link do cardápio (slug), então dois restaurantes não pegam o mesmo.
 // - Qualquer outro caminho: fechado.
 
 rules_version = '2';
@@ -21,7 +23,12 @@ service cloud.firestore {
     match /lojas/{lojaId} {
       allow read: if true;
       allow create: if logado() && request.resource.data.donoId == request.auth.uid
-        && texto(request.resource.data.nome, 120) && texto(request.resource.data.slug, 60);
+        && request.resource.data.keys().hasOnly(["nome", "slug", "cidade", "bairro", "cor", "logoUrl", "donoId", "criadoEm"])
+        && request.resource.data.slug == lojaId
+        && lojaId.matches("^[a-z0-9-]{3,40}$")
+        && texto(request.resource.data.nome, 120)
+        && texto(request.resource.data.cidade, 60)
+        && texto(request.resource.data.bairro, 60);
       allow update: if donoDa(lojaId) && request.resource.data.donoId == resource.data.donoId;
       allow delete: if donoDa(lojaId);
 
@@ -58,6 +65,17 @@ service cloud.firestore {
       match /pedidos/{id} {
         allow read, write: if donoDa(lojaId);
       }
+    }
+
+    match /donos/{uid} {
+      allow read: if logado() && request.auth.uid == uid;
+      allow create: if logado() && request.auth.uid == uid
+        && request.resource.data.keys().hasOnly(["nome", "email", "whatsapp", "lojaId", "criadoEm"])
+        && texto(request.resource.data.nome, 80)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.whatsapp.matches("^[0-9]{10,11}$");
+      allow update: if logado() && request.auth.uid == uid;
+      allow delete: if false;
     }
   }
 }

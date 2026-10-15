@@ -1,0 +1,122 @@
+/*
+  painel.css: entrada do painel do restaurante (imagens P01 a P03, PD01, PD02).
+  Os tokens vêm de tokens.css. A classe .esqueleto no body mostra só a
+  estrutura, para a revisão do passo 2; sai depois da aprovação.
+*/
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+button { font: inherit; background: none; border: 0; color: inherit; cursor: pointer; text-align: inherit; }
+a { color: inherit; text-decoration: none; }
+input { font: inherit; color: inherit; }
+fieldset { border: 0; min-width: 0; }
+[hidden] { display: none !important; }
+body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 20px; color: var(--text); background: var(--bg); -webkit-font-smoothing: antialiased; }
+svg.ic { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+@media (max-width: 1023px) { .so-pc { display: none !important; } }
+@media (min-width: 1024px) { .so-cel { display: none !important; } }
+body[data-tela="carregando"] .direita > * { visibility: hidden; }
+
+/* textos que só valem numa das telas */
+body:not([data-tela="entrar"]) .lema-entrar { display: none !important; }
+body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
+
+/* ===== marca ===== */
+.marca { display: flex; align-items: center; gap: 10px; color: #fff; }
+.selo-marca { width: 40px; height: 40px; border-radius: var(--r-md); background: rgba(255,255,255,.16); display: grid; place-items: center; }
+.selo-marca svg.ic { width: 22px; height: 22px; }
+.marca b { display: block; font-weight: 600; font-size: 20px; line-height: 24px; }
+.marca small { display: block; font-size: 13px; line-height: 18px; opacity: .85; }
+
+/* ===== formulário ===== */
+.form h1 { font-weight: 600; font-size: 22px; line-height: 30px; color: var(--text-strong); }
+.form .sub { margin-top: 4px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.campo { margin-top: 14px; }
+.campo label { display: block; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text); margin-bottom: 6px; }
+.obrig { font-style: normal; color: var(--danger); }
+.in { height: 48px; display: flex; align-items: center; gap: 10px; padding: 0 14px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); }
+.in:focus-within { border: 2px solid var(--accent); padding: 0 13px; }
+.in svg.ic { color: var(--text-muted); }
+.in input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font-size: 15px; color: var(--text-strong); }
+.in input::placeholder { color: var(--text-muted); opacity: 1; }
+.ver-senha { display: grid; place-items: center; color: var(--text-muted); }
+.ajuda { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.ajuda b { font-weight: 500; color: var(--text); word-break: break-all; }
+.linha-entre { display: flex; justify-content: flex-end; margin-top: 10px; }
+.linha-entre button { font-weight: 500; font-size: 14px; line-height: 20px; color: var(--accent); }
+.btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; border-radius: var(--r-md); background: var(--accent); color: var(--on-accent); font-weight: 500; font-size: 16px; line-height: 24px; text-align: center; }
+.btn.fantasma { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
+.btn.desligado { opacity: .5; pointer-events: none; }
+#tela-entrar .btn[type="submit"] { margin-top: 20px; }
+.ou { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; font-size: 13px; color: var(--text-muted); }
+.ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--border); }
+.passos-cad { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.passos-cad .barra { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
+.passos-cad .barra i { display: block; width: 50%; height: 100%; background: var(--accent); }
+.dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.dupla > * { min-width: 0; }
+.aceite { display: flex; gap: 10px; margin-top: 16px; font-size: 13px; line-height: 18px; color: var(--text); cursor: pointer; }
+.aceite input { position: absolute; opacity: 0; width: 1px; height: 1px; }
+.aceite .caixa { width: 20px; height: 20px; flex: none; border-radius: 4px; border: 2px solid var(--border-input); display: grid; place-items: center; color: transparent; }
+.aceite input:checked + .caixa { background: var(--accent); border-color: var(--accent); color: #fff; }
+.aceite input:focus-visible + .caixa { outline: 2px solid var(--accent); outline-offset: 2px; }
+.aceite .caixa svg.ic { width: 14px; height: 14px; stroke-width: 3; }
+.rodape-txt { margin-top: 18px; text-align: center; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.ja { margin-top: 10px; text-align: center; font-size: 13px; color: var(--text-muted); }
+.ja a { font-weight: 500; color: var(--accent); }
+
+/* toast e confirmação (shared.js) */
+#toast-container { position: fixed; left: 12px; right: 12px; bottom: 24px; z-index: 400; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+.toast { max-width: 420px; padding: 12px 16px; border-radius: var(--r-md); font-weight: 500; font-size: 14px; line-height: 20px; color: #fff; background: var(--text-strong); box-shadow: var(--shadow-raised); }
+.toast.sucesso { background: var(--success); }
+.toast.erro { background: var(--danger); }
+
+/* ===== celular (P01, P02, P03) ===== */
+@media (max-width: 1023px) {
+  .lado { height: 220px; padding: 56px 24px 0; background: var(--accent); }
+  .lado p { margin-top: 18px; max-width: 300px; color: #fff; font-size: 15px; line-height: 22px; opacity: .92; }
+  body:not([data-tela="entrar"]) .lado { display: none; }
+  #tela-entrar { margin: -40px 16px 24px; padding: 24px 20px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); }
+  #tela-entrar .rodape-txt { position: absolute; left: 0; right: 0; margin-top: 42px; }
+  body[data-tela="cadastro"], body[data-tela="painel"] { background: var(--surface); }
+  #tela-cadastro { min-height: 100vh; padding-bottom: 120px; }
+  #tela-cadastro .topo { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); }
+  #tela-cadastro .topo h1 { font-weight: 500; font-size: 18px; line-height: 28px; }
+  #tela-cadastro .topo .voltar { display: grid; place-items: center; color: var(--text-strong); }
+  #tela-cadastro .corpo { padding: 18px 20px 0; }
+  #tela-cadastro .rodape { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  #tela-painel { padding: 32px 20px; }
+  #tela-painel .btn { margin-top: 20px; }
+}
+
+/* ===== computador (PD01, PD02) ===== */
+@media (min-width: 1024px) {
+  .auth { min-height: 100vh; display: grid; grid-template-columns: 560px 1fr; }
+  .lado { display: flex; flex-direction: column; padding: 64px 56px; background: var(--accent); color: #fff; }
+  .lado h2 { margin-top: 120px; max-width: 420px; font-weight: 600; font-size: 32px; line-height: 40px; }
+  .lado p { margin-top: 16px; max-width: 400px; font-size: 16px; line-height: 24px; opacity: .92; }
+  .recursos { list-style: none; margin-top: 28px; display: grid; gap: 18px; }
+  .recursos li { display: flex; align-items: center; gap: 14px; font-size: 16px; line-height: 24px; opacity: .95; }
+  .recursos li span { width: 40px; height: 40px; flex: none; border-radius: var(--r-md); background: rgba(255,255,255,.14); display: grid; place-items: center; }
+  .lado .pe { margin-top: auto; font-size: 13px; line-height: 20px; opacity: .75; }
+  .direita { display: grid; place-items: center; padding: 32px; }
+  .direita > .form { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
+  #tela-entrar { width: 420px; padding: 36px 36px 32px; }
+  #tela-cadastro { width: 520px; padding: 32px 36px; }
+  #tela-painel { width: 520px; padding: 32px 36px; }
+  #tela-painel .btn { margin-top: 20px; }
+  #tela-cadastro .rodape { display: flex; gap: 12px; margin-top: 22px; }
+  #tela-cadastro .rodape .fantasma { width: 140px; flex: none; }
+  #tela-cadastro .rodape .btn[type="submit"] { flex: 1; }
+  #toast-container { left: auto; right: 24px; align-items: flex-end; }
+}
+
+/* ===== esqueleto (passo 2 do imagem-primeiro): só para a revisão ===== */
+.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
+.esqueleto .lado, .esqueleto .btn { background: #8a8a8a !important; }
+.esqueleto .lado *, .esqueleto .btn { color: #fff !important; }
+.esqueleto .btn.fantasma { background: #fff !important; color: #444 !important; }
+.esqueleto .in, .esqueleto .aceite .caixa { border-color: #aaa !important; }
+.esqueleto .passos-cad .barra i, .esqueleto .aceite input:checked + .caixa { background: #777 !important; border-color: #777 !important; }
+.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
+:where(.esqueleto [data-c]) { position: relative; }
+.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
