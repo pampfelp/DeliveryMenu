@@ -302,7 +302,8 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .lista-cab a { margin-left: auto; font-weight: 500; color: var(--accent); }
 .c-lista .foto { display: grid; place-items: center; border-radius: var(--r-sm); background: linear-gradient(135deg, #e5e7eb, #d1d5db); color: #9ca3af; object-fit: cover; flex: none; }
 .c-lista .foto svg.ic { width: 20px; height: 20px; stroke-width: 1.4; }
-.trilho { position: relative; flex: none; width: 36px; height: 22px; border-radius: 11px; background: var(--success); }
+.trilho { display: block; position: relative; flex: none; width: 36px; height: 22px; border-radius: 11px; background: var(--success); } /* em linha, perdia o tamanho */
+.disp-cel { flex: none; display: flex; }
 .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
 .off .trilho { background: #c4c8cf; }
 .off .trilho::after { right: 17px; }
@@ -318,11 +319,11 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .c-cab .fechar svg.ic { width: 18px; height: 18px; }
 .c-corpo-m { overflow-y: auto; }
 .c-janela .campo label { display: block; font-weight: 500; color: var(--text-muted); }
-.c-janela input:not([type="checkbox"]), .c-janela select, .c-janela textarea { width: 100%; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; background: var(--surface); font: inherit; font-size: 15px; color: var(--text-strong); outline: 0; }
+.c-janela input:not([type="checkbox"]), .c-janela select, .c-janela textarea { display: block; width: 100%; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; background: var(--surface); font: inherit; font-size: 15px; color: var(--text-strong); outline: 0; }
 .c-janela input:focus, .c-janela select:focus, .c-janela textarea:focus, .c-janela .in:focus-within { border: 2px solid var(--accent); padding: 0 11px; }
 .c-janela input:disabled { background: var(--surface-muted); color: var(--text-muted); }
 .c-janela select { appearance: none; background: var(--surface) url("data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 24 24%22 fill=%22none%22 stroke=%22%23666d7a%22 stroke-width=%221.8%22 stroke-linecap=%22round%22%3E%3Cpath d=%22m6 9 6 6 6-6%22/%3E%3C/svg%3E") no-repeat right 12px center / 20px; }
-.c-janela textarea { padding: 10px 12px; resize: none; font-size: 14px; line-height: 20px; }
+.c-janela textarea { display: block; padding: 10px 12px; resize: none; font-size: 14px; line-height: 20px; } /* em linha ganharia um vão embaixo */
 .c-janela textarea:focus { padding: 9px 11px; }
 .c-janela .in { display: flex; align-items: center; gap: 8px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; }
 .c-janela .in small { font-size: 15px; color: var(--text-muted); white-space: nowrap; }
@@ -403,19 +404,20 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .c-janela .sec { margin: 12px 12px 0; padding: 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
   .c-janela .sec-t { font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
   .c-janela .campo { margin-top: 12px; }
+  .c-janela .sec > .campo:first-child { margin-top: 0; }
   .c-janela .campo label { font-size: 12px; line-height: 16px; margin-bottom: 4px; }
   .c-janela input:not([type="checkbox"]), .c-janela select, .c-janela .in { height: 44px; }
   .c-janela textarea { height: 84px; }
   .foto-env { width: 100%; height: 150px; }
   .tirar-foto { display: block; margin: 8px auto 0; }
-  .campos { display: grid; grid-template-columns: 1fr 1fr; column-gap: 10px; }
+  .campos { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); column-gap: 10px; } /* o campo de preço tem largura mínima própria */
   .campos > .campo:nth-child(-n+3) { grid-column: 1 / -1; }
+  .campos > .campo:nth-child(n+4) { margin-top: 14px; } /* preço e promocional, como na dupla da imagem */
   .chip-s { height: 34px; border-radius: 17px; }
   .como .marcar, .como .disp-m { width: 100%; min-height: 44px; margin-top: 8px; border-top: 1px solid var(--border); gap: 10px; text-align: left; }
   .como .disp-m > span:first-child { flex: 1; }
   .adic .adic-cab { display: none; }
   .adic .grupo-r { padding: 10px 0; border-top: 1px solid var(--border); }
-  .adic .grupo-r:first-child { border-top: 0; }
   .adic .grupos::before { content: "Adicionais"; display: block; font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
   .adic .add { margin-top: 6px; }
   .c-janela .excluir.so-cel { justify-content: center; width: calc(100% - 24px); height: 44px; margin: 20px 12px 0; }
@@ -424,15 +426,16 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .c-pe .excluir { flex: none; }
   .grade-g > .campo:first-child { margin-top: 0; }
   .grade-g .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .grade-g .dupla .campo { margin-top: 14px; }
+  .ops .adic-cab { margin-bottom: 8px; }
+  .ops .adic-cab b { font-size: 12px; line-height: 16px; }
   .seg button { height: 36px; }
   .op { padding: 10px 0; border-top: 1px solid var(--border); }
-  .op:first-child { border-top: 0; padding-top: 0; }
   .op .l2 { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
   .op .l2 .in { width: 130px; flex: none; }
   .op .disp-m { flex: 1; justify-content: flex-end; font-size: 13px; }
   .ops .add { margin-top: 6px; }
   .cat-l { display: flex; align-items: center; gap: 10px; height: 52px; border-top: 1px solid var(--border); font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
-  .cat-l:first-child { border-top: 0; }
   .cat-l .alca svg.ic { width: 18px; height: 18px; }
   .cat-l .c-n { flex: 1; min-width: 0; }
   .cat-l small { font-weight: 400; font-size: 13px; color: var(--text-muted); margin-right: 4px; }
@@ -487,7 +490,6 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .c-cab { padding: 18px 24px; }
   .c-cab h2 { font-weight: 600; font-size: 20px; line-height: 28px; }
   .c-corpo-m { padding: 20px 24px; }
-  .c-janela .campo { margin-top: 0; } /* .campo do login traz 14px */
   .c-janela .campo label { font-size: 13px; line-height: 18px; margin-bottom: 6px; }
   .c-janela input:not([type="checkbox"]), .c-janela select, .c-janela .in { height: 42px; }
   .c-janela textarea { height: 62px; }
@@ -496,13 +498,13 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .tirar-foto { grid-column: 1; margin-top: 8px; justify-self: center; }
   .campos { grid-column: 2; grid-row: 1 / 3; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
   .campos .larga { grid-column: 1 / -1; }
-  .como { display: flex; align-items: center; gap: 16px; margin-top: 16px; }
+  .como { display: flex; align-items: center; gap: 24px; margin-top: 16px; }
   .como .rot { font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text-muted); }
   .como .chip-s { height: 32px; border-radius: 16px; }
-  .como .marcar { gap: 8px; margin-left: 8px; }
+  .como .marcar { gap: 8px; }
   .como .disp-m { margin-left: auto; }
   .adic { margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
-  .adic .grupo-r { padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 8px; }
+  .adic .grupo-r { min-height: 63px; padding: 10px 12px; border: 1px solid var(--border); border-radius: var(--r-md); margin-bottom: 8px; } /* na imagem o selo engrossa a linha em 1px */
   .adic .add { margin-top: 2px; }
   .c-pe { padding: 14px 24px; border-top: 1px solid var(--border); }
   .c-pe .fantasma { margin-left: auto; color: var(--text); }
@@ -519,13 +521,3 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .op .disp-m { justify-content: flex-end; font-size: 13px; }
   .ops .add { margin: 8px 0 0 28px; }
 }
-
-/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .barra-topo, .esqueleto .btn:not(.fantasma), .esqueleto .cont.forte, .esqueleto .cat.on .cont { background: #8a8a8a !important; }
-.esqueleto .barra-topo *, .esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
-.esqueleto .barra-topo .novo-item, .esqueleto .barra-topo .novo-item * { color: #444 !important; }
-.esqueleto .trilho, .esqueleto .marca-i, .esqueleto .selo-m, .esqueleto .chip-s.on, .esqueleto .cat.on { background: #ddd !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
