@@ -52,4 +52,4 @@ F50 Várias lojas no mesmo sistema com endereço próprio por loja,plataforma,mu
 F51 Cor da loja configurável,plataforma,should,yes,partial,a loja tem uma cor própria nos dados
 F52 Modos do cardápio por endereço: só visualização mesa balcão e totem,plataforma,could,yes,no,lido no código (P8)
 F53 Instalável como app (service worker),plataforma,must,yes,no,REA P8; crença 39
-F54 Login e cadastro do dono com a loja criada pelo próprio app,painel,must,no,partial,feito em 2026-10-15; falta o primeiro cadastro de verdade e a recuperação de senha testada
+F54 Login e cadastro do dono com a loja criada pelo próprio app,painel,must,no,partial,feito em 2026-10-15; primeiro cadastro real feito por ele no mesmo dia (loja casa-jambu-delivery gravada certa); falta testar a recuperação de senha

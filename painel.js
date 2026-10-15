@@ -35,7 +35,10 @@ function mensagemErro(err) {
 /* ===== navegação por hash: #entrar, #cadastro/1, #cadastro/2, #painel ===== */
 function irParaHash() {
   let [tela, passo] = (location.hash.slice(1) || "entrar").split("/");
-  if (STATE.user) tela = "painel";
+  if (STATE.user) {
+    tela = "painel";
+    if (location.hash !== "#painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
+  }
   else if (!["entrar", "cadastro"].includes(tela)) tela = "entrar";
   if (tela === "cadastro") {
     STATE.passo = passo === "2" && passo1Valido(false) ? 2 : 1;
