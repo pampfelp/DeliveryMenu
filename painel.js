@@ -39,6 +39,8 @@ function irParaHash() {
   else if (!["entrar", "cadastro"].includes(tela)) tela = "entrar";
   if (tela === "cadastro") {
     STATE.passo = passo === "2" && passo1Valido(false) ? 2 : 1;
+    // passo 2 sem o passo 1 feito volta para o 1, e o endereço acompanha
+    if (passo === "2" && STATE.passo === 1) history.replaceState(null, "", "#cadastro/1");
     renderPasso();
   }
   document.body.dataset.tela = tela;

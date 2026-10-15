@@ -1,7 +1,6 @@
 /*
   painel.css: entrada do painel do restaurante (imagens P01 a P03, PD01, PD02).
-  Os tokens vêm de tokens.css. A classe .esqueleto no body mostra só a
-  estrutura, para a revisão do passo 2; sai depois da aprovação.
+  Os tokens vêm de tokens.css.
 */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -47,7 +46,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .btn.fantasma { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
 .btn.desligado { opacity: .5; pointer-events: none; }
 #tela-entrar .btn[type="submit"] { margin-top: 20px; }
-.ou { display: flex; align-items: center; gap: 12px; margin: 22px 0 14px; font-size: 13px; color: var(--text-muted); }
+.ou { display: flex; align-items: center; gap: 12px; margin: 22px 0 20px; font-size: 13px; color: var(--text-muted); }
 .ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .passos-cad { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text-muted); }
 .passos-cad .barra { flex: 1; height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; }
@@ -109,14 +108,3 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   #tela-cadastro .rodape .btn[type="submit"] { flex: 1; }
   #toast-container { left: auto; right: 24px; align-items: flex-end; }
 }
-
-/* ===== esqueleto (passo 2 do imagem-primeiro): só para a revisão ===== */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .lado, .esqueleto .btn { background: #8a8a8a !important; }
-.esqueleto .lado *, .esqueleto .btn { color: #fff !important; }
-.esqueleto .btn.fantasma { background: #fff !important; color: #444 !important; }
-.esqueleto .in, .esqueleto .aceite .caixa { border-color: #aaa !important; }
-.esqueleto .passos-cad .barra i, .esqueleto .aceite input:checked + .caixa { background: #777 !important; border-color: #777 !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
