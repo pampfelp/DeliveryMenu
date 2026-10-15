@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=15" />
+<link rel="stylesheet" href="./loja.css?v=16" />
 </head>
 <body>
 <div id="app">
@@ -34,6 +34,8 @@
             </div>
           </div>
         </header>
+        <div class="aviso-fechada" hidden><i data-ic="relogio"></i><span><b>Não estamos recebendo pedidos agora</b>Você pode olhar o cardápio e montar a sacola. O envio volta quando o restaurante abrir.</span></div>
+        <div class="vazio-cardapio" id="vazio-cardapio" hidden>O cardápio deste restaurante ainda está sendo montado.</div>
         <button class="linha-taxa so-cel"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
         <div class="filtros">
           <button class="sel"><span>Categorias</span><i data-ic="baixo"></i></button>
@@ -89,6 +91,28 @@
     </div>
   </section>
 
+  <!-- S09 / D09 Seus dados (pula quando já estão guardados no aparelho) -->
+  <section class="tela checkout" id="tela-dados">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Seus dados</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <h2>Para o restaurante falar com você</h2>
+          <p class="sub">Só usamos para avisar sobre este pedido.</p>
+          <div class="dados-grade">
+            <div class="campo"><label for="c-nome">Nome <i class="obrig">*</i></label><div class="in"><i data-ic="user"></i><input id="c-nome" maxlength="80" autocomplete="name" /></div></div>
+            <div class="campo"><label for="c-fone">WhatsApp <i class="obrig">*</i></label><div class="in"><i data-ic="fone"></i><input id="c-fone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div>
+              <p class="ajuda">Com DDD. O restaurante chama aqui se precisar.</p></div>
+          </div>
+        </div>
+        <div class="guardar"><i data-ic="info"></i><span>Fica guardado neste aparelho. No próximo pedido você não precisa digitar de novo.</span></div>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Continuar" data-destino="#entrega"></aside>
+    </div>
+    <div class="rodape so-cel"><a class="btn" href="#entrega">Continuar</a></div>
+  </section>
+
   <!-- S12 / D12 Entrega -->
   <section class="tela checkout" id="tela-entrega">
     <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
@@ -106,12 +130,12 @@
         <div class="bloco so-entrega">
           <h2>Endereço de entrega</h2>
           <div class="end-grade">
-            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" value="66000-000" /><button class="so-cel">Buscar CEP</button></div></div>
-            <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" value="Travessa das Flores" /></div>
-            <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" value="120" /></div>
-            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" value="Centro" list="lista-bairros" autocomplete="off" /><datalist id="lista-bairros"></datalist></div>
-            <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" placeholder="Apto" /></div>
-            <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" value="Em frente à praça" /></div>
+            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" placeholder="00000-000" /><button class="so-cel">Buscar CEP</button></div></div>
+            <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" maxlength="120" autocomplete="address-line1" /></div>
+            <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" maxlength="10" /></div>
+            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" maxlength="60" list="lista-bairros" autocomplete="off" /><datalist id="lista-bairros"></datalist></div>
+            <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" maxlength="60" placeholder="Apto" /></div>
+            <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" maxlength="120" /></div>
             <div class="a-loc acoes-end"><button class="loc"><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc">Buscar pelo CEP</button></div>
           </div>
         </div>
@@ -130,6 +154,7 @@
     <div class="check-grade">
       <div class="check-main">
         <div class="bloco">
+          <h2 id="titulo-na-entrega" hidden>Pagar na entrega</h2>
           <div class="abas" id="abas-pagamento"><button data-aba="online">Pagar online</button><button data-aba="entrega">Pagar na entrega</button></div>
           <div class="formas" id="formas"></div>
         </div>
@@ -140,33 +165,34 @@
         </div>
         <div class="entrega-resumo so-pc" id="entrega-resumo"></div>
       </div>
-      <aside class="resumo-lateral so-pc" data-resumo="Revisar pedido" data-destino="#enviado"></aside>
+      <aside class="resumo-lateral so-pc" data-resumo="Revisar pedido" data-destino="#revisar"></aside>
     </div>
-    <div class="rodape so-cel"><a class="btn" href="#enviado" data-enviar>Revisar pedido</a></div>
+    <div class="rodape so-cel"><a class="btn" href="#revisar">Revisar pedido</a></div>
   </section>
 
-  <!-- S16 / D16 Pedido enviado -->
-  <section class="tela" id="tela-enviado">
+  <!-- S15 / D15 Revisar e enviar -->
+  <section class="tela checkout" id="tela-revisar">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#pagamento" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Revisar pedido</h1></div>
+    <div class="check-grade">
+      <div class="check-main" id="revisar-main"></div>
+      <aside class="resumo-lateral revisar-lado so-pc" id="revisar-lado"></aside>
+    </div>
+    <div class="rodape so-cel"><button class="btn enviar" data-enviar></button></div>
+  </section>
+
+  <!-- S16 a S18 / D16 a D18 Acompanhar o pedido: #pedido/<id> -->
+  <section class="tela" id="tela-pedido">
     <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
     <div class="topo-x so-cel"><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
-    <div class="cartao-ok">
-      <div class="ok"><div class="selo-ok"><i data-ic="check"></i></div><h1>Pedido enviado!</h1><p>O restaurante já recebeu seu pedido e vai começar a preparar.</p></div>
-      <div class="num"><div><small>Pedido</small><b id="pedido-numero">#1048</b></div><div><small>Previsão de entrega</small><b id="pedido-previsao">19h40 - 19h50</b></div></div>
-      <ol class="passos">
-        <li class="feito"><i data-ic="check" class="marca"></i>Pedido recebido <small id="pedido-hora">19h05</small></li>
-        <li class="atual">Em preparo <small>Aguardando o restaurante confirmar</small></li>
-        <li>Saiu para entrega</li>
-        <li>Entregue</li>
-      </ol>
-      <div class="rodape duplo"><button class="btn fantasma"><i data-ic="conversa"></i>Falar com o restaurante</button><a class="btn" href="#inicio">Acompanhar pedido</a></div>
-    </div>
+    <div class="cartao-ok" id="acompanhar"></div>
   </section>
 
   <nav class="nav">
-    <a href="#inicio" class="on"><i data-ic="home"></i>Início</a><a href="#inicio"><i data-ic="promo"></i>Promoções</a><a href="#inicio"><i data-ic="sacola"></i>Pedidos</a><a href="#inicio"><i data-ic="user"></i><span class="so-cel">Perfil</span><span class="so-pc">Entrar</span></a>
+    <a href="#inicio" class="on"><i data-ic="home"></i>Início</a><a href="#inicio"><i data-ic="promo"></i>Promoções</a><a href="#pedido"><i data-ic="sacola"></i>Pedidos</a><a href="#inicio"><i data-ic="user"></i><span class="so-cel">Perfil</span><span class="so-pc">Entrar</span></a>
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=13"></script>
+<script type="module" src="./app.js?v=14"></script>
 </body>
 </html>

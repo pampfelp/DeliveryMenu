@@ -152,7 +152,7 @@ body[data-tela="inicio"] .nav { display: grid; }
 /* ===== camada 1: fundo ===== */
 body { background: var(--bg); }
 .cabeca .faixa { background: var(--accent); }
-#tela-produto, #tela-sacola, #tela-enviado { background: var(--surface); }
+#tela-produto, #tela-sacola { background: var(--surface); }
 .topo, .nav, .rodape, .totais { background: var(--surface); }
 
 /* ===== camada 2: cartões, blocos e controles ===== */
@@ -224,7 +224,7 @@ body { background: var(--bg); }
 .passos li::after { content: ""; position: absolute; left: 0; top: 0; width: 24px; height: 24px; box-sizing: border-box; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); }
 .passos li.feito::after { background: var(--success); border-color: var(--success); }
 .passos li.atual::after { border-color: var(--accent); background: radial-gradient(circle, var(--accent) 0 5px, var(--surface) 5.5px); }
-#tela-enviado .rodape { box-shadow: none; background: transparent; }
+
 
 /* ===== camada 3: imagens e ícones ===== */
 svg.ic { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
@@ -488,7 +488,7 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
   .entrega-resumo a { font-weight: 500; color: var(--accent); }
 
   /* D16 pedido enviado */
-  #tela-enviado { background: var(--bg); }
+
   .cartao-ok { width: 560px; margin: 40px auto 0; padding: 32px 32px 24px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
   .cartao-ok .selo-ok { margin: 0 auto; }
   .cartao-ok .ok h1 { font-size: 24px; line-height: 32px; }
@@ -510,4 +510,104 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
   .sem-logo .cabeca { padding-top: 0; }
   .sem-logo .cabeca-txt { padding-bottom: 0; }
   .sem-logo .sacola-lateral { margin-top: 0; }
+}
+
+/* ===== pedido de verdade: S09, S14b, S15 a S18, S01b, S08b (e D09 a D18, D01b) ===== */
+.nao-achou { margin: 64px 24px; text-align: center; font-size: 15px; line-height: 22px; color: var(--text-muted); }
+.vazio-cardapio { margin: 24px 12px; text-align: center; color: var(--text-muted); }
+.situacao.fechada { color: var(--danger); }
+.aviso-fechada { display: flex; gap: 10px; margin: 12px 12px 0; padding: 12px 14px; border-radius: var(--r-md); background: #fef2f2; font-size: 13px; line-height: 18px; color: var(--text); }
+.aviso-fechada svg.ic { width: 18px; height: 18px; margin-top: 1px; color: var(--danger); }
+.aviso-fechada b { display: block; font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-strong); }
+.btn.fechada { background: var(--bg); color: var(--text-muted); cursor: default; }
+.btn.fechada svg.ic { color: var(--text-muted); }
+
+/* S09 seus dados */
+#tela-dados .bloco h2 { margin-bottom: 0; }
+#tela-dados .sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+#tela-dados .campo { margin-top: 12px; }
+.campo .in { display: flex; align-items: center; gap: 10px; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); }
+.campo .in:focus-within { border: 2px solid var(--accent); padding: 0 11px; }
+.campo .in svg.ic { color: var(--text-muted); }
+.campo .in input { flex: 1; min-width: 0; height: 100%; padding: 0; border: 0; outline: 0; background: transparent; font-size: 15px; color: var(--text-strong); }
+.ajuda { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.guardar { display: flex; gap: 10px; margin: 0 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.guardar svg.ic { width: 18px; height: 18px; margin-top: 1px; color: var(--text-muted); }
+
+/* S15 revisar */
+#tela-revisar { padding-bottom: 100px; }
+.sec { margin: 10px 12px 0; padding: 12px 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+#revisar-main > .sec:first-child { margin-top: 12px; }
+.sec-t { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.sec-t span { font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+.sec-t a { font-weight: 500; font-size: 13px; line-height: 18px; color: var(--accent); }
+.sec .linha { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+.sec .linha b { font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-strong); }
+.sec .linha b span { color: var(--text-muted); margin-right: 4px; }
+.sec .linha p { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.sec .linha .v { font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-strong); white-space: nowrap; }
+.sec .info { display: flex; gap: 10px; padding: 0; } /* .info também é o título do produto (S04) */
+.sec .info svg.ic { margin-top: 2px; color: var(--text-muted); }
+.sec .info b { display: block; font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-strong); }
+.sec .info p { margin-top: 0; font-size: 13px; line-height: 18px; color: var(--text); }
+.sec .info p.ok { font-weight: 500; color: var(--success); text-align: left; }
+.troco { display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; margin-top: 10px; }
+.troco .in { display: flex; align-items: center; height: 40px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); }
+.troco .in:focus-within { border: 2px solid var(--accent); padding: 0 11px; }
+.troco .in small { margin-right: 6px; font-size: 14px; color: var(--text-muted); }
+.troco .in input { flex: 1; min-width: 0; border: 0; outline: 0; background: transparent; font-size: 14px; color: var(--text-strong); }
+.sem-troco { padding: 0 4px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--accent); }
+.sec .tl { line-height: 22px; }
+.sec .tl.total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); font-size: 17px; line-height: 26px; }
+.btn.enviar { width: 100%; justify-content: space-between; padding: 0 20px; }
+.btn.enviar span:only-child { margin: 0 auto; }
+
+/* S16 a S18 acompanhar */
+#tela-pedido { background: var(--surface); }
+#tela-pedido .rodape { box-shadow: none; background: transparent; }
+.selo-ok.espera { background: var(--info-bg); color: var(--info); }
+.selo-ok.nao { background: #fef2f2; color: var(--danger); }
+.num b.espera { font-weight: 500; font-size: 15px; color: var(--text-muted); }
+.passos li.nao { color: var(--danger); }
+.passos li.nao::after { background: var(--danger); border-color: var(--danger); }
+.fica { display: flex; gap: 8px; margin: 12px 16px 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.fica svg.ic { width: 16px; height: 16px; }
+.rodape.duplo.um { grid-template-columns: 1fr; }
+
+@media (min-width: 1024px) {
+  .aviso-fechada { gap: 12px; margin: 20px 0 0; padding: 14px 16px; font-size: 14px; line-height: 20px; }
+  .aviso-fechada svg.ic { width: 20px; height: 20px; }
+  .aviso-fechada b { font-size: 15px; line-height: 22px; }
+  .vazio-cardapio { margin: 24px 0; text-align: left; }
+
+  #tela-dados .bloco h2 { margin-bottom: 12px; }
+  #tela-dados .sub { margin: -8px 0 16px; font-size: 14px; line-height: 20px; }
+  .dados-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+  #tela-dados .campo { margin-top: 0; }
+  #tela-dados .campo label { font-size: 13px; line-height: 18px; margin-bottom: 6px; }
+  .campo .in { height: 48px; padding: 0 14px; }
+  .campo .in:focus-within { padding: 0 13px; }
+  .guardar { margin: 0; padding: 14px 16px; font-size: 14px; line-height: 20px; }
+
+  #tela-revisar { padding-bottom: 48px; }
+  .sec { margin: 0 0 14px; padding: 18px 20px; }
+  #revisar-main > .sec:first-child { margin-top: 0; }
+  .sec-t { margin-bottom: 8px; }
+  .sec-t span { font-size: 13px; line-height: 18px; }
+  .sec-t a { font-size: 14px; line-height: 20px; }
+  .sec .info { gap: 12px; }
+  .sec .info b { font-size: 15px; line-height: 22px; }
+  .sec .info p { font-size: 14px; line-height: 20px; }
+  .troco { display: flex; gap: 16px; margin: 12px 0 0 32px; }
+  .troco .in { width: 220px; height: 48px; padding: 0 14px; }
+  .troco .in:focus-within { padding: 0 13px; }
+  .troco .in small, .troco .in input { font-size: 15px; }
+  .sem-troco { padding: 0; font-size: 14px; line-height: 20px; }
+  .revisar-lado .h { display: flex; justify-content: space-between; align-items: center; }
+  .revisar-lado .h a { margin-bottom: 10px; font-weight: 500; font-size: 14px; line-height: 20px; color: var(--accent); }
+  .revisar-lado .btn.enviar { padding: 0 18px; }
+
+  #tela-pedido { background: var(--bg); }
+  .fica { margin: 12px 0 0; font-size: 13px; line-height: 18px; }
+  .fica svg.ic { margin-top: 1px; }
 }

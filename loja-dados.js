@@ -1,0 +1,63 @@
+/*
+  loja-dados.js: de onde a loja tira os dados.
+
+  Com ?loja=<link> na URL, lê o restaurante no Firestore (lojas/{link} e as
+  subcoleções categorias, itens e bairros). Sem ?loja=, usa os dados de
+  exemplo e nada sai do aparelho.
+
+  Formato no Firestore (o editor de cardápio do painel vai gravar assim):
+    categorias/{id}  nome, ordem
+    itens/{id}       categoriaId, nome, descricao, preco, precoPromo, selo,
+                     destaque, esgotado, fotoUrl, grupos[], ordem
+    bairros/{id}     nome, lat, lng
+*/
+
+import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=6";
+
+// mesmos valores da decisão dele (2026-10-15), para loja que ainda não configurou a entrega
+const ENTREGA_PADRAO = { taxaBairro: 300, porKm: 150, arredondar: 50, raioMaxKm: 10, minutosBase: 25, minutosPorKm: 4 };
+
+export const SLUG = new URLSearchParams(location.search).get("loja");
+
+export async function carregarLoja() {
+  // loja de exemplo; ?exemplo=fechada e ?exemplo=na-entrega mostram os estados das imagens S01b e S14b
+  const ex = new URLSearchParams(location.search).get("exemplo");
+  if (!SLUG) return {
+    real: false, BAIRROS, CATEGORIAS, SUGESTOES,
+    LOJA: { ...LOJA, aberta: ex !== "fechada", pagamentoOnline: ex !== "na-entrega", whatsapp: "91900000000" },
+  };
+
+  const { db } = await import("./firebase-init.js?v=2");
+  const { doc, getDoc, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
+  const lojaSnap = await getDoc(doc(db, "lojas", SLUG));
+  if (!lojaSnap.exists()) return null;
+  const d = lojaSnap.data();
+  const [cats, itens, bairros] = await Promise.all(
+    ["categorias", "itens", "bairros"].map((c) => getDocs(collection(db, "lojas", SLUG, c)))
+  );
+  const porOrdem = (a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome));
+  const todosItens = itens.docs.map((x) => ({ id: x.id, descricao: "", fotoUrl: "", grupos: [], ...x.data() })).sort(porOrdem);
+  return {
+    real: true,
+    LOJA: {
+      id: SLUG,
+      slug: SLUG,
+      nome: d.nome,
+      cidade: d.cidade || "",
+      cor: d.cor || "#991b1b",
+      logoUrl: d.logoUrl || "",
+      bairro: d.bairro || "",
+      local: d.local || null,
+      entrega: { ...ENTREGA_PADRAO, ...(d.entrega || {}) },
+      aberta: d.aberta !== false,
+      whatsapp: d.whatsapp || "",
+      // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
+      pagamentoOnline: false,
+    },
+    BAIRROS: bairros.docs.map((x) => x.data()).filter((b) => b.nome),
+    CATEGORIAS: cats.docs.map((x) => ({ id: x.id, ...x.data() })).sort(porOrdem)
+      .map((c) => ({ ...c, itens: todosItens.filter((i) => i.categoriaId === c.id) }))
+      .filter((c) => c.itens.length),
+    SUGESTOES: d.sugestoes || [],
+  };
+}

@@ -4,7 +4,9 @@
 // - Cardápio, bairros e dados da loja: qualquer um lê; só o dono da loja escreve.
 // - Pedido do cliente (anônimo): só cria, e só numa antessala da loja
 //   (pedidosEntrada), no formato certo (crença 12). Ler, mudar e apagar é do dono.
-// - Pedidos já aceitos (pedidos): só o dono.
+// - Pedidos já aceitos (pedidos): o dono lê a lista e escreve.
+// - O cliente acompanha o próprio pedido lendo pelo id (get, nunca a lista).
+//   O id é aleatório e funciona como senha do pedido (decisão dele, 2026-10-15).
 // - Dados pessoais do dono (donos/{uid}): só o próprio dono.
 // - O id da loja é o link do cardápio (slug), então dois restaurantes não pegam o mesmo.
 // - Qualquer outro caminho: fechado.
@@ -45,9 +47,12 @@ service cloud.firestore {
         allow write: if donoDa(lojaId);
       }
 
-      // antessala: o cliente cria, o painel lê e move para "pedidos"
+      // antessala: o cliente cria, o painel lê e move para "pedidos" com o mesmo id.
+      // Loja pausada no painel (aberta == false) não recebe pedido. O cliente nunca
+      // marca o pedido como pago: isso vem do provedor de pagamento, pelo servidor.
       match /pedidosEntrada/{id} {
         allow create: if exists(/databases/$(database)/documents/lojas/$(lojaId))
+          && get(/databases/$(database)/documents/lojas/$(lojaId)).data.get("aberta", true) != false
           && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm"])
           && request.resource.data.status == "novo"
           && request.resource.data.criadoEm == request.time
@@ -58,12 +63,16 @@ service cloud.firestore {
           && centavos(request.resource.data.taxa)
           && request.resource.data.total == request.resource.data.subtotal + request.resource.data.taxa
           && texto(request.resource.data.cliente.nome, 80)
-          && texto(request.resource.data.cliente.telefone, 20);
-        allow read, update, delete: if donoDa(lojaId);
+          && texto(request.resource.data.cliente.telefone, 20)
+          && request.resource.data.pagamento is map
+          && request.resource.data.pagamento.get("pago", false) == false;
+        allow get: if true;
+        allow list, update, delete: if donoDa(lojaId);
       }
 
       match /pedidos/{id} {
-        allow read, write: if donoDa(lojaId);
+        allow get: if true;
+        allow list, write: if donoDa(lojaId);
       }
     }
 
