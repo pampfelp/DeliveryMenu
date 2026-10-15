@@ -12,8 +12,8 @@ export const LOJA = {
   logoUrl: "",
   situacao: { aberta: true, texto: "Aberto agora • Fecha às 23h00" },
   // Taxa de entrega (decisão dele, 2026-10-15): R$ 3 no bairro do restaurante e,
-  // nos outros, R$ 3 mais um valor por km de distância até o bairro, arredondado
-  // para cima em R$ 0,50. Os valores e a lista de bairros vêm do painel.
+  // nos outros, R$ 3 mais R$ 1,50 por km até o bairro, arredondado para cima em
+  // R$ 0,50, até 10 km. Os valores e a lista de bairros vêm do painel.
   bairro: "Centro",
   local: { lat: -1.4500, lng: -48.4900 },
   entrega: { taxaBairro: 300, porKm: 150, arredondar: 50, raioMaxKm: 10, minutosBase: 25, minutosPorKm: 4 },

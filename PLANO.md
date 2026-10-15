@@ -67,9 +67,10 @@ Todas lidas no original e descritas em `rea/ACHADOS.md`.
 - Taxa e tempo de entrega: **feito no app em 2026-10-15** com a regra dele.
   R$ 3,00 no bairro do restaurante; nos outros, R$ 3,00 mais R$ 1,50 por km
   em linha reta até o centro do bairro, arredondado para cima em R$ 0,50;
-  fora da lista ou acima de 10 km, "ainda não entregamos". O R$ 1,50 por
-  km, o arredondamento e o raio são proposta e ficam editáveis no painel;
-  a lista de bairros com o ponto de cada um também vem do painel.
+  fora da lista ou acima de 10 km, "ainda não entregamos". Valores
+  confirmados por ele em 2026-10-15 e editáveis por loja no painel; a lista
+  de bairros com o ponto de cada um também vem do painel. O tempo estimado
+  (25 min + 4 min por km, faixa de 10 min) ainda é proposta minha.
 - Pedido mínimo, entrega grátis a partir de um valor, cupom.
 - Mensagem pronta para o WhatsApp da loja (P6).
 
@@ -126,7 +127,8 @@ fechada.
 ## Decisões dele (2026-10-15)
 
 1. Firebase: criar agora, pela conta dele, no navegador do app.
-2. Taxa: R$ 3 no mesmo bairro, escalonando pela distância dos outros bairros.
+2. Taxa: R$ 3 no mesmo bairro, escalonando pela distância dos outros
+   bairros: R$ 1,50 por km, arredondado para cima em R$ 0,50, até 10 km.
 3. Pagamento online: o que o restaurante preferir, começando pelo Mercado
    Pago.
 4. Sem logo: o espaço some, como se não houvesse lugar para logo.
@@ -134,5 +136,5 @@ fechada.
 
 ## Ainda em aberto
 
-- Confirmar o valor por km (R$ 1,50), o arredondamento (R$ 0,50) e o raio
-  máximo (10 km) da taxa.
+- Tempo estimado de entrega: hoje 25 min mais 4 min por km, numa faixa de
+  10 min. Proposta minha, a confirmar quando o painel existir.
