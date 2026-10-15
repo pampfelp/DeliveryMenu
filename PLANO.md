@@ -139,6 +139,9 @@ fechada.
    Pago.
 4. Sem logo: o espaço some, como se não houvesse lugar para logo.
 5. Nome do app: Cardápio Delivery.
+6. Pedido que acabou de chegar aparece como "Novo" até ser aceito; o
+   número sai no aceite, pelo contador da loja. As imagens PD10, PD11, P10
+   e P11 mostram "#1051" e ficam assim, com essa diferença aceita.
 
 ## Ainda em aberto
 
