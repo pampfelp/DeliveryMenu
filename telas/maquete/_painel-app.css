@@ -1,0 +1,38 @@
+/* Partes comuns das maquetes do painel por dentro (pedidos e o que vier). */
+@import url("_painel.css?v=1");
+
+/* cartão de pedido */
+.ped { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px; }
+.ped.novo { border-left: 4px solid var(--accent); padding-left: 10px; box-shadow: var(--shadow-card); }
+.ped .l1 { display: flex; align-items: center; gap: 8px; }
+.ped .num { font: 600 15px/20px Rubik; color: var(--text-strong); }
+.ped .hora { font-size: 13px; color: var(--text-muted); }
+.ped .tipo { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font: 500 12px/16px Rubik; color: var(--text-muted); }
+.ped .tipo svg.ic { width: 16px; height: 16px; }
+.ped .cli { margin-top: 6px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+.ped .itens { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.ped .l3 { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin-top: 8px; }
+.ped .total, .pag, .ped .tempo { white-space: nowrap; }
+.ped .total { font: 600 15px/20px Rubik; color: var(--text-strong); }
+.pag { font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; }
+.pag.pago { color: var(--success); background: var(--success-bg); }
+.pag.receber { color: var(--warning); background: #fffbeb; }
+.pag.cancelado { color: var(--danger); background: #fef2f2; }
+.ped .tempo { margin-left: auto; font-size: 12px; color: var(--text-muted); }
+.ped .tempo.atrasado { color: var(--danger); font-weight: 500; }
+.ped .acao { margin-top: 10px; height: 38px; font-size: 14px; }
+.ped.feito { opacity: .8; }
+
+/* chave de loja aberta */
+.chave { display: inline-flex; align-items: center; gap: 10px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+.chave .trilho { width: 40px; height: 24px; border-radius: 12px; background: var(--success); position: relative; }
+.chave .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+
+/* indicadores */
+.kpi { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px 16px; }
+.kpi small { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.kpi b { display: block; margin-top: 4px; font: 600 22px/28px Rubik; color: var(--text-strong); }
+.kpi em { font-style: normal; font-size: 12px; color: var(--success); }
+
+.cont { display: inline-grid; place-items: center; min-width: 22px; height: 22px; padding: 0 6px; border-radius: 11px; font: 600 12px/22px Rubik; background: var(--bg); color: var(--text); }
+.cont.forte { background: var(--accent); color: var(--on-accent); }

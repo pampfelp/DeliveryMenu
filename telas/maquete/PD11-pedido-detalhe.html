@@ -1,0 +1,69 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD11 Detalhe do pedido no computador</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { position: relative; width: 1440px; height: 900px; overflow: hidden; }
+  .fundo { position: absolute; inset: 0; width: 1440px; height: 900px; border: 0; }
+  .veu { position: absolute; inset: 0; background: var(--overlay); }
+  .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 760px; max-height: 820px; display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+  .m-cab { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+  .m-cab h2 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .m-cab .estado { font: 500 12px/16px Rubik; padding: 4px 8px; border-radius: var(--r-sm); color: var(--accent); background: #fdf2f2; }
+  .m-cab .hora { font-size: 13px; color: var(--text-muted); }
+  .m-cab .fechar { margin-left: auto; }
+  .m-corpo { display: grid; grid-template-columns: 1fr 280px; gap: 24px; padding: 20px 24px; }
+  .bloco-t { font: 600 13px/18px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 8px; }
+  .item { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .item b { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .item b span { color: var(--text-muted); margin-right: 4px; }
+  .item p { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .item p.obs { color: var(--warning); font-weight: 500; }
+  .item .v { font: 500 15px/20px Rubik; color: var(--text-strong); white-space: nowrap; }
+  .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text-muted); }
+  .tl.total { margin-top: 4px; padding-top: 8px; border-top: 1px solid var(--border); font: 600 18px/28px Rubik; color: var(--text-strong); }
+  .lado-m { display: grid; gap: 16px; align-content: start; }
+  .caixa { border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px 14px; }
+  .caixa b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .caixa p { font-size: 13px; line-height: 18px; color: var(--text); margin-top: 2px; }
+  .caixa .ref { color: var(--text-muted); }
+  .caixa .acoes-c { display: flex; gap: 8px; margin-top: 10px; }
+  .caixa .acoes-c .btn { height: 36px; font-size: 13px; margin: 0; padding: 0 10px; flex: 1; }
+  .caixa .acoes-c .btn-ghost svg.ic { color: var(--success); width: 16px; height: 16px; }
+  .m-pe { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--border); background: var(--surface); }
+  .m-pe .cancelar { font: 500 14px/20px Rubik; color: var(--danger); }
+  .m-pe .btn { width: auto; padding: 0 20px; margin: 0; }
+  .m-pe .btn-ghost { margin-left: auto; }
+</style></head>
+<body><div class="pc">
+  <iframe class="fundo" src="PD10-pedidos.html" tabindex="-1"></iframe>
+  <div class="veu"></div>
+  <div class="modal">
+    <div class="m-cab"><h2>Pedido #1051</h2><span class="estado">Novo</span><span class="hora">Recebido às 19h12, há 1 min</span><span class="fechar"><i data-ic="x"></i></span></div>
+    <div class="m-corpo">
+      <div>
+        <div class="bloco-t">Itens</div>
+        <div class="item"><div><b><span>2x</span>Clássico da Casa</b><p>Ao ponto, 1 bacon</p><p class="obs">OBS: sem cebola em um deles</p></div><span class="v">R$ 62,00</span></div>
+        <div class="item"><div><b><span>1x</span>Batata média</b></div><span class="v">R$ 14,00</span></div>
+        <div style="margin-top: 12px">
+          <div class="tl"><span>Subtotal</span><span>R$ 76,00</span></div>
+          <div class="tl"><span>Taxa de entrega (Jardim das Flores)</span><span>R$ 5,50</span></div>
+          <div class="tl"><span>Cupom PRIMEIRA</span><span>- R$ 8,00</span></div>
+          <div class="tl total"><span>Total</span><span>R$ 73,50</span></div>
+        </div>
+      </div>
+      <div class="lado-m">
+        <div><div class="bloco-t">Cliente</div>
+          <div class="caixa"><b>Ana P.</b><p>(91) 90000-0000</p><p class="ref">2º pedido nesta loja</p>
+            <div class="acoes-c"><div class="btn btn-ghost"><i data-ic="conversa"></i>WhatsApp</div><div class="btn btn-ghost">Ligar</div></div></div></div>
+        <div><div class="bloco-t">Entrega</div>
+          <div class="caixa"><b>Travessa das Flores, 120</b><p>Jardim das Flores, apto 302</p><p class="ref">Ref.: em frente à praça</p><p class="ref">1,6 km • previsão 19h43 a 19h53</p></div></div>
+        <div><div class="bloco-t">Pagamento</div>
+          <div class="caixa"><b>Pix</b><p><span class="pag pago">Pago às 19h12</span></p></div></div>
+      </div>
+    </div>
+    <div class="m-pe"><span class="cancelar">Recusar pedido</span><div class="btn btn-ghost">Imprimir</div><div class="btn btn-accent">Aceitar pedido</div></div>
+  </div>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

@@ -76,6 +76,12 @@ Todas lidas no original e descritas em `rea/ACHADOS.md`.
 
 ### Fase 4. Painel do restaurante
 
+Andamento (2026-10-15): login e cadastro do dono no ar e testados por ele
+(loja Casa Jambu criada). Imagens da tela de pedidos e do detalhe do pedido
+(PD10, PD11, P10, P11) feitas e esperando validação. Ao gravar pedidos de
+verdade, a regra de pedidosEntrada precisa aceitar desconto de cupom: hoje
+ela exige total = subtotal + taxa.
+
 Depende dele: validar as imagens das telas (crença 37). Base visual: os
 mesmos tokens da loja.
 
