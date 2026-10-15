@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>D09 Seus dados no computador</title>
+<link rel="stylesheet" href="_pc.css?v=1">
+<style>
+  .campo label { display: block; font: 500 13px/18px Rubik; color: var(--text-muted); margin-bottom: 6px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .in { height: 48px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 14px; display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-strong); }
+  .in svg.ic { color: var(--text-muted); }
+  .bloco .sub { margin: -8px 0 16px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .ajuda { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .guardar { display: flex; gap: 10px; padding: 14px 16px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .guardar svg.ic { color: var(--text-muted); width: 18px; height: 18px; margin-top: 1px; }
+</style></head>
+<body><div class="pc">
+  <div class="faixa-fina"><div class="dentro">Nome do Restaurante</div></div>
+  <div class="check">
+    <div class="titulo"><i data-ic="esquerda"></i>Seus dados</div>
+    <div class="duas">
+      <div>
+        <div class="bloco cartao">
+          <h2>Para o restaurante falar com você</h2>
+          <p class="sub">Só usamos para avisar sobre este pedido.</p>
+          <div class="dupla">
+            <div class="campo"><label>Nome <i>*</i></label><div class="in"><i data-ic="user"></i>Ana Paula</div></div>
+            <div class="campo"><label>WhatsApp <i>*</i></label><div class="in"><i data-ic="fone"></i>(91) 90000-0000</div><p class="ajuda">Com DDD. O restaurante chama aqui se precisar.</p></div>
+          </div>
+        </div>
+        <div class="guardar"><i data-ic="info"></i><span>Fica guardado neste aparelho. No próximo pedido você não precisa digitar de novo.</span></div>
+      </div>
+      <aside class="resumo-pc cartao">
+        <h2>Seu pedido</h2>
+        <div class="li"><span><b>1x</b>Clássico da Casa<small>Ao ponto, 1 bacon</small></span><span>R$ 31,00</span></div>
+        <div class="li"><span><b>1x</b>Smash Simples<small>Sem picles</small></span><span class="preco-promo">R$ 19,90</span></div>
+        <div class="tls">
+          <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+          <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
+          <div class="tl total"><span>Total</span><span>R$ 50,90</span></div>
+        </div>
+        <div class="btn btn-accent">Continuar</div>
+      </aside>
+    </div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

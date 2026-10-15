@@ -112,14 +112,20 @@ ter a conta no provedor e gerar as credenciais.
   cozinha quando o provedor confirma.
 - O aviso de pagamento do provedor é tratado sem duplicar pedido
   (`padroes/desenhar-api-e-apps-script.md`, idempotência).
+- Estorno (pedido dele, 2026-10-15): pedido pago online e recusado pelo
+  restaurante precisa devolver o dinheiro pelo provedor. A tela S18 hoje
+  diz "Nada foi cobrado", que só vale para pagar na entrega; com Pix ou
+  cartão online o texto e o fluxo mudam junto com o estorno.
+- Enquanto a loja não tiver o Mercado Pago ligado, "Pagar online" não
+  aparece (S14b, decisão 8).
 
 ### Fase 6. Telas que ainda não têm imagem
 
 Cada uma passa pelo fluxo de imagem primeiro antes de virar código: mais
 informações da loja; promoções; pedidos e conta do cliente (entrada por
 telefone); lista de categorias aberta; cálculo de taxa antes do checkout;
-escolha do horário agendado; revisão do pedido e troco; espera do Pix; loja
-fechada.
+escolha do horário agendado; espera do Pix. Revisão do pedido, troco e loja
+fechada já têm imagem (S09, S14b, S15 a S18, S01b, S08b).
 
 ### Fase 7. Instalável e lançamento
 
@@ -142,6 +148,12 @@ fechada.
 6. Pedido que acabou de chegar aparece como "Novo" até ser aceito; o
    número sai no aceite, pelo contador da loja. As imagens PD10, PD11, P10
    e P11 mostram "#1051" e ficam assim, com essa diferença aceita.
+7. Nome e WhatsApp do cliente numa tela própria depois da sacola (S09),
+   guardados no aparelho para o próximo pedido.
+8. "Pagar online" some enquanto a loja não ligar o Mercado Pago.
+9. O cliente acompanha o pedido lendo pelo id (get, sem listar): a regra
+   do Firestore passa a permitir isso em pedidosEntrada e pedidos. O id é
+   aleatório e funciona como senha do pedido.
 
 ## Ainda em aberto
 

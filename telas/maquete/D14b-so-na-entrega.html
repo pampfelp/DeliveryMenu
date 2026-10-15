@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>D14b Pagamento só na entrega no computador</title>
+<link rel="stylesheet" href="_pc.css?v=1">
+<style>
+  .abas { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: var(--r-md); padding: 4px; margin-bottom: 14px; }
+  .abas span { height: 40px; display: grid; place-items: center; border-radius: var(--r-sm); font: 500 15px/20px Rubik; color: var(--text-muted); }
+  .abas span.on { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-sm); }
+  .formas { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .forma { display: flex; align-items: center; gap: 12px; height: 64px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--r-md); font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .forma .rotulo { flex: 1; }
+  .forma .rotulo small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .forma .ic:first-child { color: var(--text-muted); }
+  .forma.on { border: 2px solid var(--accent); }
+  .forma.on .ic:first-child { color: var(--accent); }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
+  .radio.on { border: 7px solid var(--accent); }
+  .nota { margin-top: 14px; padding: 14px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .nota b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); margin-bottom: 2px; }
+  .entrega-resumo { display: flex; align-items: center; gap: 10px; padding: 16px 20px; font-size: 14px; line-height: 20px; color: var(--text); }
+  .entrega-resumo span { flex: 1; }
+  .entrega-resumo b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .entrega-resumo .ic:first-child { color: var(--text-muted); }
+  .entrega-resumo a { font: 500 14px/20px Rubik; color: var(--accent); }
+</style></head>
+<body><div class="pc">
+  <div class="faixa-fina"><div class="dentro">Nome do Restaurante</div></div>
+  <div class="check">
+    <div class="titulo"><i data-ic="esquerda"></i>Pagamento</div>
+    <div class="duas">
+      <div>
+        <div class="bloco cartao">
+          <h2>Pagar na entrega</h2>
+          <div class="formas">
+            <div class="forma on"><i data-ic="dinheiro"></i><span class="rotulo">Dinheiro<small>Informe se precisa de troco</small></span><span class="radio on"></span></div>
+            <div class="forma"><i data-ic="pix"></i><span class="rotulo">Pix<small>Na hora da entrega</small></span><span class="radio"></span></div>
+            <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito<small>Na maquininha</small></span><span class="radio"></span></div>
+            <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de débito<small>Na maquininha</small></span><span class="radio"></span></div>
+          </div>
+          <div class="nota"><b>Como funciona</b>Você paga quando o pedido chegar. Se for em dinheiro, diga para quanto precisa de troco na revisão do pedido.</div>
+        </div>
+        <div class="entrega-resumo cartao"><i data-ic="entrega"></i><span><b>Entrega em Travessa das Flores, 120</b>Jardim das Flores • 31-41 min</span><a>Alterar</a></div>
+      </div>
+      <aside class="resumo-pc cartao">
+        <h2>Seu pedido</h2>
+        <div class="li"><span><b>1x</b>Clássico da Casa<small>Ao ponto, 1 bacon</small></span><span>R$ 31,00</span></div>
+        <div class="li"><span><b>1x</b>Smash Simples<small>Sem picles</small></span><span class="preco-promo">R$ 19,90</span></div>
+        <div class="tls">
+          <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+          <div class="tl"><span>Taxa de entrega</span><span>R$ 5,50</span></div>
+          <div class="tl total"><span>Total</span><span>R$ 56,40</span></div>
+        </div>
+        <div class="btn btn-accent">Revisar pedido</div>
+      </aside>
+    </div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>
