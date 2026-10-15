@@ -1,60 +1,63 @@
-// Padrão consolidado — ver padroes/dados-e-seguranca.md
-// Antes de publicar: PERGUNTAR ao Felipe se este projeto precisa de
-// autenticação real (ver decisoes.md #1). Este arquivo traz as duas
-// variantes: a de baixo (ativa) é para uso pessoal/grupo de confiança.
+// Regras do Cardápio Delivery (várias lojas no mesmo projeto).
+// Padrão em segundo-cerebro/padroes/dados-e-seguranca.md.
+//
+// - Cardápio, bairros e dados da loja: qualquer um lê; só o dono da loja escreve.
+// - Pedido do cliente (anônimo): só cria, e só numa antessala da loja
+//   (pedidosEntrada), no formato certo (crença 12). Ler, mudar e apagar é do dono.
+// - Pedidos já aceitos (pedidos): só o dono.
+// - Qualquer outro caminho: fechado.
 
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
-    function isNonEmptyString(v, maxLen) {
-      return v is string && v.size() > 0 && v.size() <= maxLen;
+    function logado() { return request.auth != null; }
+    function donoDa(lojaId) {
+      return logado() && get(/databases/$(database)/documents/lojas/$(lojaId)).data.donoId == request.auth.uid;
     }
+    function texto(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
+    function centavos(v) { return v is int && v >= 0 && v <= 10000000; }
 
-    // ===================================================================
-    // VARIANTE ATIVA: uso pessoal / grupo pequeno de confiança.
-    // Valida só FORMATO dos dados, não identidade de quem escreve.
-    // Qualquer um com o link consegue ler/escrever — aceitável só quando
-    // não há dado sensível nem gente de fora do círculo de confiança.
-    // ===================================================================
-    match /itens/{id} {
+    match /lojas/{lojaId} {
       allow read: if true;
-      // hasOnly() bloqueia mass assignment — sem isso, um create/update
-      // malicioso poderia mandar campos extras não previstos aqui (ex.:
-      // um "isAdmin:true" em coleções que tiverem esse tipo de campo em
-      // outro projeto). Sempre listar exatamente os campos esperados.
-      allow create, update: if request.resource.data.keys().hasOnly(["nome", "createdAt"])
-        && isNonEmptyString(request.resource.data.nome, 200);
-      allow delete: if true;
-    }
+      allow create: if logado() && request.resource.data.donoId == request.auth.uid
+        && texto(request.resource.data.nome, 120) && texto(request.resource.data.slug, 60);
+      allow update: if donoDa(lojaId) && request.resource.data.donoId == resource.data.donoId;
+      allow delete: if donoDa(lojaId);
 
-    // Coleções de log/histórico: append-only. Se a entidade pai puder ser
-    // excluída em cascata, mantenha "delete: if true" mesmo aqui — ver a
-    // lição documentada em padroes/dados-e-seguranca.md sobre o bug do
-    // SmashUpPickBan (excluir sala falhava com subcoleção "delete: if false").
-    match /itens/{itemId}/historico/{logId} {
-      allow read: if true;
-      allow create: if true;
-      allow update, delete: if false;
-    }
+      match /categorias/{id} {
+        allow read: if true;
+        allow write: if donoDa(lojaId);
+      }
+      match /itens/{id} {
+        allow read: if true;
+        allow write: if donoDa(lojaId);
+      }
+      match /bairros/{id} {
+        allow read: if true;
+        allow write: if donoDa(lojaId);
+      }
 
-    // ===================================================================
-    // VARIANTE COM FIREBASE AUTH (descomentar e adaptar quando o projeto
-    // precisar de acesso real — troque a coleção "itens" acima por esta):
-    // ===================================================================
-    // function isSignedIn() { return request.auth != null; }
-    // function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
-    //
-    // match /itens/{id} {
-    //   allow read: if isSignedIn();
-    //   allow create: if isSignedIn()
-    //     && request.resource.data.keys().hasOnly(["nome", "createdAt", "donoId"])
-    //     && request.resource.data.donoId == request.auth.uid
-    //     && isNonEmptyString(request.resource.data.nome, 200);
-    //   allow update: if isSignedIn() && resource.data.donoId == request.auth.uid
-    //     && request.resource.data.keys().hasOnly(["nome", "createdAt", "donoId"])
-    //     && request.resource.data.donoId == resource.data.donoId; // não deixa "roubar" o dono trocando o campo
-    //   allow delete: if isSignedIn() && resource.data.donoId == request.auth.uid;
-    // }
+      // antessala: o cliente cria, o painel lê e move para "pedidos"
+      match /pedidosEntrada/{id} {
+        allow create: if exists(/databases/$(database)/documents/lojas/$(lojaId))
+          && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm"])
+          && request.resource.data.status == "novo"
+          && request.resource.data.criadoEm == request.time
+          && request.resource.data.tipo in ["entrega", "retirada", "local"]
+          && request.resource.data.itens is list
+          && request.resource.data.itens.size() > 0 && request.resource.data.itens.size() <= 50
+          && centavos(request.resource.data.subtotal)
+          && centavos(request.resource.data.taxa)
+          && request.resource.data.total == request.resource.data.subtotal + request.resource.data.taxa
+          && texto(request.resource.data.cliente.nome, 80)
+          && texto(request.resource.data.cliente.telefone, 20);
+        allow read, update, delete: if donoDa(lojaId);
+      }
+
+      match /pedidos/{id} {
+        allow read, write: if donoDa(lojaId);
+      }
+    }
   }
 }

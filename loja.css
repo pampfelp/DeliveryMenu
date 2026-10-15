@@ -523,3 +523,15 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
 
   #toast-container { left: auto; right: 24px; bottom: 24px; align-items: flex-end; }
 }
+
+/* ===== sem logo: o espaço dele não existe (decisão dele, 2026-10-15) ===== */
+.sem-logo .cabeca .logo, .sem-logo .faixa-fina .mini { display: none; }
+.sem-logo .cabeca { padding-top: 20px; }
+.mini img { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; }
+.resultado.fora { background: #fffbeb; color: var(--warning); }
+@media (min-width: 1024px) {
+  .sem-logo .inicio-grade { padding-top: 164px; }
+  .sem-logo .cabeca { padding-top: 0; }
+  .sem-logo .cabeca-txt { padding-bottom: 0; }
+  .sem-logo .sacola-lateral { margin-top: 0; }
+}

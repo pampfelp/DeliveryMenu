@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-<title>Cardápio</title>
+<title>Cardápio Delivery</title>
 
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#991b1b" />
@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
-<link rel="stylesheet" href="./loja.css?v=13" />
+<link rel="stylesheet" href="./loja.css?v=14" />
 </head>
 <body>
 <div id="app">
@@ -90,7 +90,7 @@
 
   <!-- S12 / D12 Entrega -->
   <section class="tela checkout" id="tela-entrega">
-    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
     <div class="topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Como receber</h1></div>
     <div class="check-grade">
       <div class="check-main">
@@ -108,13 +108,13 @@
             <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" value="66000-000" /><button class="so-cel">Buscar CEP</button></div></div>
             <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" value="Travessa das Flores" /></div>
             <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" value="120" /></div>
-            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" value="Centro" /></div>
+            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" value="Centro" list="lista-bairros" autocomplete="off" /><datalist id="lista-bairros"></datalist></div>
             <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" placeholder="Apto" /></div>
             <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" value="Em frente à praça" /></div>
             <div class="a-loc acoes-end"><button class="loc"><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc">Buscar pelo CEP</button></div>
           </div>
         </div>
-        <div class="resultado so-entrega"><i data-ic="check"></i><span>Entregamos no seu endereço</span><span>R$ 6,00 • 35-45 min</span></div>
+        <div class="resultado so-entrega"></div>
         <button class="agendar"><i data-ic="agenda"></i><span>Agendar pedido<small>Receber agora ou escolher um horário</small></span><i data-ic="direita" class="seta"></i></button>
       </div>
       <aside class="resumo-lateral so-pc" data-resumo="Continuar" data-destino="#pagamento"></aside>
@@ -124,7 +124,7 @@
 
   <!-- S14 / D14 Pagamento -->
   <section class="tela checkout" id="tela-pagamento">
-    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
     <div class="topo"><a href="#entrega" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Pagamento</h1></div>
     <div class="check-grade">
       <div class="check-main">
@@ -146,7 +146,7 @@
 
   <!-- S16 / D16 Pedido enviado -->
   <section class="tela" id="tela-enviado">
-    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
     <div class="topo-x so-cel"><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
     <div class="cartao-ok">
       <div class="ok"><div class="selo-ok"><i data-ic="check"></i></div><h1>Pedido enviado!</h1><p>O restaurante já recebeu seu pedido e vai começar a preparar.</p></div>
@@ -166,6 +166,6 @@
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=11"></script>
+<script type="module" src="./app.js?v=13"></script>
 </body>
 </html>

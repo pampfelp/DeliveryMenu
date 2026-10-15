@@ -1,6 +1,6 @@
-# Plano do DeliveryMenu
+# Plano do Cardápio Delivery
 
-Atualizado em 2026-10-14. A lista de recursos com o andamento de cada um
+Atualizado em 2026-10-15. A lista de recursos com o andamento de cada um
 está em [`replica/features.csv`](replica/features.csv) (rode
 `parity.py` para a nota). As decisões e o histórico do dia ficam no
 relatório `Relatórios Claude/DeliveryMenu - 2026-10-14.txt`.
@@ -29,8 +29,17 @@ criado por sessão de IA.
 
 ### Fase 2. Banco de dados (Firebase)
 
-Depende dele: criar o projeto no Firebase e colar a configuração pública
-(passo a passo em `segundo-cerebro/padroes/conectar-firebase.md`).
+**Feito em 2026-10-15**, na conta dele pelo navegador do app: projeto
+`cardapio-delivery-ae048`, app web "Cardápio Delivery" (config em
+`firebase-init.js`), Firestore edição Standard em `southamerica-east1`,
+Authentication com e-mail e senha, domínio `pampfelp.github.io` autorizado,
+Gemini e Google Analytics desligados. As regras de `firestore.rules` estão
+publicadas (conferido pelo hash) e testadas: ler lojas passa; criar loja sem
+login, criar pedido em loja inexistente, ler pedidos sem ser dono e escrever
+fora dos caminhos previstos voltam `permission-denied`. Plano Spark
+(gratuito), sem backup automático, que pede o plano pago.
+
+Falta no código desta fase:
 
 - Modelo para várias lojas (decisão dele): `lojas/{lojaId}` com nome,
   endereço curto (slug), cor, logo, WhatsApp, horários, bairros, taxas,
@@ -55,9 +64,12 @@ Todas lidas no original e descritas em `rea/ACHADOS.md`.
 - Horários de agendamento em faixas, com antecedência e lotação (P5). A
   lotação tem que ser conferida também na gravação, para duas pessoas não
   pegarem a última vaga.
-- Taxa e tempo de entrega. O original calcula no servidor e a regra não é
-  visível. Proposta: tabela por bairro preenchida no painel, com "não
-  entregamos" para bairro fora da lista. **Decisão dele.**
+- Taxa e tempo de entrega: **feito no app em 2026-10-15** com a regra dele.
+  R$ 3,00 no bairro do restaurante; nos outros, R$ 3,00 mais R$ 1,50 por km
+  em linha reta até o centro do bairro, arredondado para cima em R$ 0,50;
+  fora da lista ou acima de 10 km, "ainda não entregamos". O R$ 1,50 por
+  km, o arredondamento e o raio são proposta e ficam editáveis no painel;
+  a lista de bairros com o ponto de cada um também vem do painel.
 - Pedido mínimo, entrega grátis a partir de um valor, cupom.
 - Mensagem pronta para o WhatsApp da loja (P6).
 
@@ -80,8 +92,12 @@ mesmos tokens da loja.
 
 ### Fase 5. Pagamento online
 
-Depende dele: escolher e contratar o provedor (Mercado Pago, Asaas,
-Pagar.me ou outro) e criar a conta.
+Decisão dele (2026-10-15): cada restaurante usa o provedor que preferir, e
+o primeiro a ser ligado é o **Mercado Pago**. Depende de cada restaurante:
+ter a conta no provedor e gerar as credenciais.
+
+- O provedor é escolhido por loja no painel; o código fala com um provedor
+  por vez através de um módulo próprio, começando pelo Mercado Pago.
 
 - A chave do provedor fica no Apps Script (`Code.gs`), nunca no navegador
   (crença 13).
@@ -107,10 +123,16 @@ fechada.
 - Domínio próprio, se ele quiser. Título e imagem de compartilhamento.
 - `sweep.py` sem resquício do original antes de divulgar.
 
-## Decisões que ele precisa tomar
+## Decisões dele (2026-10-15)
 
-1. Projeto do Firebase: criar agora ou quando o painel começar.
-2. Taxa de entrega: tabela por bairro (proposta) ou por distância.
-3. Provedor de pagamento online.
-4. Logo sem logo enviado: hoje aparece "SEU LOGO"; trocar pelas iniciais?
-5. Nome do app para o ícone e para o link (hoje "DeliveryMenu").
+1. Firebase: criar agora, pela conta dele, no navegador do app.
+2. Taxa: R$ 3 no mesmo bairro, escalonando pela distância dos outros bairros.
+3. Pagamento online: o que o restaurante preferir, começando pelo Mercado
+   Pago.
+4. Sem logo: o espaço some, como se não houvesse lugar para logo.
+5. Nome do app: Cardápio Delivery.
+
+## Ainda em aberto
+
+- Confirmar o valor por km (R$ 1,50), o arredondamento (R$ 0,50) e o raio
+  máximo (10 km) da taxa.

@@ -18,13 +18,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { getAuth, connectAuthEmulator } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 
+// Projeto cardapio-delivery-ae048, criado em 2026-10-15 na conta dele.
 export const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  authDomain: "SEU-PROJETO.firebaseapp.com",
-  projectId: "SEU-PROJETO",
-  storageBucket: "SEU-PROJETO.appspot.com",
-  messagingSenderId: "COLE_AQUI",
-  appId: "COLE_AQUI",
+  apiKey: "AIzaSyCsY34ZT38ZjAkdNidqG45Nz4qPCVTamEs",
+  authDomain: "cardapio-delivery-ae048.firebaseapp.com",
+  projectId: "cardapio-delivery-ae048",
+  storageBucket: "cardapio-delivery-ae048.firebasestorage.app",
+  messagingSenderId: "308771638053",
+  appId: "1:308771638053:web:b2076912a86188fbff68cc",
 };
 
 const app = initializeApp(firebaseConfig);

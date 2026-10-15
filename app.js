@@ -7,14 +7,13 @@
 */
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
-import { LOJA, CATEGORIAS, SUGESTOES, SACOLA_EXEMPLO } from "./dados-exemplo.js?v=4";
+import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES, SACOLA_EXEMPLO } from "./dados-exemplo.js?v=5";
 import { pintarIcones } from "./icones.js?v=1";
 
 const reais = (centavos) => fmtMoeda(centavos / 100);
 const ITENS = CATEGORIAS.flatMap((c) => c.itens);
 const item = (id) => ITENS.find((i) => i.id === id);
 const SELOS = { recomendado: "Recomendado", oferta: "Oferta", novo: "Novo" };
-const TAXA_EXEMPLO = 600; // até a regra de taxa por bairro existir (PLANO.md, fase 3)
 const pc = window.matchMedia("(min-width: 1024px)");
 
 // foto enviada pela loja, ou o espaço reservado com o ícone de imagem
@@ -27,7 +26,7 @@ function lerSacola() {
   if (new URLSearchParams(location.search).has("exemplo")) return SACOLA_EXEMPLO.map((l, n) => ({ uid: `ex${n}`, ...l }));
   try { return JSON.parse(localStorage.getItem(CHAVE)) || []; } catch { return []; }
 }
-const STATE = { sacola: lerSacola(), tipo: "entrega", aba: "online", forma: "pix", produto: null };
+const STATE = { sacola: lerSacola(), tipo: "entrega", aba: "online", forma: "pix", produto: null, entrega: { status: "vazio" } };
 function salvarSacola() {
   try { localStorage.setItem(CHAVE, JSON.stringify(STATE.sacola)); } catch { /* modo anônimo: a sacola vale só nesta aba */ }
   renderSacolas();
@@ -60,7 +59,31 @@ function precoVitrine(i) {
 const precoUnitario = (i, escolhas) => precoBase(i) + i.grupos.reduce((s, g) => s + valorGrupo(g, escolhas[g.id]), 0);
 const totalLinha = (l) => precoUnitario(item(l.itemId), l.escolhas) * l.qtd;
 const subtotal = () => STATE.sacola.reduce((s, l) => s + totalLinha(l), 0);
-const taxa = () => (STATE.tipo === "entrega" ? TAXA_EXEMPLO : 0);
+const taxa = () => (STATE.tipo === "entrega" && STATE.entrega.status === "ok" ? STATE.entrega.valor : 0);
+
+/* ===== taxa de entrega por bairro (decisão dele, 2026-10-15) =====
+   R$ 3 no bairro do restaurante; nos outros, a taxa do bairro mais um valor
+   por km em linha reta até o centro do bairro, arredondado para cima. */
+function distanciaKm(a, b) {
+  const rad = (g) => (g * Math.PI) / 180;
+  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
+  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.sqrt(h));
+}
+function calcularEntrega(nomeBairro) {
+  const e = LOJA.entrega;
+  if (!nomeBairro.trim()) return { status: "vazio" };
+  const bairro = BAIRROS.find((b) => semAcento(b.nome) === semAcento(nomeBairro.trim()));
+  if (!bairro) return { status: "fora" };
+  const mesmo = semAcento(bairro.nome) === semAcento(LOJA.bairro);
+  const km = mesmo ? 0 : distanciaKm(LOJA.local, bairro);
+  if (km > e.raioMaxKm) return { status: "fora" };
+  const valor = mesmo ? e.taxaBairro : Math.ceil((e.taxaBairro + km * e.porKm) / e.arredondar) * e.arredondar;
+  const min = Math.round(e.minutosBase + km * e.minutosPorKm);
+  return { status: "ok", bairro: bairro.nome, km, valor, min, max: min + 10 };
+}
+// texto da taxa nos resumos: sem bairro válido ainda não há taxa para mostrar
+const textoTaxa = () => (STATE.tipo !== "entrega" ? "Grátis" : STATE.entrega.status === "ok" ? reais(STATE.entrega.valor) : "A definir");
 const qtdItens = () => STATE.sacola.reduce((s, l) => s + l.qtd, 0);
 
 function resumoLinha(l) {
@@ -80,6 +103,11 @@ function irParaHash() {
   if (!document.getElementById(`tela-${tela}`)) tela = "inicio";
   if (pc.matches && tela === "sacola") tela = "inicio"; // no computador a sacola é a coluna do início
   if (["entrega", "pagamento"].includes(tela) && !STATE.sacola.length) tela = "inicio";
+  if (tela === "pagamento" && STATE.tipo === "entrega" && STATE.entrega.status !== "ok") {
+    toast(STATE.entrega.status === "fora" ? "Ainda não entregamos nesse bairro." : "Informe o bairro da entrega.", "erro", 3500);
+    tela = "entrega";
+    history.replaceState(null, "", "#entrega");
+  }
   document.querySelectorAll(".tela").forEach((s) => s.classList.toggle("ativa", s.id === `tela-${tela}`));
   document.body.dataset.tela = tela;
   if (tela === "produto") abrirProduto(param, uid);
@@ -96,7 +124,11 @@ function renderInicio() {
   document.querySelectorAll(".loja-nome").forEach((el) => (el.textContent = LOJA.nome));
   document.getElementById("loja-cidade").textContent = LOJA.cidade;
   document.getElementById("loja-situacao").textContent = LOJA.situacao.texto;
-  document.getElementById("loja-logo").innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="${esc(LOJA.nome)}" />` : "SEU LOGO";
+  // sem logo, o espaço dele some (decisão dele, 2026-10-15)
+  document.body.classList.toggle("sem-logo", !LOJA.logoUrl);
+  document.getElementById("loja-logo").innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="${esc(LOJA.nome)}" />` : "";
+  document.querySelectorAll(".mini").forEach((el) => (el.innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="" />` : ""));
+  document.title = `${LOJA.nome} | Cardápio Delivery`;
 
   document.getElementById("destaques").innerHTML = ITENS.filter((i) => i.destaque).map((i) => `
     <a class="dest" href="#produto/${esc(i.id)}">
@@ -129,7 +161,7 @@ function cardItem(i) {
 }
 
 /* busca: filtra pelo nome e pela descrição, sem ir ao servidor */
-const semAcento = (t) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+const semAcento = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 const campoBusca = document.getElementById("busca");
 campoBusca.addEventListener("input", () => {
   const termo = semAcento(campoBusca.value.trim());
@@ -260,7 +292,7 @@ function htmlResumoLateral(aside, sub) {
     }).join("")}
     <div class="tls">
       <div class="tl"><span>Subtotal</span><span>${reais(sub)}</span></div>
-      <div class="tl"><span>Taxa de entrega</span><span>${taxa() ? reais(taxa()) : "Grátis"}</span></div>
+      <div class="tl"><span>Taxa de entrega</span><span>${textoTaxa()}</span></div>
       <div class="tl total"><span>Total</span><span>${reais(sub + taxa())}</span></div>
     </div>
     <a class="btn" href="${aside.dataset.destino}"${aside.dataset.destino === "#enviado" ? " data-enviar" : ""}>${esc(aside.dataset.resumo)}</a>`;
@@ -270,7 +302,7 @@ function renderSacolas() {
   const vazia = !STATE.sacola.length;
   const sub = subtotal();
   document.querySelectorAll("[data-subtotal]").forEach((el) => (el.textContent = reais(sub)));
-  document.querySelectorAll("[data-taxa]").forEach((el) => (el.textContent = taxa() ? reais(taxa()) : "Grátis"));
+  document.querySelectorAll("[data-taxa]").forEach((el) => (el.textContent = textoTaxa()));
   document.querySelectorAll("[data-total]").forEach((el) => (el.textContent = reais(sub + taxa())));
 
   // barra do início
@@ -341,7 +373,23 @@ document.addEventListener("click", async (e) => {
   if (e.target.closest("[data-enviar]")) enviarPedido();
 });
 
-/* ===== S12 entrega: tipo de pedido ===== */
+/* ===== S12 entrega: tipo de pedido e taxa ===== */
+function renderEntrega() {
+  STATE.entrega = calcularEntrega(document.getElementById("f-bairro").value);
+  const caixa = document.querySelector(".resultado");
+  const e = STATE.entrega;
+  caixa.classList.toggle("fora", e.status === "fora");
+  caixa.innerHTML = e.status === "ok"
+    ? `<i data-ic="check"></i><span>Entregamos no seu endereço</span><span>${reais(e.valor)} • ${e.min}-${e.max} min</span>`
+    : e.status === "fora"
+      ? `<i data-ic="info"></i><span>Ainda não entregamos nesse bairro</span>`
+      : `<i data-ic="info"></i><span>Informe o bairro para calcular a taxa</span>`;
+  pintarIcones(caixa);
+  renderSacolas();
+}
+document.getElementById("f-bairro").addEventListener("input", renderEntrega);
+document.getElementById("lista-bairros").innerHTML = BAIRROS.map((b) => `<option value="${esc(b.nome)}"></option>`).join("");
+
 function renderTipo() {
   document.querySelectorAll("#tipos [data-tipo]").forEach((b) => b.classList.toggle("on", b.dataset.tipo === STATE.tipo));
   document.querySelectorAll(".so-entrega").forEach((el) => (el.hidden = STATE.tipo !== "entrega"));
@@ -386,7 +434,7 @@ function renderPagamento() {
     : [...formas.slice(0, pos + 1), nota, ...formas.slice(pos + 1)].join("");
   const rua = document.getElementById("f-rua").value, num = document.getElementById("f-num").value, bairro = document.getElementById("f-bairro").value;
   document.getElementById("entrega-resumo").innerHTML = STATE.tipo === "entrega"
-    ? `<i data-ic="entrega"></i><span><b>Entrega em ${esc(rua)}, ${esc(num)}</b>${esc(bairro)} • 35-45 min</span><a href="#entrega">Alterar</a>`
+    ? `<i data-ic="entrega"></i><span><b>Entrega em ${esc(rua)}, ${esc(num)}</b>${esc(bairro)} • ${STATE.entrega.min}-${STATE.entrega.max} min</span><a href="#entrega">Alterar</a>`
     : `<i data-ic="${STATE.tipo === "retirada" ? "loja" : "mesa"}"></i><span><b>${STATE.tipo === "retirada" ? "Retirada no restaurante" : "Consumo no local"}</b>Sem taxa de entrega</span><a href="#entrega">Alterar</a>`;
   renderSacolas();
 }
@@ -411,7 +459,8 @@ function enviarPedido() {
   const hh = (d) => `${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}`;
   document.getElementById("pedido-numero").textContent = `#${String(agora.getTime()).slice(-4)}`;
   document.getElementById("pedido-hora").textContent = hh(agora);
-  document.getElementById("pedido-previsao").textContent = `${hh(new Date(agora.getTime() + 35 * 60000))} - ${hh(new Date(agora.getTime() + 45 * 60000))}`;
+  const [min, max] = STATE.tipo === "entrega" && STATE.entrega.status === "ok" ? [STATE.entrega.min, STATE.entrega.max] : [20, 30];
+  document.getElementById("pedido-previsao").textContent = `${hh(new Date(agora.getTime() + min * 60000))} - ${hh(new Date(agora.getTime() + max * 60000))}`;
   if (!new URLSearchParams(location.search).has("exemplo")) {
     STATE.sacola = [];
     salvarSacola();
@@ -420,5 +469,6 @@ function enviarPedido() {
 }
 
 renderInicio();
+renderEntrega();
 renderTipo();
 irParaHash();

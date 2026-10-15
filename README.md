@@ -1,4 +1,8 @@
-# DeliveryMenu
+# Cardápio Delivery
+
+Nome do app (decisão dele, 2026-10-15); o repositório continua `DeliveryMenu`.
+No ar em https://pampfelp.github.io/DeliveryMenu/ e o que falta está em
+[`PLANO.md`](PLANO.md).
 
 App de delivery (cardápio, sacola e pedido) do restaurante do Felipe,
 estruturado desde o início para atender vários restaurantes: cada loja tem
