@@ -1,6 +1,6 @@
 /*
   painel.js: entrada do painel do restaurante (imagens P01 a P03, PD01, PD02).
-  Depois do login, a tela de pedidos mora em pedidos.js.
+  Depois do login, a tela de pedidos mora em pedidos.js e o cardápio em cardapio.js.
   Cadastro do dono pelo próprio app (crença 38): cria a conta no Firebase
   Auth, a loja em lojas/{link} (o link é o id, então dois restaurantes não
   pegam o mesmo) e os dados privados em donos/{uid}.
@@ -14,9 +14,10 @@ import {
   doc, getDoc, setDoc, collection, query, where, limit, getDocs, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
-import { pintarIcones } from "./icones.js?v=2";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=2";
-import { PEDIDOS_EXEMPLO } from "./dados-exemplo.js?v=6";
+import { pintarIcones } from "./icones.js?v=3";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=3";
+import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=1";
+import { PEDIDOS_EXEMPLO, CATEGORIAS } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
 const $ = (id) => document.getElementById(id);
@@ -36,12 +37,15 @@ function mensagemErro(err) {
   return "Não deu certo. Tente de novo.";
 }
 
-/* ===== navegação por hash: #entrar, #cadastro/1, #cadastro/2, #painel ===== */
+/* ===== navegação por hash: #entrar, #cadastro/1, #cadastro/2, #painel, #painel/<pedido>, #cardapio/... ===== */
 function irParaHash() {
-  let [tela, passo] = (location.hash.slice(1) || "entrar").split("/");
+  const partes = (location.hash.slice(1) || "entrar").split("/");
+  let [tela, passo] = partes;
+  let vista = "pedidos";
   if (STATE.user || EXEMPLO_PAINEL) {
+    if (tela === "cardapio") vista = "cardapio";
+    else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
-    if (!location.hash.startsWith("#painel")) history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
   }
   else if (!["entrar", "cadastro"].includes(tela)) tela = "entrar";
   if (tela === "cadastro") {
@@ -54,7 +58,13 @@ function irParaHash() {
   document.querySelectorAll(".direita > .form").forEach((f) => (f.hidden = f.id !== `tela-${tela}`));
   $("tela-painel").hidden = tela !== "painel";
   document.querySelector(".auth").hidden = tela === "painel";
-  if (tela === "painel" && passo) abrirPedido(passo); // #painel/<id> abre o detalhe
+  if (tela !== "painel") return;
+  document.body.dataset.vista = vista;
+  $("vista-pedidos").hidden = vista !== "pedidos";
+  $("vista-cardapio").hidden = vista !== "cardapio";
+  document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista === vista));
+  if (vista === "cardapio") mostrarCardapio(partes);
+  else { fecharCardapio(); if (passo) abrirPedido(passo); } // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
 
@@ -180,11 +190,13 @@ async function abrirPainel(user) {
   STATE.loja = achadas.empty ? null : { id: achadas.docs[0].id, ...achadas.docs[0].data() };
   if (!STATE.loja) { toast("Esta conta não tem restaurante ligado.", "erro", 5000); await signOut(auth); return; }
   iniciarPedidos(STATE.loja);
-  if (!location.hash.startsWith("#painel")) location.hash = "#painel";
+  iniciarCardapio(STATE.loja);
+  if (!/^#(painel|cardapio)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
 document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
   pararPedidos();
+  pararCardapio();
   await signOut(auth);
   location.hash = "#entrar";
 }));
@@ -194,12 +206,13 @@ setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash()
 
 if (EXEMPLO_PAINEL) {
   iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
+  iniciarCardapio({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CATEGORIAS });
   irParaHash();
 } else {
   onAuthStateChanged(auth, async (user) => {
     STATE.user = user;
     if (user && !STATE.ocupado) await abrirPainel(user);
-    else { pararPedidos(); irParaHash(); }
+    else { pararPedidos(); pararCardapio(); irParaHash(); }
   });
 }
 

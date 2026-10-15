@@ -22,9 +22,13 @@ PC = {"D01-inicio": "inicio", "D04-produto": "produto/classico/ex0", "D12-entreg
       "D15-revisar": "na-entrega|revisar", "D16-aguardando": "pedido/exemplo", "D17-aceito": "pedido/exemplo-aceito",
       "D18-recusado": "pedido/exemplo-recusado", "D01b-fechado": "fechada|inicio"}
 PAINEL_CEL = {"P01-login": "entrar", "P02-cadastro-dados": "cadastro/1", "P03-cadastro-loja": "cadastro/2",
-              "P10-pedidos": "painel", "P11-pedido-detalhe": "painel/1051"}
+              "P10-pedidos": "painel", "P11-pedido-detalhe": "painel/1051",
+              "P20-cardapio": "cardapio", "P21-editar-item": "cardapio/item/classico",
+              "P22-grupo-opcoes": "cardapio/item/classico/grupo/1", "P23-categorias": "cardapio/categorias"}
 PAINEL_PC = {"PD01-login": "entrar", "PD02-cadastro-loja": "cadastro/2",
-             "PD10-pedidos": "painel", "PD11-pedido-detalhe": "painel/1051"}
+             "PD10-pedidos": "painel", "PD11-pedido-detalhe": "painel/1051",
+             "PD20-cardapio": "cardapio", "PD21-editar-item": "cardapio/item/classico",
+             "PD22-grupo-opcoes": "cardapio/item/classico/grupo/1", "PD23-nova-categoria": "cardapio/categoria/nova"}
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 no_pc = "--pc" in sys.argv
 painel = "--painel" in sys.argv
@@ -39,7 +43,7 @@ for nome, rota in telas.items():
         continue
     estado, _, rota = rota.rpartition("|")
     png = saida / f"{nome}.png"
-    app = f"http://localhost:{porta}/{'painel' if painel else 'index'}.html?exemplo={'painel' if rota.startswith('painel') else (estado or '1')}#{rota}"
+    app = f"http://localhost:{porta}/{'painel' if painel else 'index'}.html?exemplo={'painel' if rota.startswith(('painel', 'cardapio')) else (estado or '1')}#{rota}"
     if no_pc:
         cmd = ["--window-size=1440,900", f"--screenshot={png}", app]
     else:

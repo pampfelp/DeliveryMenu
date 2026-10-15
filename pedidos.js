@@ -13,7 +13,7 @@ import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
-import { pintarIcones } from "./icones.js?v=2";
+import { pintarIcones } from "./icones.js?v=3";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);
 const $ = (id) => document.getElementById(id);

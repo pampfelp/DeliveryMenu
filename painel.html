@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=7" />
+<link rel="stylesheet" href="./painel.css?v=8" />
 </head>
 <body data-tela="carregando">
 
@@ -91,15 +91,15 @@
   <aside class="lateral so-pc" data-c="M menu">
     <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
     <nav class="menu">
-      <a class="on" href="#painel"><i data-ic="sacola"></i>Pedidos<span class="cont" data-novos></span></a>
-      <button type="button" data-em-breve><i data-ic="lista"></i>Cardápio</button>
+      <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont" data-novos></span></a>
+      <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
       <button type="button" data-em-breve><i data-ic="entrega"></i>Entregas e bairros</button>
       <button type="button" data-em-breve><i data-ic="loja"></i>Configurações</button>
     </nav>
     <div class="loja-atual"><b class="nome-loja"></b><small>Você está como dono · <button type="button" data-sair>Sair</button></small></div>
   </aside>
 
-  <main class="principal">
+  <main class="principal" id="vista-pedidos">
     <div class="barra-topo so-cel" data-c="T topo"><b class="nome-loja"></b><button type="button" class="chave" data-chave aria-pressed="true"><span class="trilho"></span><span class="chave-txt">Aberto</span></button></div>
     <div class="cab so-pc" data-c="T cabeçalho">
       <h1>Pedidos</h1>
@@ -118,13 +118,42 @@
     <div class="quadro" id="quadro" data-c="Q quadro de pedidos"></div>
   </main>
 
+  <!-- PD20 / P20 Cardápio -->
+  <main class="principal cardapio esqueleto" id="vista-cardapio" hidden>
+    <div class="barra-topo so-cel" data-c="T topo"><b>Cardápio</b><button type="button" class="novo-item" data-novo-item><i data-ic="mais"></i>Novo item</button></div>
+    <div class="cab so-pc" data-c="T cabeçalho">
+      <h1>Cardápio</h1>
+      <label class="busca"><i data-ic="busca"></i><input type="search" data-busca-item placeholder="Buscar item" aria-label="Buscar item" /></label>
+      <a class="ver" id="ver-cliente" target="_blank" rel="noopener"><i data-ic="olho"></i>Ver como o cliente</a>
+      <button type="button" class="btn" data-novo-item><i data-ic="mais"></i>Novo item</button>
+    </div>
+    <div class="kpis" id="c-kpis" data-c="K indicadores"></div>
+    <label class="busca so-cel" data-c="B busca"><i data-ic="busca"></i><input type="search" data-busca-item placeholder="Buscar item" aria-label="Buscar item" /></label>
+    <div class="abas so-cel" id="c-abas" data-c="A categorias"></div>
+    <div class="c-corpo" data-c="C categorias e itens">
+      <aside class="cats so-pc" id="c-cats"></aside>
+      <section class="c-lista" id="c-lista"></section>
+    </div>
+  </main>
+
   <nav class="nav-p so-cel" data-c="N navegação">
-    <a class="on" href="#painel"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
-    <button type="button" data-em-breve><i data-ic="lista"></i>Cardápio</button>
+    <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
+    <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
     <button type="button" data-em-breve><i data-ic="entrega"></i>Entregas</button>
     <button type="button" data-em-breve><i data-ic="loja"></i>Ajustes</button>
   </nav>
 </div>
+
+<!-- PD21 a PD23 / P21 a P23 Janela do cardápio: item, grupo de opções, categoria.
+     Janela no computador, tela cheia no celular (crença 15) -->
+<div class="detalhe-veu" id="c-modal" hidden>
+  <section class="c-janela esqueleto" role="dialog" aria-modal="true" aria-labelledby="c-titulo" data-c="J janela do cardápio">
+    <div class="c-cab" id="c-cab"></div>
+    <div class="c-corpo-m" id="c-corpo-m"></div>
+    <div class="c-pe" id="c-pe"></div>
+  </section>
+</div>
+<input type="file" id="c-foto" accept="image/*" hidden />
 
 <!-- PD11 / P11 Detalhe do pedido: janela no computador, tela cheia no celular -->
 <div class="detalhe-veu" id="detalhe" hidden>
@@ -135,6 +164,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=8"></script>
+<script type="module" src="./painel.js?v=9"></script>
 </body>
 </html>
