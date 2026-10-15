@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S17 Pedido aceito</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .topo { border-bottom: 0; justify-content: flex-end; }
+  .ok { width: 88px; height: 88px; margin: 24px auto 0; border-radius: 50%; background: var(--success-bg); color: var(--success); display: grid; place-items: center; }
+  .ok svg.ic { width: 44px; height: 44px; stroke-width: 2.4; }
+  h1.t { margin-top: 16px; text-align: center; font: 600 20px/28px Rubik; color: var(--text-strong); }
+  p.s { margin: 6px 32px 0; text-align: center; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .num { margin: 20px 16px 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-md); display: flex; justify-content: space-between; align-items: center; }
+  .num small { display: block; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .num b { font: 600 18px/24px Rubik; color: var(--text-strong); }
+  .num .prazo { text-align: right; }
+  .passos { margin: 16px 16px 0; padding: 14px; border: 1px solid var(--border); border-radius: var(--r-md); }
+  .p { display: flex; gap: 12px; position: relative; padding-bottom: 16px; }
+  .p:last-child { padding-bottom: 0; }
+  .p::before { content: ""; position: absolute; left: 11px; top: 24px; bottom: 0; width: 2px; background: var(--border); }
+  .p:last-child::before { display: none; }
+  .b { width: 24px; height: 24px; border-radius: 50%; border: 2px solid var(--border); background: var(--surface); flex: none; display: grid; place-items: center; position: relative; }
+  .b.feito { background: var(--success); border-color: var(--success); color: #fff; }
+  .b.feito svg.ic { width: 14px; height: 14px; stroke-width: 3; }
+  .b.atual { border-color: var(--accent); }
+  .b.atual::after { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
+  .p div { font: 500 14px/24px Rubik; color: var(--text-strong); }
+  .p div small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .p.depois div { color: var(--text-muted); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; display: grid; gap: 10px; }
+  .btn-ghost svg.ic { color: var(--success); }
+  .ok.espera { background: var(--info-bg); color: var(--info); }
+  .ok.nao { background: #fef2f2; color: var(--danger); }
+  .num b.espera { font: 500 15px/24px Rubik; color: var(--text-muted); }
+  .fica { margin: 12px 16px 0; display: flex; gap: 8px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .fica svg.ic { width: 16px; height: 16px; }
+  .b.recusado { background: var(--danger); border-color: var(--danger); color: #fff; }
+  .b.recusado svg.ic { width: 14px; height: 14px; stroke-width: 3; }
+  .p.nao div { color: var(--danger); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><div class="fechar"><i data-ic="x"></i></div></div>
+  <div class="ok "><i data-ic="check"></i></div>
+  <h1 class="t">Pedido aceito!</h1>
+  <p class="s">O restaurante já está preparando o seu pedido.</p>
+
+  <div class="num cartao"><div><small>Pedido</small><b>#1052</b></div><div class="prazo"><small>Previsão de entrega</small><b>19h36 - 19h46</b></div></div>
+
+  <div class="passos">
+    <div class="p "><span class="b feito"><i data-ic="check"></i></span><div>Pedido enviado<small>19h05</small></div></div>
+    <div class="p "><span class="b feito"><i data-ic="check"></i></span><div>Aceito pelo restaurante<small>19h06</small></div></div>
+    <div class="p "><span class="b atual"></span><div>Em preparo<small>Começou às 19h06</small></div></div>
+    <div class="p depois"><span class="b"></span><div>Saiu para entrega</div></div>
+    <div class="p depois"><span class="b"></span><div>Entregue</div></div>
+  </div>
+  <div class="fica"><i data-ic="info"></i><span>Pode fechar esta tela: o pedido fica em Pedidos, na barra de baixo, e a situação atualiza sozinha.</span></div>
+  <div class="rodape">
+    <div class="btn btn-ghost"><i data-ic="conversa"></i>Falar com o restaurante</div>
+    <div class="btn btn-accent">Voltar ao cardápio</div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

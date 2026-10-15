@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S15 Revisar pedido</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .topo .voltar { color: var(--text-strong); }
+  .sec { margin: 10px 12px 0; padding: 12px 14px; }
+  .sec:first-of-type { margin-top: 12px; }
+  .sec-t { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+  .sec-t span { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+  .sec-t a { font: 500 13px/18px Rubik; color: var(--accent); }
+  .linha { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; }
+  .linha b { font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .linha b span { color: var(--text-muted); margin-right: 4px; }
+  .linha p { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .linha .v { font: 500 14px/20px Rubik; color: var(--text-strong); white-space: nowrap; }
+  .info { display: flex; gap: 10px; }
+  .info svg.ic { color: var(--text-muted); margin-top: 2px; }
+  .info b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .info p { font-size: 13px; line-height: 18px; color: var(--text); }
+  .info .ok { color: var(--success); font-weight: 500; }
+  .troco { margin-top: 10px; display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; }
+  .in { height: 40px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; font-size: 14px; color: var(--text-strong); }
+  .in small { color: var(--text-muted); margin-right: 6px; font-size: 14px; }
+  .sem-troco { font: 500 13px/18px Rubik; color: var(--accent); padding: 0 4px; }
+  .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+  .tl.total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); font: 600 17px/26px Rubik; color: var(--text-strong); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .rodape .btn { justify-content: space-between; padding: 0 20px; }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Revisar pedido</h1></div>
+
+  <div class="sec cartao">
+    <div class="sec-t"><span>Itens</span><a>Editar</a></div>
+    <div class="linha"><div><b><span>1x</span>Clássico da Casa</b><p>Ao ponto, 1 bacon</p></div><span class="v">R$ 31,00</span></div>
+    <div class="linha"><div><b><span>1x</span>Smash Simples</b><p>Sem picles</p></div><span class="v">R$ 19,90</span></div>
+  </div>
+
+  <div class="sec cartao">
+    <div class="sec-t"><span>Entrega</span><a>Alterar</a></div>
+    <div class="info"><i data-ic="entrega"></i><div><b>Travessa das Flores, 120</b><p>Jardim das Flores · Ref.: em frente à praça</p><p class="ok">Chega entre 19h36 e 19h46</p></div></div>
+  </div>
+
+  <div class="sec cartao">
+    <div class="sec-t"><span>Seus dados</span><a>Alterar</a></div>
+    <div class="info"><i data-ic="user"></i><div><b>Ana Paula</b><p>(91) 90000-0000</p></div></div>
+  </div>
+
+  <div class="sec cartao">
+    <div class="sec-t"><span>Pagamento</span><a>Alterar</a></div>
+    <div class="info"><i data-ic="dinheiro"></i><div><b>Dinheiro na entrega</b><p>Troco para quanto?</p></div></div>
+    <div class="troco"><div class="in"><small>R$</small>100,00</div><span class="sem-troco">Não preciso</span></div>
+  </div>
+
+  <div class="sec cartao">
+    <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+    <div class="tl"><span>Taxa de entrega</span><span>R$ 5,50</span></div>
+    <div class="tl total"><span>Total</span><span>R$ 56,40</span></div>
+  </div>
+
+  <div class="rodape"><div class="btn btn-accent"><span>Enviar pedido</span><span>R$ 56,40</span></div></div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S09 Seus dados</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .topo .voltar { color: var(--text-strong); }
+  .bloco { margin: 12px; padding: 14px; }
+  .bloco h2 { font: 500 16px/24px Rubik; color: var(--text-strong); }
+  .bloco .sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .campo { margin-top: 12px; }
+  .campo label { display: block; font: 500 12px/16px Rubik; color: var(--text-muted); margin-bottom: 4px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .in { height: 44px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-strong); }
+  .in svg.ic { color: var(--text-muted); }
+  .ajuda { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .guardar { display: flex; gap: 10px; margin: 0 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .guardar svg.ic { color: var(--text-muted); width: 18px; height: 18px; margin-top: 1px; }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Seus dados</h1></div>
+
+  <div class="bloco cartao">
+    <h2>Para o restaurante falar com você</h2>
+    <p class="sub">Só usamos para avisar sobre este pedido.</p>
+    <div class="campo"><label>Nome <i>*</i></label><div class="in"><i data-ic="user"></i>Ana Paula</div></div>
+    <div class="campo"><label>WhatsApp <i>*</i></label><div class="in"><i data-ic="fone"></i>(91) 90000-0000</div>
+      <p class="ajuda">Com DDD. O restaurante chama aqui se precisar.</p></div>
+  </div>
+
+  <div class="guardar"><i data-ic="info"></i><span>Fica guardado neste aparelho. No próximo pedido você não precisa digitar de novo.</span></div>
+
+  <div class="rodape"><div class="btn btn-accent">Continuar</div></div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

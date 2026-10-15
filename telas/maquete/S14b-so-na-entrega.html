@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S14b Pagamento sem online</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .topo .voltar { color: var(--text-strong); }
+  .bloco { margin: 12px; padding: 14px; }
+  .bloco h2 { font: 500 16px/24px Rubik; color: var(--text-strong); margin-bottom: 10px; }
+  .abas { display: grid; grid-template-columns: 1fr 1fr; background: var(--bg); border-radius: var(--r-md); padding: 4px; margin-bottom: 12px; }
+  .abas span { height: 36px; display: grid; place-items: center; border-radius: var(--r-sm); font: 500 14px/20px Rubik; color: var(--text-muted); }
+  .abas span.on { background: var(--surface); color: var(--text-strong); box-shadow: var(--shadow-sm); }
+  .forma { display: flex; align-items: center; gap: 12px; height: 56px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-md); margin-top: 8px; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .forma .rotulo { flex: 1; }
+  .forma .ic:first-child { color: var(--text-muted); }
+  .forma.on { border: 2px solid var(--accent); }
+  .forma.on .ic:first-child { color: var(--accent); }
+  .radio { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--border-input); }
+  .radio.on { border: 7px solid var(--accent); }
+  .forma .rotulo small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .nota { margin-top: 8px; padding: 12px; border-radius: var(--r-md); background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .nota b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); margin-bottom: 2px; }
+  .resumo { margin: 0 12px; padding: 14px; }
+  .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text-muted); }
+  .tl.total { margin-top: 6px; padding-top: 8px; border-top: 1px solid var(--border); font: 600 18px/28px Rubik; color: var(--text-strong); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Pagamento</h1></div>
+
+  <div class="bloco cartao">
+    <h2>Pagar na entrega</h2>
+    <div class="forma on"><i data-ic="dinheiro"></i><span class="rotulo">Dinheiro<small>Informe se precisa de troco</small></span><span class="radio on"></span></div>
+    <div class="nota"><b>Como funciona</b>Você paga quando o pedido chegar. Se for em dinheiro, diga para quanto precisa de troco na revisão do pedido.</div>
+    <div class="forma"><i data-ic="pix"></i><span class="rotulo">Pix<small>Na hora da entrega</small></span><span class="radio"></span></div>
+    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito<small>Na maquininha</small></span><span class="radio"></span></div>
+    <div class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de débito<small>Na maquininha</small></span><span class="radio"></span></div>
+  </div>
+
+  <div class="resumo cartao">
+    <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+    <div class="tl"><span>Taxa de entrega</span><span>R$ 5,50</span></div>
+    <div class="tl total"><span>Total</span><span>R$ 56,40</span></div>
+  </div>
+
+  <div class="rodape"><div class="btn btn-accent">Revisar pedido</div></div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

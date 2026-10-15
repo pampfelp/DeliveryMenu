@@ -1,0 +1,92 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S01b Loja fechada</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .faixa { height: 96px; background: var(--accent); }
+  .cabeca { position: relative; margin: -44px 12px 0; padding: 20px 16px 16px; text-align: center; }
+  .situacao.fechada { color: var(--danger); }
+  .aviso { margin: 12px 12px 0; padding: 12px 14px; display: flex; gap: 10px; border-radius: var(--r-md); background: #fef2f2; font-size: 13px; line-height: 18px; color: var(--text); }
+  .aviso svg.ic { color: var(--danger); width: 18px; height: 18px; margin-top: 1px; }
+  .aviso b { display: block; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .barra-sacola.fechada { background: #9ca3af; box-shadow: none; }
+  .barra-sacola.fechada .qtd b { color: #6b7280; }
+  .logo { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--surface); box-shadow: var(--shadow-card); font: 500 11px/14px Rubik; letter-spacing: .04em; }
+  .cabeca h1 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .linha-info { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 4px; font-size: 14px; }
+  .linha-info svg.ic { width: 16px; height: 16px; color: var(--text-muted); }
+  .linha-info a { color: var(--text); text-decoration: none; font-weight: 500; }
+  .situacao { margin-top: 6px; font: 500 13px/19.5px Rubik; color: var(--success); }
+  .taxa { margin: 12px 12px 0; padding: 14px 12px; display: flex; align-items: center; gap: 10px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .taxa .ic:first-child { color: var(--text-muted); }
+  .taxa span { flex: 1; }
+  .taxa .ic:last-child { color: var(--accent); }
+  .filtros { display: flex; gap: 8px; margin: 16px 12px 0; }
+  .sel { flex: 1; height: 44px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; font: 500 14px/20px Rubik; color: var(--text-strong); background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); }
+  .lupa { width: 44px; height: 44px; display: grid; place-items: center; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); color: var(--text-strong); }
+  .secao { margin: 20px 12px 10px; }
+  .faixa-h { display: flex; gap: 10px; padding: 0 12px; overflow: hidden; }
+  .dest { width: 150px; flex: none; overflow: hidden; }
+  .dest .foto { height: 108px; }
+  .dest .corpo { padding: 10px; }
+  .dest h3 { font: 500 15px/20px Rubik; color: var(--text-strong); margin-top: 6px; }
+  .dest p { font-size: 13px; line-height: 18px; margin-top: 2px; height: 36px; overflow: hidden; }
+  .dest .preco { margin-top: 8px; font-size: 15px; }
+  .item { display: flex; gap: 12px; margin: 0 12px 10px; padding: 12px; }
+  .item .txt { flex: 1; min-width: 0; }
+  .item h3 { font: 500 16px/22px Rubik; color: var(--text-strong); }
+  .item p { font-size: 13px; line-height: 18px; margin-top: 2px; }
+  .item .valores { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .item .foto { width: 88px; height: 88px; border-radius: var(--r-md); flex: none; }
+  .esgotado { opacity: .55; }
+  .esgotado .tag { font: 500 12px/16px Rubik; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: var(--r-sm); }
+  .barra-sacola { position: absolute; left: 12px; right: 12px; bottom: 76px; height: 52px; padding: 0 16px; display: flex; align-items: center; gap: 12px; background: var(--accent); color: var(--on-accent); border-radius: var(--r-md); box-shadow: var(--shadow-raised); font: 500 16px/24px Rubik; }
+  .barra-sacola .qtd { position: relative; }
+  .barra-sacola .qtd b { position: absolute; top: -6px; right: -8px; min-width: 18px; height: 18px; border-radius: 9px; background: var(--on-accent); color: var(--accent); font: 600 11px/18px Rubik; text-align: center; }
+  .barra-sacola .rotulo { flex: 1; text-align: center; }
+</style></head>
+<body><div class="tela">
+  <div class="faixa"></div>
+  <div class="cabeca cartao">
+    <h1>Nome do Restaurante</h1>
+    <div class="linha-info"><i data-ic="pino"></i> Belém - PA <span class="muted">•</span> <a>Mais informações</a></div>
+    <div class="situacao fechada">Fechado agora</div>
+  </div>
+  <div class="aviso"><i data-ic="relogio"></i><span><b>Não estamos recebendo pedidos agora</b>Você pode olhar o cardápio e montar a sacola. O envio volta quando o restaurante abrir.</span></div>
+  <div class="taxa cartao"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita"></i></div>
+  <div class="filtros">
+    <div class="sel">Categorias <i data-ic="baixo"></i></div>
+    <div class="lupa"><i data-ic="busca"></i></div>
+  </div>
+
+  <h2 class="secao">Destaques</h2>
+  <div class="faixa-h">
+    <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+      <span class="selo">Recomendado</span><h3>Clássico da Casa</h3><p class="muted leve">Pão brioche, blend de 160 g, queijo e molho especial</p><div class="preco">R$ 27,00</div></div></div>
+    <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+      <span class="selo selo-oferta">Oferta</span><h3>Combo Dupla</h3><p class="muted leve">2 burgers, batata média e refrigerante 1 L</p><div class="preco preco-promo">R$ 59,90</div></div></div>
+    <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+      <span class="selo">Novo</span><h3>Bacon Duplo</h3><p class="muted leve">Dois blends, bacon e cheddar</p><div class="preco">R$ 34,00</div></div></div>
+  </div>
+
+  <h2 class="secao">Burgers</h2>
+  <div class="item cartao">
+    <div class="txt"><h3>Smash Simples</h3><p class="muted leve">Blend de 90 g prensado na chapa, queijo prato e picles</p>
+      <div class="valores"><span class="preco preco-promo">R$ 19,90</span><span class="riscado">R$ 24,00</span><span class="desconto">-17%</span></div></div>
+    <div class="foto"><i data-ic="foto"></i></div>
+  </div>
+  <div class="item cartao esgotado">
+    <div class="txt"><h3>Costela Desfiada</h3><p class="muted leve">Blend de 160 g, costela desfiada e cebola crispy</p>
+      <div class="valores"><span class="preco">R$ 36,00</span><span class="tag">Esgotado</span></div></div>
+    <div class="foto"><i data-ic="foto"></i></div>
+  </div>
+
+  <div class="barra-sacola"><span class="qtd"><i data-ic="sacola"></i><b>2</b></span><span class="rotulo">Ver sacola</span><strong>R$ 50,90</strong></div>
+  <nav class="nav">
+    <a class="on"><i data-ic="home"></i>Início</a>
+    <a><i data-ic="promo"></i>Promoções</a>
+    <a><i data-ic="sacola"></i>Pedidos</a>
+    <a><i data-ic="user"></i>Perfil</a>
+  </nav>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>
