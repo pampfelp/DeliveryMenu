@@ -85,16 +85,57 @@ export const CATEGORIAS = [
       },
     ],
   },
+  {
+    id: "pizzas",
+    nome: "Pizzas",
+    itens: [
+      {
+        id: "pizza-meio",
+        nome: "Pizza meio a meio",
+        descricao: "35 cm, dois sabores. Vale o preço do sabor mais caro",
+        preco: 0,
+        fotoUrl: "",
+        grupos: [
+          {
+            id: "sabores", nome: "Sabores", tipo: "somavel", min: 2, max: 2, regraPreco: "maior",
+            opcoes: [
+              { id: "mussarela", nome: "Mussarela", preco: 4500 },
+              { id: "calabresa", nome: "Calabresa", preco: 4800 },
+              { id: "frango", nome: "Frango com catupiry", preco: 5500 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
+  {
+    id: "acompanhamentos",
+    nome: "Acompanhamentos e bebidas",
+    itens: [
+      { id: "batata", nome: "Batata média", descricao: "Batata frita crocante, 200 g", preco: 1400, fotoUrl: "", grupos: [] },
+      { id: "onion", nome: "Onion rings", descricao: "Anéis de cebola empanados", preco: 1600, fotoUrl: "", grupos: [] },
+      {
+        id: "refri", nome: "Refrigerante lata", descricao: "350 ml", preco: 600, fotoUrl: "",
+        grupos: [
+          {
+            id: "sabor", nome: "Sabor", tipo: "unica", min: 1, max: 1, regraPreco: "soma",
+            opcoes: [
+              { id: "cola", nome: "Cola", preco: 0 },
+              { id: "guarana", nome: "Guaraná", preco: 0 },
+              { id: "cola-zero", nome: "Cola zero", preco: 0 },
+            ],
+          },
+        ],
+      },
+    ],
+  },
 ];
 
-export const SUGESTOES = [
-  { id: "batata", nome: "Batata média", preco: 1400 },
-  { id: "refri", nome: "Refrigerante lata", preco: 600 },
-  { id: "onion", nome: "Onion rings", preco: 1600 },
-];
+// Itens oferecidos em "Peça também" na sacola.
+export const SUGESTOES = ["batata", "refri", "onion"];
 
-// Sacola das telas S01 e S08: o Clássico com bacon e um Smash em promoção.
+// Sacola das imagens validadas (S01, S08, D01). Só entra com ?exemplo=1 na URL.
 export const SACOLA_EXEMPLO = [
-  { itemId: "classico", nome: "Clássico da Casa", qtd: 1, resumo: "Ao ponto, 1 bacon", total: 3100 },
-  { itemId: "smash", nome: "Smash Simples", qtd: 1, resumo: "Sem picles", total: 1990, promo: true },
+  { itemId: "classico", qtd: 1, escolhas: { ponto: { "ao-ponto": 1 }, adicionais: { bacon: 1 } }, obs: "" },
+  { itemId: "smash", qtd: 1, escolhas: {}, obs: "Sem picles" },
 ];

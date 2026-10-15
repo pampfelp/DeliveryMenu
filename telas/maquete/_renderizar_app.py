@@ -1,23 +1,35 @@
-"""Fotografa as telas do app rodando no servidor local, 390 x 844.
+"""Fotografa as telas do app rodando no servidor local.
 
-Uso: python _renderizar_app.py <pasta-de-saida> [porta]
+Uso: python _renderizar_app.py <pasta-de-saida> [porta] [--pc]
+  sem --pc: celular, 390 x 844 (S01...S16)
+  com --pc: computador, 1440 x 900 (D01...D16)
+Usa ?exemplo=1, que põe na sacola os itens das imagens validadas.
 Precisa do servidor de pé (TESTAR - index.html.bat, ou o preview na porta 8735).
 """
 import pathlib, subprocess, sys
 from PIL import Image
 
 CHROME = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-TELAS = {"S01-inicio": "inicio", "S04-produto": "produto/classico", "S08-sacola": "sacola",
-         "S12-entrega": "entrega", "S14-pagamento": "pagamento", "S16-enviado": "enviado"}
+CELULAR = {"S01-inicio": "inicio", "S04-produto": "produto/classico/ex0", "S08-sacola": "sacola",
+           "S12-entrega": "entrega", "S14-pagamento": "pagamento", "S16-enviado": "enviado"}
+PC = {"D01-inicio": "inicio", "D04-produto": "produto/classico/ex0", "D12-entrega": "entrega",
+      "D14-pagamento": "pagamento", "D16-enviado": "enviado"}
+args = [a for a in sys.argv[1:] if a != "--pc"]
+no_pc = "--pc" in sys.argv
 aqui = pathlib.Path(__file__).resolve().parent
-saida = pathlib.Path(sys.argv[1]).resolve()
-porta = sys.argv[2] if len(sys.argv) > 2 else "8735"
+saida = pathlib.Path(args[0]).resolve()
+porta = args[1] if len(args) > 1 else "8735"
 saida.mkdir(parents=True, exist_ok=True)
-for nome, rota in TELAS.items():
+for nome, rota in (PC if no_pc else CELULAR).items():
     png = saida / f"{nome}.png"
-    url = (aqui / "_quadro390.html").as_uri() + f"#http://localhost:{porta}/index.html#{rota}"
-    subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--virtual-time-budget=6000",
-                    "--force-device-scale-factor=2", "--window-size=500,900",
-                    f"--screenshot={png}", url], check=True, capture_output=True)
-    Image.open(png).crop((0, 0, 780, 1688)).save(png)
+    app = f"http://localhost:{porta}/index.html?exemplo=1#{rota}"
+    if no_pc:
+        cmd = ["--window-size=1440,900", f"--screenshot={png}", app]
+    else:
+        cmd = ["--force-device-scale-factor=2", "--window-size=500,900", f"--screenshot={png}",
+               (aqui / "_quadro390.html").as_uri() + "#" + app]
+    subprocess.run([CHROME, "--headless=new", "--hide-scrollbars", "--virtual-time-budget=6000", *cmd],
+                   check=True, capture_output=True)
+    if not no_pc:
+        Image.open(png).crop((0, 0, 780, 1688)).save(png)
     print("ok", png.name)

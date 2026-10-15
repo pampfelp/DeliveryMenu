@@ -13,115 +13,159 @@
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
-<link rel="stylesheet" href="./loja.css?v=8" />
+<link rel="stylesheet" href="./loja.css?v=13" />
 </head>
 <body>
 <div id="app">
 
-  <!-- S01 Início -->
+  <!-- S01 / D01 Início -->
   <section class="tela" id="tela-inicio">
-    <header data-c="A1 cabeçalho da loja" class="cabeca">
-      <div class="faixa"></div>
-      <div class="logo foto" data-c="A1.1 logo" id="loja-logo"></div>
-      <h1 id="loja-nome"></h1>
-      <div class="linha-info"><i data-ic="pino"></i><span id="loja-cidade"></span><span class="ponto">•</span><a href="#" data-c="A1.2">Mais informações</a></div>
-      <div class="situacao" id="loja-situacao"></div>
-    </header>
-    <button class="linha-taxa" data-c="A2 taxa"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
-    <div class="filtros" data-c="A3 filtros">
-      <button class="sel"><span>Categorias</span><i data-ic="baixo"></i></button>
-      <button class="lupa" aria-label="Buscar"><i data-ic="busca"></i></button>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <header class="cabeca">
+          <div class="faixa"></div>
+          <div class="logo foto" id="loja-logo"></div>
+          <div class="cabeca-txt">
+            <h1 class="loja-nome"></h1>
+            <div class="meta">
+              <div class="linha-info"><i data-ic="pino"></i><span id="loja-cidade"></span><span class="ponto">•</span><a href="#inicio">Mais informações</a></div>
+              <div class="situacao" id="loja-situacao"></div>
+            </div>
+          </div>
+        </header>
+        <button class="linha-taxa so-cel"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
+        <div class="filtros">
+          <button class="sel"><span>Categorias</span><i data-ic="baixo"></i></button>
+          <label class="lupa" aria-label="Buscar"><i data-ic="busca"></i><input id="busca" type="search" placeholder="Buscar no cardápio" /></label>
+        </div>
+        <div id="resultado-busca"></div>
+        <div id="cardapio">
+          <h2 class="secao">Destaques</h2>
+          <div class="faixa-h" id="destaques"></div>
+          <div id="categorias"></div>
+        </div>
+      </div>
+      <aside class="sacola-lateral so-pc" id="sacola-lateral"></aside>
     </div>
-    <h2 class="secao">Destaques</h2>
-    <div class="faixa-h" id="destaques" data-c="A4 destaques"></div>
-    <div id="categorias" data-c="A5 categorias"></div>
-    <a class="barra-sacola" href="#sacola" data-c="A6 barra da sacola"><span class="qtd"><i data-ic="sacola"></i><span id="barra-qtd"></span></span><span class="rotulo">Ver sacola</span><strong id="barra-total"></strong></a>
+    <a class="barra-sacola" href="#sacola"><span class="qtd"><i data-ic="sacola"></i><span id="barra-qtd"></span></span><span class="rotulo">Ver sacola</span><strong id="barra-total"></strong></a>
   </section>
 
-  <!-- S04 Produto -->
+  <!-- S04 / D04 Produto -->
   <section class="tela" id="tela-produto">
-    <div class="hero foto" data-c="B1 foto"><i data-ic="foto"></i></div>
-    <a class="x" href="#inicio" data-c="B2 fechar" aria-label="Fechar"><i data-ic="x"></i></a>
-    <div class="info" data-c="B3 informações" id="produto-info"></div>
-    <div id="produto-grupos" data-c="B4/B5 grupos e opções"></div>
-    <div class="obs" data-c="B6 observação"><label for="obs">Alguma observação?</label><textarea id="obs" placeholder="Ex.: sem cebola, molho à parte"></textarea></div>
-    <div class="rodape" data-c="B7 rodapé"><div class="qtd"><button class="menos" aria-label="Menos"><i data-ic="menos"></i></button><b>1</b><button aria-label="Mais"><i data-ic="mais"></i></button></div><button class="btn" id="btn-adicionar"></button></div>
+    <div class="hero-col"><div class="hero foto" id="produto-foto"><i data-ic="foto"></i></div></div>
+    <a class="x" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a>
+    <div class="produto-det">
+      <div class="cab-det so-pc"><h2>Detalhes do produto</h2></div>
+      <div class="rolagem">
+        <div class="info" id="produto-info"></div>
+        <div id="produto-grupos"></div>
+        <div class="obs"><label for="obs">Alguma observação?</label><textarea id="obs" placeholder="Ex.: sem cebola, molho à parte"></textarea></div>
+      </div>
+      <div class="rodape">
+        <div class="qtd"><button class="menos" id="qtd-menos" aria-label="Menos"><i data-ic="menos"></i></button><b id="qtd-valor">1</b><button id="qtd-mais" aria-label="Mais"><i data-ic="mais"></i></button></div>
+        <button class="btn" id="btn-adicionar"></button>
+      </div>
+    </div>
   </section>
 
-  <!-- S08 Sacola -->
+  <!-- S08 Sacola (no computador, a sacola é a coluna do início) -->
   <section class="tela" id="tela-sacola">
-    <div class="topo" data-c="C1 topo"><h1 id="sacola-loja"></h1><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
-    <button class="linha-taxa" data-c="C2 taxa"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
-    <div class="cab" data-c="C3"><h2>Sua sacola</h2><button>LIMPAR</button></div>
-    <div id="sacola-itens" data-c="C4 itens"></div>
-    <a class="mais-itens" href="#inicio" data-c="C5">ADICIONAR MAIS ITENS</a>
-    <h3 class="sug-t">Peça também</h3>
-    <div class="sug" id="sugestoes" data-c="C6 sugestões"></div>
-    <div class="totais" data-c="C7 totais e cupom">
-      <div class="tl"><span>Subtotal</span><span id="sacola-subtotal"></span></div>
+    <div class="topo"><h1 class="loja-nome"></h1><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
+    <button class="linha-taxa"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
+    <div class="cab"><h2>Sua sacola</h2><button data-limpar>LIMPAR</button></div>
+    <div id="sacola-itens"></div>
+    <a class="mais-itens" href="#inicio">ADICIONAR MAIS ITENS</a>
+    <div id="sacola-sugestoes">
+      <h3 class="sug-t">Peça também</h3>
+      <div class="sug" id="sugestoes"></div>
+    </div>
+    <div class="totais">
+      <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
       <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
-      <div class="tl total"><span>Total</span><span id="sacola-total"></span></div>
+      <div class="tl total"><span>Total</span><span data-subtotal></span></div>
       <button class="cupom"><i data-ic="cupom"></i><span>Tem um cupom?<small>Toque e digite o código</small></span><i data-ic="direita" class="seta"></i></button>
-      <a class="btn" href="#entrega">Continuar pedido</a>
+      <a class="btn" href="#entrega" data-continuar>Continuar pedido</a>
     </div>
   </section>
 
-  <!-- S12 Entrega -->
-  <section class="tela" id="tela-entrega">
-    <div class="topo" data-c="D1 topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Como receber</h1></div>
-    <div class="bloco" data-c="D2 tipo de pedido">
-      <h2>Como você quer receber o pedido?</h2>
-      <div class="tipos"><button class="on"><i data-ic="entrega"></i>Entrega</button><button><i data-ic="loja"></i>Retirada</button><button><i data-ic="mesa"></i>No local</button></div>
+  <!-- S12 / D12 Entrega -->
+  <section class="tela checkout" id="tela-entrega">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Como receber</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <h2>Como você quer receber o pedido?</h2>
+          <div class="tipos" id="tipos">
+            <button data-tipo="entrega"><i data-ic="entrega"></i>Entrega</button>
+            <button data-tipo="retirada"><i data-ic="loja"></i>Retirada</button>
+            <button data-tipo="local"><i data-ic="mesa"></i>No local</button>
+          </div>
+        </div>
+        <div class="bloco so-entrega">
+          <h2>Endereço de entrega</h2>
+          <div class="end-grade">
+            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" value="66000-000" /><button class="so-cel">Buscar CEP</button></div></div>
+            <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" value="Travessa das Flores" /></div>
+            <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" value="120" /></div>
+            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" value="Centro" /></div>
+            <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" placeholder="Apto" /></div>
+            <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" value="Em frente à praça" /></div>
+            <div class="a-loc acoes-end"><button class="loc"><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc">Buscar pelo CEP</button></div>
+          </div>
+        </div>
+        <div class="resultado so-entrega"><i data-ic="check"></i><span>Entregamos no seu endereço</span><span>R$ 6,00 • 35-45 min</span></div>
+        <button class="agendar"><i data-ic="agenda"></i><span>Agendar pedido<small>Receber agora ou escolher um horário</small></span><i data-ic="direita" class="seta"></i></button>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Continuar" data-destino="#pagamento"></aside>
     </div>
-    <div class="bloco" data-c="D3 endereço">
-      <h2>Endereço de entrega</h2>
-      <div class="campo"><label>CEP</label><div class="cep"><input value="66000-000" /><button>Buscar CEP</button></div></div>
-      <div class="campo dupla"><div><label>Rua <i class="obrig">*</i></label><input value="Travessa das Flores" /></div><div><label>Número <i class="obrig">*</i></label><input value="120" /></div></div>
-      <div class="campo dupla"><div><label>Bairro <i class="obrig">*</i></label><input value="Centro" /></div><div><label>Compl.</label><input placeholder="Apto" /></div></div>
-      <div class="campo"><label>Ponto de referência <i class="obrig">*</i></label><input value="Em frente à praça" /></div>
-      <button class="loc"><i data-ic="alvo"></i>Usar minha localização</button>
-    </div>
-    <div class="resultado" data-c="D4 resultado da taxa"><i data-ic="check"></i><span>Entregamos no seu endereço</span><span>R$ 6,00 • 35-45 min</span></div>
-    <button class="agendar" data-c="D5 agendar"><i data-ic="agenda"></i><span>Agendar pedido<small>Receber agora ou escolher um horário</small></span><i data-ic="direita" class="seta"></i></button>
-    <div class="rodape" data-c="D6"><a class="btn" href="#pagamento">Continuar</a></div>
+    <div class="rodape so-cel"><a class="btn" href="#pagamento">Continuar</a></div>
   </section>
 
-  <!-- S14 Pagamento -->
-  <section class="tela" id="tela-pagamento">
-    <div class="topo" data-c="E1 topo"><a href="#entrega" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Pagamento</h1></div>
-    <div class="bloco" data-c="E2/E3 formas">
-      <div class="abas" data-c="E2 abas"><button class="on">Pagar online</button><button>Pagar na entrega</button></div>
-      <button class="forma on"><i data-ic="pix"></i><span class="rotulo">Pix <small>Aprovação na hora</small></span><span class="radio on"></span></button>
-      <div class="nota"><b>Como funciona</b>Depois de revisar o pedido, aparecem o QR Code e o código copia e cola. O restaurante começa a preparar assim que o pagamento é confirmado.</div>
-      <button class="forma"><i data-ic="cartao"></i><span class="rotulo">Cartão de crédito <small>Adicionar cartão</small></span><span class="radio"></span></button>
+  <!-- S14 / D14 Pagamento -->
+  <section class="tela checkout" id="tela-pagamento">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#entrega" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Pagamento</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <div class="abas" id="abas-pagamento"><button data-aba="online">Pagar online</button><button data-aba="entrega">Pagar na entrega</button></div>
+          <div class="formas" id="formas"></div>
+        </div>
+        <div class="bloco resumo so-cel">
+          <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
+          <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
+          <div class="tl total"><span>Total</span><span data-total></span></div>
+        </div>
+        <div class="entrega-resumo so-pc" id="entrega-resumo"></div>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Revisar pedido" data-destino="#enviado"></aside>
     </div>
-    <div class="bloco resumo" data-c="E4 resumo">
-      <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
-      <div class="tl"><span>Taxa de entrega</span><span>R$ 6,00</span></div>
-      <div class="tl total"><span>Total</span><span>R$ 56,90</span></div>
-    </div>
-    <div class="rodape" data-c="E5"><a class="btn" href="#enviado">Revisar pedido</a></div>
+    <div class="rodape so-cel"><a class="btn" href="#enviado" data-enviar>Revisar pedido</a></div>
   </section>
 
-  <!-- S16 Pedido enviado -->
+  <!-- S16 / D16 Pedido enviado -->
   <section class="tela" id="tela-enviado">
-    <div class="topo-x" data-c="F1"><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
-    <div class="ok" data-c="F2 confirmação"><div class="selo-ok"><i data-ic="check"></i></div><h1>Pedido enviado!</h1><p>O restaurante já recebeu seu pedido e vai começar a preparar.</p></div>
-    <div class="num" data-c="F3 número e previsão"><div><small>Pedido</small><b>#1048</b></div><div><small>Previsão de entrega</small><b>19h40 - 19h50</b></div></div>
-    <ol class="passos" data-c="F4 linha do tempo">
-      <li class="feito"><i data-ic="check" class="marca"></i>Pedido recebido <small>19h05</small></li>
-      <li class="atual">Em preparo <small>Aguardando o restaurante confirmar</small></li>
-      <li>Saiu para entrega</li>
-      <li>Entregue</li>
-    </ol>
-    <div class="rodape duplo" data-c="F5 ações"><button class="btn fantasma"><i data-ic="conversa"></i>Falar com o restaurante</button><button class="btn">Acompanhar pedido</button></div>
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto">LOGO</span><span class="loja-nome"></span></div></div>
+    <div class="topo-x so-cel"><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
+    <div class="cartao-ok">
+      <div class="ok"><div class="selo-ok"><i data-ic="check"></i></div><h1>Pedido enviado!</h1><p>O restaurante já recebeu seu pedido e vai começar a preparar.</p></div>
+      <div class="num"><div><small>Pedido</small><b id="pedido-numero">#1048</b></div><div><small>Previsão de entrega</small><b id="pedido-previsao">19h40 - 19h50</b></div></div>
+      <ol class="passos">
+        <li class="feito"><i data-ic="check" class="marca"></i>Pedido recebido <small id="pedido-hora">19h05</small></li>
+        <li class="atual">Em preparo <small>Aguardando o restaurante confirmar</small></li>
+        <li>Saiu para entrega</li>
+        <li>Entregue</li>
+      </ol>
+      <div class="rodape duplo"><button class="btn fantasma"><i data-ic="conversa"></i>Falar com o restaurante</button><a class="btn" href="#inicio">Acompanhar pedido</a></div>
+    </div>
   </section>
 
-  <nav class="nav" data-c="A7 navegação">
-    <a href="#inicio" class="on"><i data-ic="home"></i>Início</a><a href="#promocoes"><i data-ic="promo"></i>Promoções</a><a href="#pedidos"><i data-ic="sacola"></i>Pedidos</a><a href="#perfil"><i data-ic="user"></i>Perfil</a>
+  <nav class="nav">
+    <a href="#inicio" class="on"><i data-ic="home"></i>Início</a><a href="#inicio"><i data-ic="promo"></i>Promoções</a><a href="#inicio"><i data-ic="sacola"></i>Pedidos</a><a href="#inicio"><i data-ic="user"></i><span class="so-cel">Perfil</span><span class="so-pc">Entrar</span></a>
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=6"></script>
+<script type="module" src="./app.js?v=11"></script>
 </body>
 </html>
