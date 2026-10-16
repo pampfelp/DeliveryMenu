@@ -47,7 +47,10 @@ export async function carregarLoja() {
       bairro: d.bairro || "",
       local: d.local || null,
       entrega: regraDe(d), // loja que ainda não configurou a entrega fica com o padrão
-      aberta: d.aberta !== false,
+      aberta: d.aberta !== false, // a chave de Pedidos; o app junta com o horário (horario.js)
+      ligada: d.aberta !== false,
+      horario: d.horario || null,
+      abrirSozinho: !!d.abrirSozinho,
       whatsapp: d.whatsapp || "",
       // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
       pagamentoOnline: false,

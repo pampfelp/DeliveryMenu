@@ -9,8 +9,9 @@
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO } from "./dados-exemplo.js?v=6";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=2";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=3";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
+import { situacao } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -172,6 +173,10 @@ pc.addEventListener("change", irParaHash);
 /* ===== S01 início ===== */
 function renderInicio() {
   document.documentElement.style.setProperty("--accent", LOJA.cor);
+  // cor clara pede texto escuro nos botões: acima de 0,22 de luminância o texto escuro dá mais contraste que o branco
+  const [r, g, b] = (LOJA.cor.match(/^#?([\da-f]{2})([\da-f]{2})([\da-f]{2})$/i) || [0, "99", "1b", "1b"]).slice(1).map((x) => parseInt(x, 16) / 255)
+    .map((c) => (c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4));
+  document.documentElement.style.setProperty("--on-accent", 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.22 ? "#1f2937" : "#ffffff");
   document.querySelectorAll(".loja-nome").forEach((el) => (el.textContent = LOJA.nome));
   document.getElementById("loja-cidade").textContent = LOJA.cidade;
   renderAberta();
@@ -198,11 +203,21 @@ function renderInicio() {
     <div class="lista-itens">${c.itens.filter((i) => !i.destaque).map(cardItem).join("")}</div>`).join("");
 }
 
-// loja pausada no painel: mostra o aviso e trava o envio (S01b, S08b, D01b)
+// aberta agora = chave de Pedidos + horário, quando a loja abre e fecha sozinha (horario.js).
+// A loja de exemplo fica com o texto fixo das imagens.
+function recalcularAberta() {
+  if (!SLUG) return false;
+  const s = situacao({ ...LOJA, aberta: LOJA.ligada });
+  const mudou = s.aberta !== LOJA.aberta;
+  LOJA.aberta = s.aberta;
+  LOJA.textoSituacao = s.texto;
+  return mudou;
+}
+// loja fechada: mostra o aviso e trava o envio (S01b, S08b, D01b)
 function renderAberta() {
-  const situacao = document.getElementById("loja-situacao");
-  situacao.textContent = LOJA.aberta ? (LOJA.situacao?.texto || "Aberto agora") : "Fechado agora";
-  situacao.classList.toggle("fechada", !LOJA.aberta);
+  const el = document.getElementById("loja-situacao");
+  el.textContent = LOJA.textoSituacao || (LOJA.aberta ? (LOJA.situacao?.texto || "Aberto agora") : "Fechado agora");
+  el.classList.toggle("fechada", !LOJA.aberta);
   document.querySelector(".aviso-fechada").hidden = LOJA.aberta;
   document.body.classList.toggle("loja-fechada", !LOJA.aberta);
 }
@@ -739,6 +754,16 @@ function renderAcompanhar(p) {
   pintarIcones(caixa);
 }
 
+function atualizarAberta() {
+  const antes = document.getElementById("loja-situacao").textContent;
+  const mudou = recalcularAberta();
+  if (!mudou && antes === LOJA.textoSituacao) return;
+  renderAberta();
+  renderSacolas();
+  if (!LOJA.aberta && CHECKOUT.includes(document.body.dataset.tela)) irParaHash();
+}
+setInterval(atualizarAberta, 60000); // o horário vira sozinho, sem recarregar
+
 /* loja real: abrir e fechar no painel chega aqui na hora */
 async function vigiarLoja() {
   if (!SLUG) return;
@@ -746,12 +771,11 @@ async function vigiarLoja() {
   const { doc, onSnapshot } = await import(FIRESTORE);
   onSnapshot(doc(db, "lojas", SLUG), (snap) => {
     if (!snap.exists()) return;
-    const aberta = snap.data().aberta !== false;
-    if (aberta === LOJA.aberta) return;
-    LOJA.aberta = aberta;
-    renderAberta();
-    renderSacolas();
-    if (!aberta && CHECKOUT.includes(document.body.dataset.tela)) irParaHash();
+    const d = snap.data();
+    LOJA.ligada = d.aberta !== false;
+    LOJA.horario = d.horario || null;
+    LOJA.abrirSozinho = !!d.abrirSozinho;
+    atualizarAberta();
   }, () => { /* sem internet: segue com o que já leu */ });
 }
 
@@ -759,6 +783,7 @@ async function vigiarLoja() {
 if (EXEMPLO) [["f-cep", "66000-000"], ["f-rua", "Travessa das Flores"], ["f-num", "120"], ["f-bairro", "Centro"], ["f-ref", "Em frente à praça"]]
   .forEach(([id, v]) => (document.getElementById(id).value = v));
 vigiarLoja();
+recalcularAberta();
 renderInicio();
 renderEntrega();
 renderTipo();

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=13" />
+<link rel="stylesheet" href="./painel.css?v=14" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
 <body data-tela="carregando">
@@ -95,7 +95,7 @@
       <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont" data-novos></span></a>
       <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
       <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas e bairros</a>
-      <button type="button" data-em-breve><i data-ic="loja"></i>Configurações</button>
+      <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Configurações</a>
     </nav>
     <div class="loja-atual"><b class="nome-loja"></b><small>Você está como dono · <button type="button" data-sair>Sair</button></small></div>
   </aside>
@@ -151,11 +151,20 @@
     </div>
   </main>
 
+  <!-- PD40 / P40 Configurações -->
+  <main class="principal configuracoes esqueleto" id="vista-configuracoes" hidden>
+    <div class="barra-topo so-cel" data-c="T topo"><b>Ajustes</b></div>
+    <div class="cab so-pc" data-c="T cabeçalho"><h1>Configurações</h1><a class="ver" id="cf-ver" target="_blank" rel="noopener"><i data-ic="olho"></i>Ver como o cliente</a><button type="button" class="btn" data-cf-salvar>Salvar alterações</button></div>
+    <div class="cf-grade" id="cf-grade" data-c="C dados, horário e aparência"></div>
+    <div class="cf-salvar so-cel" data-c="S salvar"><button type="button" class="btn" data-cf-salvar>Salvar alterações</button></div>
+  </main>
+  <input type="file" id="cf-logo" accept="image/*" hidden />
+
   <nav class="nav-p so-cel" data-c="N navegação">
     <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
     <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
     <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas</a>
-    <button type="button" data-em-breve><i data-ic="loja"></i>Ajustes</button>
+    <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Ajustes</a>
   </nav>
 </div>
 
@@ -188,6 +197,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=15"></script>
+<script type="module" src="./painel.js?v=17"></script>
 </body>
 </html>

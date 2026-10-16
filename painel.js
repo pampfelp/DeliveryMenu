@@ -18,6 +18,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=4";
 import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
+import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=1";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
@@ -44,7 +45,7 @@ function irParaHash() {
   let [tela, passo] = partes;
   let vista = "pedidos";
   if (STATE.user || EXEMPLO_PAINEL) {
-    if (tela === "cardapio" || tela === "entregas") vista = tela;
+    if (["cardapio", "entregas", "configuracoes"].includes(tela)) vista = tela;
     else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
   }
@@ -64,11 +65,13 @@ function irParaHash() {
   $("vista-pedidos").hidden = vista !== "pedidos";
   $("vista-cardapio").hidden = vista !== "cardapio";
   $("vista-entregas").hidden = vista !== "entregas";
+  $("vista-configuracoes").hidden = vista !== "configuracoes";
   document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista === vista));
   if (vista !== "cardapio") fecharCardapio();
   if (vista !== "entregas") fecharEntregas();
   if (vista === "cardapio") mostrarCardapio(partes);
   else if (vista === "entregas") mostrarEntregas(partes);
+  else if (vista === "configuracoes") mostrarConfiguracoes();
   else if (passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
@@ -199,13 +202,15 @@ async function abrirPainel(user) {
   iniciarPedidos(STATE.loja);
   iniciarCardapio(STATE.loja);
   iniciarEntregas(STATE.loja);
-  if (!/^#(painel|cardapio|entregas)/.test(location.hash)) location.hash = "#painel";
+  iniciarConfiguracoes(STATE.loja);
+  if (!/^#(painel|cardapio|entregas|configuracoes)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
 document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
   pararPedidos();
   pararCardapio();
   pararEntregas();
+  pararConfiguracoes();
   await signOut(auth);
   location.hash = "#entrar";
 }));
@@ -219,12 +224,18 @@ if (EXEMPLO_PAINEL) {
   iniciarEntregas({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: {
     loja: { bairro: LOJA_EXEMPLO.bairro, cidade: LOJA_EXEMPLO.cidade, local: LOJA_EXEMPLO.local, entrega: LOJA_EXEMPLO.entrega, endereco: "Rua do Exemplo, 100" },
     bairros: BAIRROS_EXEMPLO } });
+  iniciarConfiguracoes({ id: "nome-do-restaurante" }, { exemplo: {
+    nome: LOJA_EXEMPLO.nome, cidade: LOJA_EXEMPLO.cidade, bairro: LOJA_EXEMPLO.bairro, whatsapp: "91900000000", cor: LOJA_EXEMPLO.cor, logoUrl: "",
+    abrirSozinho: true, aberta: true, entrega: LOJA_EXEMPLO.entrega,
+    horario: { seg: { aberto: false }, ter: { aberto: true, abre: "18:00", fecha: "23:00" }, qua: { aberto: true, abre: "18:00", fecha: "23:00" },
+      qui: { aberto: true, abre: "18:00", fecha: "23:00" }, sex: { aberto: true, abre: "18:00", fecha: "00:00" },
+      sab: { aberto: true, abre: "18:00", fecha: "00:00" }, dom: { aberto: true, abre: "17:00", fecha: "23:00" } } } });
   irParaHash();
 } else {
   onAuthStateChanged(auth, async (user) => {
     STATE.user = user;
     if (user && !STATE.ocupado) await abrirPainel(user);
-    else { pararPedidos(); pararCardapio(); pararEntregas(); irParaHash(); }
+    else { pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); irParaHash(); }
   });
 }
 
