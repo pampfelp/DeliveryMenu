@@ -159,6 +159,9 @@ fechada já têm imagem (S09, S14b, S15 a S18, S01b, S08b).
 9. O cliente acompanha o pedido lendo pelo id (get, sem listar): a regra
    do Firestore passa a permitir isso em pedidosEntrada e pedidos. O id é
    aleatório e funciona como senha do pedido.
+10. Casa Jambu abre e fecha pela chave em Pedidos, não pelo horário
+    (abrirSozinho desligado, decisão dele em 16/10). O horário salvo só
+    aparece como "Fecha às" dentro do turno.
 
 ## Ainda em aberto
 
