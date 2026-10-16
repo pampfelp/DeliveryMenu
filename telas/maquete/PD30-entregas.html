@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD30 Entregas e bairros no computador</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 1fr; background: var(--bg); overflow: hidden; }
+  .lateral { background: var(--accent); padding: 20px 14px; display: flex; flex-direction: column; }
+  .lateral .marca b { font-size: 17px; line-height: 22px; }
+  .lateral .marca small { font-size: 12px; }
+  .menu { margin-top: 28px; display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-md); color: rgba(255,255,255,.85); font: 500 15px/20px Rubik; }
+  .menu a.on { background: rgba(255,255,255,.16); color: #fff; }
+  .menu a .cont { margin-left: auto; background: #fff; color: var(--accent); }
+  .loja-atual { margin-top: auto; padding: 12px; border-radius: var(--r-md); background: rgba(255,255,255,.1); color: #fff; }
+  .loja-atual b { display: block; font: 500 14px/20px Rubik; }
+  .loja-atual small { font-size: 12px; opacity: .8; }
+  .principal { padding: 24px 28px; min-width: 0; }
+  .cab { display: flex; align-items: center; gap: 12px; }
+  .cab h1 { font: 600 24px/32px Rubik; color: var(--text-strong); margin-right: 4px; }
+  .busca { width: 280px; height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 14px; color: var(--text-muted); }
+  .busca svg.ic { width: 18px; height: 18px; }
+  .cab .ver { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .cab .ver svg.ic { width: 18px; height: 18px; }
+  .cab .btn { height: 40px; padding: 0 16px; font-size: 15px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+  .kpi em.alerta { color: var(--warning); }
+  .kpi em.neutro { color: var(--text-muted); }
+  .corpo { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+  .cats { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 8px; }
+  .cats h2 { font: 600 13px/18px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); padding: 8px 8px 6px; }
+  .cat { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px; border-radius: var(--r-sm); font: 500 14px/20px Rubik; color: var(--text); }
+  .cat .ic:first-child { color: #b6bbc4; width: 16px; height: 16px; }
+  .cat > span:not(.cont) { flex: 1; }
+  .cat.on { background: var(--accent-soft, #fdf2f2); color: var(--accent); }
+  .cat.on .cont { background: var(--accent); color: #fff; }
+  .nova-cat { display: flex; align-items: center; gap: 8px; height: 40px; margin-top: 4px; padding: 0 8px; border-top: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--accent); }
+  .nova-cat svg.ic { width: 18px; height: 18px; }
+  .lista { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .lista-cab { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .lista-cab h2 { font: 600 17px/24px Rubik; color: var(--text-strong); }
+  .lista-cab small { font-size: 13px; color: var(--text-muted); }
+  .lista-cab a { margin-left: auto; font: 500 14px/20px Rubik; color: var(--accent); }
+  .linha { display: grid; grid-template-columns: 16px 56px 1fr 130px 150px 32px; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .linha:last-child { border-bottom: 0; }
+  .linha > .ic:first-child { color: #b6bbc4; width: 16px; height: 16px; }
+  .linha .foto { width: 56px; height: 56px; border-radius: var(--r-sm); }
+  .linha .foto svg.ic { width: 20px; height: 20px; }
+  .linha > div:nth-child(3) { min-width: 0; }
+  .linha .nome { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .linha .desc { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .marcas { display: flex; gap: 6px; margin-top: 6px; }
+  .marca-i { display: inline-flex; align-items: center; gap: 4px; font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: var(--text-muted); background: var(--bg); }
+  .marca-i svg.ic { width: 12px; height: 12px; }
+  .marca-i.selo { color: var(--info); background: var(--info-bg); text-transform: none; letter-spacing: 0; font-size: 11px; }
+  .marca-i.oferta { color: var(--accent); background: #fde8e8; }
+  .marca-i.dest { color: var(--warning); background: #fffbeb; }
+  .preco-c { text-align: right; }
+  .preco-c b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .preco-c b.promo { color: var(--success); }
+  .preco-c s { font-size: 12px; color: var(--text-muted); }
+  .disp { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font: 500 13px/18px Rubik; color: var(--text); }
+  .disp .trilho { width: 36px; height: 22px; border-radius: 11px; background: var(--success); position: relative; flex: none; }
+  .disp .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .disp.off { color: var(--text-muted); }
+  .disp.off .trilho { background: #c4c8cf; }
+  .disp.off .trilho::after { right: 17px; }
+  .editar { width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--text-muted); }
+  .editar svg.ic { width: 18px; height: 18px; }
+  .linha.esgot .foto, .linha.esgot .nome, .linha.esgot .preco-c { opacity: .55; }
+
+  .cab .btn { margin-left: auto; }
+  .grade-e { display: grid; grid-template-columns: 1fr 380px; gap: 16px; margin-top: 20px; align-items: start; }
+  .cartao-e { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+  .cartao-cab { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .cartao-cab h2 { font: 600 17px/24px Rubik; color: var(--text-strong); }
+  .cartao-cab small { font-size: 13px; color: var(--text-muted); }
+  .cartao-cab a { margin-left: auto; font: 500 14px/20px Rubik; color: var(--accent); }
+  .tab-cab, .tab-l { display: grid; grid-template-columns: 1fr 110px 110px 120px 72px; gap: 12px; align-items: center; padding: 0 16px; }
+  .tab-cab { height: 36px; font: 500 12px/16px Rubik; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .tab-cab span:not(:first-child), .tab-l > span:not(:first-child) { text-align: right; }
+  .tab-l { min-height: 56px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+  .tab-l:last-of-type { border-bottom: 0; }
+  .tab-l b { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .tab-l .proprio { margin-left: 8px; font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: var(--accent); background: #fdf2f2; }
+  .tab-l .taxa { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .tab-l .acoes { display: flex; justify-content: flex-end; gap: 4px; }
+  .tab-l .acoes span { width: 32px; height: 32px; display: grid; place-items: center; color: var(--text-muted); }
+  .tab-l .acoes svg.ic { width: 18px; height: 18px; }
+  .rodape-t { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--border); background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); border-radius: 0 0 var(--r-md) var(--r-md); }
+  .rodape-t svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .lado-e { display: grid; gap: 16px; }
+  .mapa { display: block; height: 110px; overflow: hidden; }
+  .ponto { padding: 12px 16px 14px; }
+  .ponto b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .ponto p { font-size: 13px; line-height: 18px; color: var(--text-muted); margin-top: 2px; }
+  .regra { padding: 14px 16px 16px; display: grid; gap: 12px; }
+  .r-g { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .r-g .campo label { display: block; font: 500 12px/16px Rubik; color: var(--text-muted); margin-bottom: 4px; }
+  .r-l { display: grid; grid-template-columns: 1fr 130px; gap: 12px; align-items: center; }
+  .r-l label { font: 500 14px/20px Rubik; color: var(--text); }
+  .r-l label small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .in { height: 40px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; gap: 6px; font-size: 15px; color: var(--text-strong); }
+  .in small { color: var(--text-muted); font-size: 14px; }
+  .in .un { margin-left: auto; color: var(--text-muted); font-size: 13px; }
+  .simula { display: flex; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--success-bg); color: var(--success); font: 500 13px/18px Rubik; }
+  .simula svg.ic { width: 18px; height: 18px; flex: none; }
+  .regra .btn { height: 42px; font-size: 15px; }
+</style></head>
+<body><div class="pc">
+  <aside class="lateral">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <nav class="menu">
+      <a><i data-ic="sacola"></i>Pedidos<span class="cont">2</span></a>
+      <a><i data-ic="lista"></i>Cardápio</a>
+      <a class="on"><i data-ic="entrega"></i>Entregas e bairros</a>
+      <a><i data-ic="loja"></i>Configurações</a>
+    </nav>
+    <div class="loja-atual"><b>Nome do Restaurante</b><small>Você está como dono</small></div>
+  </aside>
+
+  <main class="principal">
+    <div class="cab">
+      <h1>Entregas e bairros</h1>
+      <div class="btn btn-accent"><i data-ic="mais"></i>Adicionar bairro</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><small>Bairros atendidos</small><b>5</b><em class="neutro">contando o do restaurante</em></div>
+      <div class="kpi"><small>Taxa mais barata</small><b>R$ 3,00</b><em class="neutro">no Centro</em></div>
+      <div class="kpi"><small>Taxa mais cara</small><b>R$ 11,00</b><em class="neutro">Parque Sul, a 5,1 km</em></div>
+      <div class="kpi"><small>Alcance</small><b>10 km</b><em class="neutro">depois disso, não entrega</em></div>
+    </div>
+
+    <div class="grade-e">
+      <section class="cartao-e">
+        <div class="cartao-cab"><h2>Bairros atendidos</h2><small>do mais perto ao mais longe</small></div>
+        <div class="tab-cab"><span>Bairro</span><span>Distância</span><span>Taxa</span><span>Tempo</span><span></span></div>
+        <div class="tab-l"><span><b>Centro</b><span class="proprio">Do restaurante</span></span><span>0 km</span><span class="taxa">R$ 3,00</span><span>25 a 35 min</span><span class="acoes"></span></div>
+        <div class="tab-l"><span><b>Jardim das Flores</b></span><span>1,6 km</span><span class="taxa">R$ 5,50</span><span>31 a 41 min</span><span class="acoes"><span><i data-ic="editar"></i></span><span><i data-ic="lixo"></i></span></span></div>
+        <div class="tab-l"><span><b>Bela Vista</b></span><span>2,6 km</span><span class="taxa">R$ 7,00</span><span>35 a 45 min</span><span class="acoes"><span><i data-ic="editar"></i></span><span><i data-ic="lixo"></i></span></span></div>
+        <div class="tab-l"><span><b>Vila Nova</b></span><span>3,1 km</span><span class="taxa">R$ 8,00</span><span>37 a 47 min</span><span class="acoes"><span><i data-ic="editar"></i></span><span><i data-ic="lixo"></i></span></span></div>
+        <div class="tab-l"><span><b>Parque Sul</b></span><span>5,1 km</span><span class="taxa">R$ 11,00</span><span>46 a 56 min</span><span class="acoes"><span><i data-ic="editar"></i></span><span><i data-ic="lixo"></i></span></span></div>
+        <div class="rodape-t"><i data-ic="info"></i><span>Bairro fora da lista: o cliente vê "Ainda não entregamos nesse bairro". A distância é em linha reta, do restaurante até o centro do bairro.</span></div>
+      </section>
+
+      <div class="lado-e">
+        <section class="cartao-e">
+          <div class="cartao-cab"><h2>Ponto de saída</h2><a>Alterar</a></div>
+          <div class="mapa" data-pinos="50,52,restaurante"></div>
+          <div class="ponto"><b>Rua do Exemplo, 100</b><p>Centro, Belém - PA · é daqui que a distância é medida</p></div>
+        </section>
+        <section class="cartao-e">
+          <div class="cartao-cab"><h2>Regra da taxa</h2></div>
+          <div class="regra">
+            <div class="r-g">
+              <div class="campo"><label>No bairro do restaurante</label><div class="in"><small>R$</small>3,00</div></div>
+              <div class="campo"><label>A mais por km, nos outros</label><div class="in"><small>R$</small>1,50</div></div>
+              <div class="campo"><label>Arredondar para cima em</label><div class="in"><small>R$</small>0,50</div></div>
+              <div class="campo"><label>Entrega até</label><div class="in">10<span class="un">km</span></div></div>
+              <div class="campo"><label>Tempo de preparo</label><div class="in">25<span class="un">min</span></div></div>
+              <div class="campo"><label>A mais por km</label><div class="in">4<span class="un">min</span></div></div>
+            </div>
+            <div class="simula"><i data-ic="check"></i><span>Exemplo: um bairro a 3 km paga R$ 7,50 e recebe em 37 a 47 min.</span></div>
+            <div class="btn btn-accent">Salvar regra</div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </main>
+</div>
+<script src="_icones.js?v=3"></script>
+<script src="_mapa.js?v=1"></script>
+</body></html>

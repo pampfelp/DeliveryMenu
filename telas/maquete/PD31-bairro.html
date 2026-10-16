@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD31 Novo bairro no computador</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { position: relative; width: 1440px; height: 900px; overflow: hidden; }
+  .fundo { position: absolute; inset: 0; width: 1440px; height: 900px; border: 0; }
+  .veu { position: absolute; inset: 0; background: var(--overlay); }
+  .modal { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 560px; display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r-lg); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); overflow: hidden; }
+  .m-cab { display: flex; align-items: center; gap: 12px; padding: 18px 24px; border-bottom: 1px solid var(--border); }
+  .m-cab h2 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .m-cab .fechar { margin-left: auto; }
+  .m-corpo { padding: 20px 24px; display: grid; gap: 14px; }
+  .campo label { display: block; font: 500 13px/18px Rubik; color: var(--text-muted); margin-bottom: 6px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .busca-l { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .in { height: 42px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; font-size: 15px; color: var(--text-strong); }
+  .busca-l .btn { height: 42px; width: auto; padding: 0 16px; font-size: 15px; }
+  .mapa { display: block; height: 260px; border-radius: var(--r-md); overflow: hidden; border: 1px solid var(--border); }
+  .ajuda { font-size: 12px; line-height: 16px; color: var(--text-muted); margin-top: -6px; }
+  .loc { display: inline-flex; align-items: center; gap: 8px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .resultado { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--success-bg); color: var(--success); font: 500 14px/20px Rubik; }
+  .resultado span { flex: 1; }
+  .m-pe { display: flex; align-items: center; gap: 12px; padding: 14px 24px; border-top: 1px solid var(--border); }
+  .m-pe .excluir { display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--danger); }
+  .m-pe .excluir svg.ic { width: 18px; height: 18px; }
+  .m-pe .btn { width: auto; padding: 0 20px; }
+  .m-pe .btn-ghost { margin-left: auto; color: var(--text); }
+</style></head>
+<body><div class="pc">
+  <iframe class="fundo" src="PD30-entregas.html" tabindex="-1"></iframe>
+  <div class="veu"></div>
+  <section class="modal">
+    <div class="m-cab"><h2>Novo bairro</h2><span class="fechar"><i data-ic="x"></i></span></div>
+    <div class="m-corpo">
+      <div class="campo"><label>Nome do bairro <i>*</i></label>
+        <div class="busca-l"><div class="in">Jardim das Flores</div><div class="btn btn-ghost">Buscar no mapa</div></div></div>
+      <div class="mapa" data-pinos="34,62,restaurante;58,40,bairro"></div>
+      <p class="ajuda">Achamos o bairro em Belém - PA. Se o pino não estiver no meio do bairro, arraste até lá.</p>
+      <div class="resultado"><i data-ic="check"></i><span>1,6 km do restaurante</span>R$ 5,50 · 31 a 41 min</div>
+    </div>
+    <div class="m-pe">
+      <div class="btn btn-ghost">Cancelar</div>
+      <div class="btn btn-accent">Salvar bairro</div>
+    </div>
+  </section>
+</div>
+<script src="_icones.js?v=3"></script>
+<script src="_mapa.js?v=1"></script>
+</body></html>
