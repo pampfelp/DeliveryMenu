@@ -14,6 +14,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
+import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);
 const $ = (id) => document.getElementById(id);
@@ -32,13 +33,11 @@ const P = { loja: null, entrada: [], pedidos: [], aba: "novo", verTodos: false, 
 const data = (t) => (t instanceof Date ? t : t?.toDate ? t.toDate() : null);
 const hhmm = (t) => { const d = data(t); return d ? `${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}` : ""; };
 const minutosDesde = (t) => { const d = data(t); return d ? Math.max(0, Math.round((P.agora() - d) / 60000)) : 0; };
-// previsão de chegada: a mesma conta da loja (app.js, calcularEntrega), com janela de 10 min
-const ENTREGA_PADRAO = { minutosBase: 25, minutosPorKm: 4 };
+// previsão de chegada: a mesma conta da loja (conta-entrega.js), com janela de 10 min
 function previsao(p) {
   const d = data(p.criadoEm), km = p.endereco?.km;
   if (!d || km == null) return "";
-  const e = P.loja?.entrega || ENTREGA_PADRAO;
-  const ate = new Date(d.getTime() + Math.round(e.minutosBase + km * e.minutosPorKm) * 60000);
+  const ate = new Date(d.getTime() + minutosKm(km, regraDe(P.loja)) * 60000);
   return ` · previsão ${hhmm(ate)} a ${hhmm(new Date(ate.getTime() + 600000))}`;
 }
 const inicioDoDia = (deslocamento = 0) => { const d = P.agora(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + deslocamento); return d; };

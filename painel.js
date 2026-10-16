@@ -15,9 +15,10 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=3";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=4";
 import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
-import { PEDIDOS_EXEMPLO, CATEGORIAS } from "./dados-exemplo.js?v=6";
+import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
+import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
 const $ = (id) => document.getElementById(id);
@@ -43,7 +44,7 @@ function irParaHash() {
   let [tela, passo] = partes;
   let vista = "pedidos";
   if (STATE.user || EXEMPLO_PAINEL) {
-    if (tela === "cardapio") vista = "cardapio";
+    if (tela === "cardapio" || tela === "entregas") vista = tela;
     else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
   }
@@ -62,9 +63,13 @@ function irParaHash() {
   document.body.dataset.vista = vista;
   $("vista-pedidos").hidden = vista !== "pedidos";
   $("vista-cardapio").hidden = vista !== "cardapio";
+  $("vista-entregas").hidden = vista !== "entregas";
   document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista === vista));
+  if (vista !== "cardapio") fecharCardapio();
+  if (vista !== "entregas") fecharEntregas();
   if (vista === "cardapio") mostrarCardapio(partes);
-  else { fecharCardapio(); if (passo) abrirPedido(passo); } // #painel/<id> abre o detalhe
+  else if (vista === "entregas") mostrarEntregas(partes);
+  else if (passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
 
@@ -193,12 +198,14 @@ async function abrirPainel(user) {
   if (!STATE.loja) { toast("Esta conta não tem restaurante ligado.", "erro", 5000); await signOut(auth); return; }
   iniciarPedidos(STATE.loja);
   iniciarCardapio(STATE.loja);
-  if (!/^#(painel|cardapio)/.test(location.hash)) location.hash = "#painel";
+  iniciarEntregas(STATE.loja);
+  if (!/^#(painel|cardapio|entregas)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
 document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
   pararPedidos();
   pararCardapio();
+  pararEntregas();
   await signOut(auth);
   location.hash = "#entrar";
 }));
@@ -209,12 +216,15 @@ setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash()
 if (EXEMPLO_PAINEL) {
   iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
   iniciarCardapio({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CATEGORIAS });
+  iniciarEntregas({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: {
+    loja: { bairro: LOJA_EXEMPLO.bairro, cidade: LOJA_EXEMPLO.cidade, local: LOJA_EXEMPLO.local, entrega: LOJA_EXEMPLO.entrega, endereco: "Rua do Exemplo, 100" },
+    bairros: BAIRROS_EXEMPLO } });
   irParaHash();
 } else {
   onAuthStateChanged(auth, async (user) => {
     STATE.user = user;
     if (user && !STATE.ocupado) await abrirPainel(user);
-    else { pararPedidos(); pararCardapio(); irParaHash(); }
+    else { pararPedidos(); pararCardapio(); pararEntregas(); irParaHash(); }
   });
 }
 

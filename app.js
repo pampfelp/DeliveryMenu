@@ -9,7 +9,8 @@
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO } from "./dados-exemplo.js?v=6";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=1";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=2";
+import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -100,15 +101,7 @@ const totalLinha = (l) => precoUnitario(item(l.itemId), l.escolhas) * l.qtd;
 const subtotal = () => STATE.sacola.reduce((s, l) => s + totalLinha(l), 0);
 const taxa = () => (STATE.tipo === "entrega" && STATE.entrega.status === "ok" ? STATE.entrega.valor : 0);
 
-/* ===== taxa de entrega por bairro (decisão dele, 2026-10-15) =====
-   R$ 3 no bairro do restaurante; nos outros, a taxa do bairro mais um valor
-   por km em linha reta até o centro do bairro, arredondado para cima. */
-function distanciaKm(a, b) {
-  const rad = (g) => (g * Math.PI) / 180;
-  const dLat = rad(b.lat - a.lat), dLng = rad(b.lng - a.lng);
-  const h = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a.lat)) * Math.cos(rad(b.lat)) * Math.sin(dLng / 2) ** 2;
-  return 6371 * 2 * Math.asin(Math.sqrt(h));
-}
+/* ===== taxa de entrega por bairro: a conta mora em conta-entrega.js ===== */
 function calcularEntrega(nomeBairro) {
   const e = LOJA.entrega;
   if (!nomeBairro.trim()) return { status: "vazio" };
@@ -118,9 +111,8 @@ function calcularEntrega(nomeBairro) {
   if (!mesmo && (!LOJA.local || bairro.lat == null)) return { status: "fora" }; // sem coordenada não dá para medir
   const km = mesmo ? 0 : distanciaKm(LOJA.local, bairro);
   if (km > e.raioMaxKm) return { status: "fora" };
-  const valor = mesmo ? e.taxaBairro : Math.ceil((e.taxaBairro + km * e.porKm) / e.arredondar) * e.arredondar;
-  const min = Math.round(e.minutosBase + km * e.minutosPorKm);
-  return { status: "ok", bairro: bairro.nome, km, valor, min, max: min + 10 };
+  const min = minutosKm(km, e);
+  return { status: "ok", bairro: bairro.nome, km, valor: taxaKm(km, mesmo, e), min, max: min + 10 };
 }
 // texto da taxa nos resumos: sem bairro válido ainda não há taxa para mostrar
 const textoTaxa = () => (STATE.tipo !== "entrega" ? "Grátis" : STATE.entrega.status === "ok" ? reais(STATE.entrega.valor) : "A definir");
@@ -551,7 +543,7 @@ const somaMin = (d, m) => new Date(d.getTime() + m * 60000);
 // minutos até chegar: a conta da entrega pela distância; retirada e no local têm 20 a 30 min
 function janela(tipo, km) {
   if (tipo !== "entrega") return [20, 30];
-  const min = Math.round(LOJA.entrega.minutosBase + (km || 0) * LOJA.entrega.minutosPorKm);
+  const min = minutosKm(km, LOJA.entrega);
   return [min, min + 10];
 }
 const ONDE = { entrega: "na entrega", retirada: "na retirada", local: "no local" };

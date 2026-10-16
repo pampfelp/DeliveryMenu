@@ -13,9 +13,7 @@
 */
 
 import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=6";
-
-// mesmos valores da decisão dele (2026-10-15), para loja que ainda não configurou a entrega
-const ENTREGA_PADRAO = { taxaBairro: 300, porKm: 150, arredondar: 50, raioMaxKm: 10, minutosBase: 25, minutosPorKm: 4 };
+import { regraDe } from "./conta-entrega.js?v=1";
 
 export const SLUG = new URLSearchParams(location.search).get("loja");
 
@@ -48,7 +46,7 @@ export async function carregarLoja() {
       logoUrl: d.logoUrl || "",
       bairro: d.bairro || "",
       local: d.local || null,
-      entrega: { ...ENTREGA_PADRAO, ...(d.entrega || {}) },
+      entrega: regraDe(d), // loja que ainda não configurou a entrega fica com o padrão
       aberta: d.aberta !== false,
       whatsapp: d.whatsapp || "",
       // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
