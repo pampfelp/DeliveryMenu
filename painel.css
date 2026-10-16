@@ -716,15 +716,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .cf-corpo .campo label { font-size: 13px; line-height: 18px; margin-bottom: 6px; }
   .cf-corpo input:not([type="color"]), .cf-corpo .in { height: 42px; }
   .cf-corpo .dupla { gap: 12px; }
+  .cf-corpo .dupla + .ajuda { margin-top: 12px; } /* como na imagem do computador */
   .dia { grid-template-columns: 70px 1fr auto; gap: 8px; }
   .cf-corpo .horas .in-h { width: 74px; }
 }
-
-/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .barra-topo, .esqueleto .btn:not(.fantasma) { background: #8a8a8a !important; }
-.esqueleto .barra-topo *, .esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
-.esqueleto .previa .faixa, .esqueleto .previa .btn-p { background: #8a8a8a !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
