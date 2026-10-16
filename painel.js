@@ -16,13 +16,13 @@ import {
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=3";
-import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=1";
+import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
 import { PEDIDOS_EXEMPLO, CATEGORIAS } from "./dados-exemplo.js?v=6";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
 const $ = (id) => document.getElementById(id);
 const valor = (id) => $(id).value.trim();
-const STATE = { user: null, loja: null, passo: 1, ocupado: false };
+const STATE = { user: null, loja: null, passo: 1, ocupado: false, entrando: false };
 const EXEMPLO_PAINEL = new URLSearchParams(location.search).get("exemplo") === "painel"; // pedidos das imagens, sem login e sem Firestore
 
 /* ===== mensagens do Firebase em português ===== */
@@ -78,14 +78,16 @@ document.querySelectorAll(".ver-senha").forEach((b) => b.addEventListener("click
 /* ===== P01 entrar ===== */
 $("tela-entrar").addEventListener("submit", async (e) => {
   e.preventDefault();
-  if (STATE.ocupado) return;
+  // STATE.ocupado é só do cadastro (segura a carga da loja até ela existir); no login,
+  // usar a mesma marca fazia o aviso de "entrou" do Firebase pular a carga do painel
+  if (STATE.entrando) return;
   const email = valor("e-email"), senha = $("e-senha").value;
   if (!email || !senha) { toast("Informe o e-mail e a senha.", "erro", 3500); return; }
-  STATE.ocupado = true;
+  STATE.entrando = true;
   $("btn-entrar").classList.add("desligado");
   try { await signInWithEmailAndPassword(auth, email, senha); }
   catch (err) { toast(mensagemErro(err), "erro", 4000); }
-  finally { STATE.ocupado = false; $("btn-entrar").classList.remove("desligado"); }
+  finally { STATE.entrando = false; $("btn-entrar").classList.remove("desligado"); }
 });
 
 $("btn-esqueci").addEventListener("click", async () => {

@@ -76,6 +76,17 @@ const catsOrdenadas = () => [...C.cats].sort(porOrdem);
 const itensDa = (catId) => C.itens.filter((i) => i.categoriaId === catId).sort(porOrdem);
 const item = (id) => C.itens.find((i) => i.id === id);
 
+// item que cobra pelas opções (pizza por tamanho): o menor preço possível, a mesma conta da loja (app.js, precoVitrine)
+function aPartirDe(i) {
+  const minimo = (i.grupos || []).filter((g) => g.min > 0).reduce((s, g) => {
+    const precos = g.opcoes.filter((o) => !o.esgotado).map((o) => o.preco || 0);
+    if (!precos.length) return s;
+    const barata = Math.min(...precos);
+    return s + (g.regraPreco === "soma" || !g.regraPreco ? barata * g.min : barata);
+  }, 0);
+  return minimo ? `A partir de ${reais(minimo)}` : "Pelas opções";
+}
+
 /* ===== PD20 / P20 lista ===== */
 function renderIndicadores() {
   const esg = C.itens.filter((i) => i.esgotado), promo = C.itens.filter((i) => i.precoPromo), semFoto = C.itens.filter((i) => !i.fotoUrl);
@@ -99,14 +110,14 @@ function linhaPc(i) {
       <span class="alca" data-alca aria-label="Arrastar"><i data-ic="arrastar"></i></span>
       ${i.fotoUrl ? `<img class="foto" src="${esc(i.fotoUrl)}" alt="" />` : `<div class="foto"><i data-ic="foto"></i></div>`}
       <div class="t"><div class="nome">${esc(i.nome)}</div>${i.descricao ? `<div class="desc">${esc(i.descricao)}</div>` : ""}${marcas ? `<div class="marcas">${marcas}</div>` : ""}</div>
-      <div class="preco-c">${i.precoPromo ? `<b class="promo">${reais(i.precoPromo)}</b><s>${reais(i.preco)}</s>` : `<b>${i.preco ? reais(i.preco) : "Pelas opções"}</b>`}</div>
+      <div class="preco-c">${i.precoPromo ? `<b class="promo">${reais(i.precoPromo)}</b><s>${reais(i.preco)}</s>` : `<b>${i.preco ? reais(i.preco) : aPartirDe(i)}</b>`}</div>
       <button type="button" class="disp${i.esgotado ? " off" : ""}" data-disp="${esc(i.id)}" aria-pressed="${!i.esgotado}">${i.esgotado ? "Esgotado" : "Disponível"}<span class="trilho"></span></button>
       <a class="editar" href="#cardapio/item/${esc(i.id)}" aria-label="Editar ${esc(i.nome)}"><i data-ic="editar"></i></a>
     </div>`;
 }
 function linhaCel(i) {
   const selo = i.selo ? `<span class="selo-m${i.selo === "oferta" ? " oferta" : ""}">${SELOS[i.selo]}</span>` : "";
-  const preco = i.precoPromo ? `<span class="promo">${reais(i.precoPromo)}</span><s>${reais(i.preco)}</s>` : (i.preco ? reais(i.preco) : "Pelas opções");
+  const preco = i.precoPromo ? `<span class="promo">${reais(i.precoPromo)}</span><s>${reais(i.preco)}</s>` : (i.preco ? reais(i.preco) : aPartirDe(i));
   return `
     <div class="linha${i.esgotado ? " esgot" : ""}" data-id="${esc(i.id)}">
       <a class="abre" href="#cardapio/item/${esc(i.id)}">
