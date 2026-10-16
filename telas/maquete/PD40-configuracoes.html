@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD40 Configurações no computador</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 1fr; background: var(--bg); overflow: hidden; }
+  .lateral { background: var(--accent); padding: 20px 14px; display: flex; flex-direction: column; }
+  .lateral .marca b { font-size: 17px; line-height: 22px; }
+  .lateral .marca small { font-size: 12px; }
+  .menu { margin-top: 28px; display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-md); color: rgba(255,255,255,.85); font: 500 15px/20px Rubik; }
+  .menu a.on { background: rgba(255,255,255,.16); color: #fff; }
+  .menu a .cont { margin-left: auto; background: #fff; color: var(--accent); }
+  .loja-atual { margin-top: auto; padding: 12px; border-radius: var(--r-md); background: rgba(255,255,255,.1); color: #fff; }
+  .loja-atual b { display: block; font: 500 14px/20px Rubik; }
+  .loja-atual small { font-size: 12px; opacity: .8; }
+  .principal { padding: 24px 28px; min-width: 0; }
+  .cab { display: flex; align-items: center; gap: 12px; }
+  .cab h1 { font: 600 24px/32px Rubik; color: var(--text-strong); margin-right: 4px; }
+  .busca { width: 280px; height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 14px; color: var(--text-muted); }
+  .busca svg.ic { width: 18px; height: 18px; }
+  .cab .ver { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .cab .ver svg.ic { width: 18px; height: 18px; }
+  .cab .btn { height: 40px; padding: 0 16px; font-size: 15px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+  .kpi em.alerta { color: var(--warning); }
+  .kpi em.neutro { color: var(--text-muted); }
+  .corpo { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+  .cats { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 8px; }
+  .cats h2 { font: 600 13px/18px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); padding: 8px 8px 6px; }
+  .cat { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 8px; border-radius: var(--r-sm); font: 500 14px/20px Rubik; color: var(--text); }
+  .cat .ic:first-child { color: #b6bbc4; width: 16px; height: 16px; }
+  .cat > span:not(.cont) { flex: 1; }
+  .cat.on { background: var(--accent-soft, #fdf2f2); color: var(--accent); }
+  .cat.on .cont { background: var(--accent); color: #fff; }
+  .nova-cat { display: flex; align-items: center; gap: 8px; height: 40px; margin-top: 4px; padding: 0 8px; border-top: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--accent); }
+  .nova-cat svg.ic { width: 18px; height: 18px; }
+  .lista { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .lista-cab { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .lista-cab h2 { font: 600 17px/24px Rubik; color: var(--text-strong); }
+  .lista-cab small { font-size: 13px; color: var(--text-muted); }
+  .lista-cab a { margin-left: auto; font: 500 14px/20px Rubik; color: var(--accent); }
+  .linha { display: grid; grid-template-columns: 16px 56px 1fr 130px 150px 32px; gap: 14px; align-items: center; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+  .linha:last-child { border-bottom: 0; }
+  .linha > .ic:first-child { color: #b6bbc4; width: 16px; height: 16px; }
+  .linha .foto { width: 56px; height: 56px; border-radius: var(--r-sm); }
+  .linha .foto svg.ic { width: 20px; height: 20px; }
+  .linha > div:nth-child(3) { min-width: 0; }
+  .linha .nome { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .linha .desc { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .marcas { display: flex; gap: 6px; margin-top: 6px; }
+  .marca-i { display: inline-flex; align-items: center; gap: 4px; font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: var(--text-muted); background: var(--bg); }
+  .marca-i svg.ic { width: 12px; height: 12px; }
+  .marca-i.selo { color: var(--info); background: var(--info-bg); text-transform: none; letter-spacing: 0; font-size: 11px; }
+  .marca-i.oferta { color: var(--accent); background: #fde8e8; }
+  .marca-i.dest { color: var(--warning); background: #fffbeb; }
+  .preco-c { text-align: right; }
+  .preco-c b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .preco-c b.promo { color: var(--success); }
+  .preco-c s { font-size: 12px; color: var(--text-muted); }
+  .disp { display: flex; align-items: center; justify-content: flex-end; gap: 8px; font: 500 13px/18px Rubik; color: var(--text); }
+  .disp .trilho { width: 36px; height: 22px; border-radius: 11px; background: var(--success); position: relative; flex: none; }
+  .disp .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .disp.off { color: var(--text-muted); }
+  .disp.off .trilho { background: #c4c8cf; }
+  .disp.off .trilho::after { right: 17px; }
+  .editar { width: 32px; height: 32px; border-radius: var(--r-sm); display: grid; place-items: center; color: var(--text-muted); }
+  .editar svg.ic { width: 18px; height: 18px; }
+  .linha.esgot .foto, .linha.esgot .nome, .linha.esgot .preco-c { opacity: .55; }
+
+  .cartao-c { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+  .c-cab { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+  .c-cab h2 { font: 600 17px/24px Rubik; color: var(--text-strong); }
+  .c-cab small { font-size: 13px; color: var(--text-muted); }
+  .c-corpo { padding: 14px 16px 16px; }
+  .campo label { display: block; font: 500 13px/18px Rubik; color: var(--text-muted); margin-bottom: 6px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .in { height: 42px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; gap: 8px; font-size: 15px; color: var(--text-strong); background: var(--surface); }
+  .in.fixo { background: var(--surface-muted); color: var(--text-muted); border-color: var(--border); }
+  .in .ic { color: var(--text-muted); }
+  .in .copiar { flex: none; margin-left: auto; font: 500 13px/18px Rubik; color: var(--accent); }
+  .ajuda { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .dia { display: grid; grid-template-columns: 96px 1fr auto; gap: 12px; align-items: center; padding: 8px 0; border-top: 1px solid var(--border); }
+  .dia:first-of-type { border-top: 0; }
+  .dia b { font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .horas { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--text-muted); }
+  .horas .in { height: 36px; width: 82px; justify-content: center; font-size: 14px; }
+  .fechado-t { font: 500 13px/18px Rubik; color: var(--text-muted); }
+  .chave-p { display: flex; align-items: center; gap: 8px; font: 500 13px/18px Rubik; color: var(--text); }
+  .trilho { width: 36px; height: 22px; border-radius: 11px; background: var(--success); position: relative; flex: none; }
+  .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .off .trilho { background: #c4c8cf; }
+  .off .trilho::after { right: 17px; }
+  .auto { display: flex; align-items: center; gap: 12px; margin-top: 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-muted); }
+  .auto div { flex: 1; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .auto small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .copiar-t { display: inline-flex; margin-top: 10px; font: 500 13px/18px Rubik; color: var(--accent); }
+  .logo-l { display: flex; align-items: center; gap: 14px; }
+  .logo-c { width: 72px; height: 72px; border-radius: 50%; border: 2px dashed #c4c8cf; background: var(--surface-muted); display: grid; place-items: center; color: var(--text-muted); flex: none; }
+  .logo-c svg.ic { width: 24px; height: 24px; stroke-width: 1.4; }
+  .logo-l b { display: block; font: 500 14px/20px Rubik; color: var(--accent); }
+  .logo-l span { font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .rot { display: block; font: 500 13px/18px Rubik; color: var(--text-muted); margin: 16px 0 8px; }
+  .cores { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
+  .cor { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; box-shadow: inset 0 0 0 1px rgba(0,0,0,.08); }
+  .cor.on { box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--text-strong); }
+  .cor svg.ic { width: 16px; height: 16px; stroke-width: 3; }
+  .outra { height: 34px; padding: 0 12px; border: 1px solid var(--border); border-radius: 17px; display: flex; align-items: center; gap: 6px; font: 500 13px/18px Rubik; color: var(--text); }
+  .outra i.amostra { width: 14px; height: 14px; border-radius: 50%; background: conic-gradient(#ef4444, #f59e0b, #22c55e, #3b82f6, #a855f7, #ef4444); }
+  .previa { margin-top: 16px; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .previa .faixa { height: 44px; background: #991b1b; }
+  .previa .cabeca { margin: -24px 12px 12px; padding: 12px; text-align: center; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+  .previa .cabeca b { display: block; font: 600 16px/22px Rubik; color: var(--text-strong); }
+  .previa .cabeca small { font: 500 12px/16px Rubik; color: var(--success); }
+  .previa .btn-p { margin: 0 12px 12px; height: 38px; border-radius: var(--r-md); background: #991b1b; color: #fff; display: grid; place-items: center; font: 500 14px/20px Rubik; }
+  .previa-t { padding: 8px 12px; background: var(--surface-muted); border-top: 1px solid var(--border); font-size: 12px; line-height: 16px; color: var(--text-muted); }
+
+  .cab .ver { margin-left: auto; display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .cab .ver svg.ic { width: 18px; height: 18px; }
+  .cab .btn { height: 40px; padding: 0 20px; font-size: 15px; }
+  .grade-c { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr) 340px; gap: 16px; margin-top: 20px; align-items: start; }
+  .col { display: grid; gap: 16px; }
+  .grade-c > *, .col > * { min-width: 0; }
+  .c-corpo .campo + .campo, .c-corpo .campo + .dupla, .c-corpo .dupla + .ajuda { margin-top: 12px; }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .dia { grid-template-columns: 70px 1fr auto; gap: 8px; }
+  .horas .in { width: 74px; }
+  .dupla > .campo { margin-top: 0; }
+  .in.fixo .t { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .c-corpo .dupla > .campo { margin-top: 0; } /* depois da regra campo + campo */
+</style></head>
+<body><div class="pc">
+  <aside class="lateral">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <nav class="menu">
+      <a><i data-ic="sacola"></i>Pedidos<span class="cont">2</span></a>
+      <a><i data-ic="lista"></i>Cardápio</a>
+      <a><i data-ic="entrega"></i>Entregas e bairros</a>
+      <a class="on"><i data-ic="loja"></i>Configurações</a>
+    </nav>
+    <div class="loja-atual"><b>Nome do Restaurante</b><small>Você está como dono</small></div>
+  </aside>
+
+  <main class="principal">
+    <div class="cab">
+      <h1>Configurações</h1>
+      <a class="ver"><i data-ic="olho"></i>Ver como o cliente</a>
+      <div class="btn btn-accent">Salvar alterações</div>
+    </div>
+    <div class="grade-c">
+      <div class="col">
+        <section class="cartao-c"><div class="c-cab"><h2>Dados do restaurante</h2></div><div class="c-corpo">
+        <div class="campo"><label>Nome do restaurante <i>*</i></label><div class="in">Nome do Restaurante</div></div>
+        <div class="campo"><label>Link do cardápio</label><div class="in fixo"><i data-ic="link"></i><span class="t">pampfelp.github.io/DeliveryMenu/?loja=nome-do-restaurante</span><span class="copiar">Copiar</span></div><p class="ajuda">O link não muda: é ele que os clientes já têm.</p></div>
+        <div class="dupla">
+          <div class="campo"><label>Cidade <i>*</i></label><div class="in">Belém - PA</div></div>
+          <div class="campo"><label>Bairro do restaurante <i>*</i></label><div class="in">Centro</div></div>
+        </div>
+        <p class="ajuda">O bairro do restaurante paga a taxa fixa de R$ 3,00. O ponto de saída fica em Entregas e bairros.</p>
+        </div></section>
+        <section class="cartao-c"><div class="c-cab"><h2>WhatsApp</h2></div><div class="c-corpo">
+        <div class="campo"><label>WhatsApp da loja</label><div class="in"><i data-ic="fone"></i>(91) 90000-0000</div>
+        <p class="ajuda">Aparece para o cliente no botão "Falar com o restaurante", depois do pedido.</p></div>
+        </div></section>
+      </div>
+      <section class="cartao-c"><div class="c-cab"><h2>Horário de funcionamento</h2></div><div class="c-corpo">
+        <div class="dia"><b>Segunda</b><div class="fechado-t">Fechado</div><span class="chave-p off"><span class="trilho"></span></span></div>
+<div class="dia"><b>Terça</b><div class="horas"><div class="in">18:00</div>às<div class="in">23:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+<div class="dia"><b>Quarta</b><div class="horas"><div class="in">18:00</div>às<div class="in">23:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+<div class="dia"><b>Quinta</b><div class="horas"><div class="in">18:00</div>às<div class="in">23:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+<div class="dia"><b>Sexta</b><div class="horas"><div class="in">18:00</div>às<div class="in">00:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+<div class="dia"><b>Sábado</b><div class="horas"><div class="in">18:00</div>às<div class="in">00:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+<div class="dia"><b>Domingo</b><div class="horas"><div class="in">17:00</div>às<div class="in">23:00</div></div><span class="chave-p"><span class="trilho"></span></span></div>
+        <span class="copiar-t">Usar o horário de terça em todos os dias abertos</span>
+        <div class="auto"><div>Abrir e fechar sozinho pelo horário<small>Ligado, a loja abre e fecha no horário acima. Desligado, você usa a chave em Pedidos.</small></div><span class="chave-p"><span class="trilho"></span></span></div>
+      </div></section>
+      <section class="cartao-c"><div class="c-cab"><h2>Aparência</h2></div><div class="c-corpo">
+        <div class="logo-l"><div class="logo-c"><i data-ic="foto"></i></div><div><b>Enviar logo</b><span>Quadrado, de preferência. Sem logo, o espaço dele some do cardápio.</span></div></div>
+        <span class="rot">Cor da loja</span>
+        <div class="cores"><span class="cor on" style="background:#991b1b"><i data-ic=check></i></span><span class="cor" style="background:#c2410c"></span><span class="cor" style="background:#15803d"></span><span class="cor" style="background:#1d4ed8"></span><span class="cor" style="background:#6d28d9"></span><span class="cor" style="background:#1f2937"></span><span class="outra"><i class="amostra"></i>Outra cor</span></div>
+        <div class="previa"><div class="faixa"></div><div class="cabeca"><b>Nome do Restaurante</b><small>Aberto agora • Fecha às 23h00</small></div><div class="btn-p">Ver sacola</div><div class="previa-t">Prévia do topo do cardápio</div></div>
+      </div></section>
+    </div>
+  </main>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>
