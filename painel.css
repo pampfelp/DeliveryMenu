@@ -588,7 +588,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .mapa-j { height: 260px; margin-top: 12px; }
   .e-janela .ajuda { margin-top: 4px; }
   .e-janela .resultado { margin: 12px 12px 0; }
-  .e-janela .loc { margin-top: 12px; }
+  .e-janela .loc { display: flex; margin-top: 12px; } /* em linha, o botão ganhava um vão embaixo */
   .e-janela .r-g { gap: 0 10px; }
   .e-janela .c-taxaBairro, .e-janela .c-porKm { grid-column: 1 / -1; }
   .e-janela .c-taxaBairro, .e-janela .c-minutosBase, .e-janela .c-minutosPorKm { margin-top: 0; } /* primeira linha de cada seção */
@@ -624,17 +624,8 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .e-janela .sec { display: grid; gap: 14px; }
   .e-cartao .campo, .e-janela .campo { margin-top: 0; } /* a grade já dá o espaço; .campo do login traz 14px */
   .e-janela .campo label { margin-bottom: 6px; }
+  .e-janela .sec > .campo:first-child { margin-top: 14px; } /* como na imagem (margem do .campo) */
   .e-janela .busca-l .btn { height: 42px; padding: 0 16px; font-size: 15px; }
   .mapa-j { height: 260px; }
   .e-janela .ajuda { margin-top: -6px; }
 }
-
-/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .barra-topo, .esqueleto .btn:not(.fantasma) { background: #8a8a8a !important; }
-.esqueleto .barra-topo *, .esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
-.esqueleto .barra-topo .novo-item, .esqueleto .barra-topo .novo-item * { color: #444 !important; }
-.esqueleto .proprio, .esqueleto .aviso-b, .esqueleto .simula, .esqueleto .resultado { background: #ddd !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
