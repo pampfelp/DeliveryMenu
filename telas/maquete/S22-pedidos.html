@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S22 Pedidos</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .intro { margin: 16px 12px 12px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .ped { margin: 0 12px 10px; padding: 14px; }
+  .ped .l1 { display: flex; align-items: center; gap: 8px; }
+  .ped .l1 b { font: 600 16px/22px Rubik; color: var(--text-strong); }
+  .ped .l1 b.espera { font-weight: 500; font-size: 14px; color: var(--text-muted); }
+  .ped .l1 .quando { font-size: 13px; color: var(--text-muted); }
+  .ped .l1 svg.ic { margin-left: auto; color: var(--accent); }
+  .ped p { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .ped .l3 { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+  .ped .l3 strong { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .st { font: 500 12px/16px Rubik; padding: 3px 8px; border-radius: var(--r-sm); }
+  .st.prep { color: var(--info); background: var(--info-bg); }
+  .st.novo { color: var(--warning); background: #fffbeb; }
+  .st.ok { color: var(--success); background: var(--success-bg); }
+  .st.nao { color: var(--danger); background: #fdf2f2; }
+  .sub-t { margin: 18px 12px 10px; font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><h1>Pedidos</h1></div>
+  <p class="intro">Os pedidos feitos neste aparelho.</p>
+  <div class="sub-t">Em andamento</div>
+  <div class="ped cartao">
+    <div class="l1"><b>#1052</b><span class="quando">Hoje, 19h05</span><i data-ic="direita"></i></div>
+    <p>1x Clássico da Casa, 1x Smash Simples</p>
+    <div class="l3"><span class="st prep">Em preparo</span><strong>R$ 54,90</strong></div>
+  </div>
+  <div class="ped cartao">
+    <div class="l1"><b class="espera">Aguardando aceite</b><span class="quando">Hoje, 19h22</span><i data-ic="direita"></i></div>
+    <p>2x Milk-shake 400 ml</p>
+    <div class="l3"><span class="st novo">Enviado</span><strong>R$ 31,00</strong></div>
+  </div>
+  <div class="sub-t">Anteriores</div>
+  <div class="ped cartao">
+    <div class="l1"><b>#1031</b><span class="quando">Sáb, 12/10, 20h14</span><i data-ic="direita"></i></div>
+    <p>1x Combo Dupla, 1x Batata média</p>
+    <div class="l3"><span class="st ok">Entregue</span><strong>R$ 77,90</strong></div>
+  </div>
+  <div class="ped cartao">
+    <div class="l1"><b class="espera">Sem número</b><span class="quando">Sex, 11/10, 21h40</span><i data-ic="direita"></i></div>
+    <p>1x Bacon Duplo</p>
+    <div class="l3"><span class="st nao">Não aceito</span><strong>R$ 37,00</strong></div>
+  </div>
+  <nav class="nav">
+    <a><i data-ic="home"></i>Início</a>
+    <a><i data-ic="promo"></i>Promoções</a>
+    <a class="on"><i data-ic="sacola"></i>Pedidos</a>
+    <a><i data-ic="user"></i>Perfil</a>
+  </nav>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

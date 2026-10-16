@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P51 Novo cupom no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .form { padding: 16px; }
+  .campo + .campo, .dupla { margin-top: 14px; }
+  .campo label { display: block; margin-bottom: 4px; font: 500 12px/16px Rubik; color: var(--text-muted); }
+  .in { display: flex; align-items: center; gap: 6px; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); font-size: 15px; color: var(--text-strong); }
+  .in.vazio { color: var(--text-muted); }
+  .in.cod { letter-spacing: .06em; font-weight: 500; border: 2px solid var(--accent); padding: 0 11px; }
+  .in small { color: var(--text-muted); font-size: 14px; }
+  .ajuda { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .seg { display: grid; grid-template-columns: 1fr 1fr; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; height: 44px; }
+  .seg span { display: grid; place-items: center; font: 500 14px/20px Rubik; color: var(--text); }
+  .seg span.on { background: var(--text-strong); color: #fff; }
+  .dupla { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .dupla > .campo { margin-top: 0 !important; }
+  .ativo { display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--surface-muted); font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .ativo div { flex: 1; }
+  .ativo small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .trilho { width: 40px; height: 24px; border-radius: 12px; background: var(--success); position: relative; flex: none; }
+  .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .previa-c { margin-top: 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--success-bg); color: var(--success); font: 500 13px/18px Rubik; }
+  .rodape-c { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span style="color:var(--text-strong)"><i data-ic="esquerda"></i></span><h1>Novo cupom</h1></div>
+  <div class="form">
+      <div class="campo"><label>Código</label><div class="in cod">PIZZA10</div><p class="ajuda">Letras e números, sem espaço. O cliente digita na sacola.</p></div>
+      <div class="campo"><label>Tipo de desconto</label><div class="seg"><span class="on">Porcentagem</span><span>Valor em R$</span></div></div>
+      <div class="dupla">
+        <div class="campo"><label>Desconto</label><div class="in">10<small style="margin-left:auto">%</small></div></div>
+        <div class="campo"><label>Pedido mínimo</label><div class="in"><small>R$</small>60,00</div></div>
+      </div>
+      <div class="dupla">
+        <div class="campo"><label>Válido até</label><div class="in vazio">Sem data</div></div>
+        <div class="campo"><label>Limite de usos</label><div class="in vazio">Sem limite</div></div>
+      </div>
+      <div class="ativo"><div>Cupom ligado<small>Desligado, o código deixa de valer na hora.</small></div><span class="trilho"></span></div>
+      <div class="previa-c">Num pedido de R$ 80,00 em itens, o cliente paga R$ 72,00 mais a entrega.</div>
+  </div>
+  <div class="rodape-c"><div class="btn btn-accent">Salvar cupom</div></div>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>

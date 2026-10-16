@@ -22,7 +22,13 @@ export async function carregarLoja() {
   const ex = new URLSearchParams(location.search).get("exemplo");
   if (!SLUG) return {
     real: false, BAIRROS, CATEGORIAS, SUGESTOES,
-    LOJA: { ...LOJA, aberta: ex !== "fechada", pagamentoOnline: ex !== "na-entrega", whatsapp: "91900000000" },
+    LOJA: {
+      ...LOJA, aberta: ex !== "fechada", pagamentoOnline: ex !== "na-entrega", whatsapp: "91900000000",
+      // o que aparece em Mais informações (S20, D20)
+      endereco: "Travessa das Flores, 120",
+      horario: Object.fromEntries(["seg", "ter", "qua", "qui", "sex", "sab", "dom"].map((d) => [d,
+        { aberto: d !== "dom", abre: "18:00", fecha: ["sex", "sab"].includes(d) ? "00:00" : "23:00" }])),
+    },
   };
 
   const { db } = await import("./firebase-init.js?v=2");
@@ -52,6 +58,7 @@ export async function carregarLoja() {
       horario: d.horario || null,
       abrirSozinho: !!d.abrirSozinho,
       whatsapp: d.whatsapp || "",
+      endereco: d.endereco || "", // o ponto de saída marcado em Entregas
       // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
       pagamentoOnline: false,
     },

@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S21 Promoções</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .intro { margin: 16px 12px 12px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+  .item { display: flex; gap: 12px; margin: 0 12px 10px; padding: 12px; }
+  .item .txt { flex: 1; min-width: 0; }
+  .item h3 { font: 500 16px/22px Rubik; color: var(--text-strong); }
+  .item p { font-size: 13px; line-height: 18px; margin-top: 2px; }
+  .item .valores { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
+  .item .foto { width: 88px; height: 88px; border-radius: var(--r-md); flex: none; }
+  .vazio { margin: 32px 24px 0; padding: 24px 16px; text-align: center; border: 1px dashed #c4c8cf; border-radius: var(--r-md); }
+  .vazio svg.ic { width: 28px; height: 28px; color: var(--text-muted); }
+  .vazio b { display: block; margin-top: 8px; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .vazio p { margin-top: 4px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .nota-v { margin: 16px 12px 0; font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><h1>Promoções</h1></div>
+  <p class="intro">Itens com preço de oferta agora.</p>
+  <div class="item cartao">
+    <div class="txt"><h3>Smash Simples</h3><p class="muted leve">Blend de 90 g prensado na chapa, queijo prato e picles</p>
+      <div class="valores"><span class="preco preco-promo">R$ 19,90</span><span class="riscado">R$ 24,00</span><span class="desconto">-17%</span></div></div>
+    <div class="foto"><i data-ic="foto"></i></div>
+  </div>
+  <div class="item cartao">
+    <div class="txt"><h3>Combo Dupla</h3><p class="muted leve">2 burgers, batata média e refrigerante 1 L</p>
+      <div class="valores"><span class="preco preco-promo">R$ 59,90</span><span class="riscado">R$ 68,00</span><span class="desconto">-12%</span></div></div>
+    <div class="foto"><i data-ic="foto"></i></div>
+  </div>
+  <div class="item cartao">
+    <div class="txt"><h3>Milk-shake 400 ml</h3><p class="muted leve">Chocolate, morango ou baunilha</p>
+      <div class="valores"><span class="preco preco-promo">R$ 14,00</span><span class="riscado">R$ 17,00</span><span class="desconto">-18%</span></div></div>
+    <div class="foto"><i data-ic="foto"></i></div>
+  </div>
+
+  <div class="nota-v">Quando não há promoção</div>
+  <div class="vazio"><i data-ic="promo"></i><b>Nenhuma promoção agora</b><p>Quando o restaurante baixar um preço, o item aparece aqui.</p></div>
+
+  <nav class="nav">
+    <a><i data-ic="home"></i>Início</a>
+    <a class="on"><i data-ic="promo"></i>Promoções</a>
+    <a><i data-ic="sacola"></i>Pedidos</a>
+    <a><i data-ic="user"></i>Perfil</a>
+  </nav>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

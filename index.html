@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=17" />
+<link rel="stylesheet" href="./loja.css?v=18" />
 </head>
 <body>
 <div id="app">
@@ -30,7 +30,7 @@
           <div class="cabeca-txt">
             <h1 class="loja-nome"></h1>
             <div class="meta">
-              <div class="linha-info"><i data-ic="pino"></i><span id="loja-cidade"></span><span class="ponto">•</span><a href="#inicio">Mais informações</a></div>
+              <div class="linha-info"><i data-ic="pino"></i><span id="loja-cidade"></span><span class="ponto">•</span><button type="button" data-info>Mais informações</button></div>
               <div class="situacao" id="loja-situacao"></div>
             </div>
           </div>
@@ -49,7 +49,7 @@
           <div id="categorias"></div>
         </div>
       </div>
-      <aside class="sacola-lateral so-pc" id="sacola-lateral"></aside>
+      <aside class="sacola-lateral so-pc"></aside>
     </div>
     <a class="barra-sacola" href="#sacola"><span class="qtd"><i data-ic="sacola"></i><span id="barra-qtd"></span></span><span class="rotulo">Ver sacola</span><strong id="barra-total"></strong></a>
   </section>
@@ -189,11 +189,79 @@
     <div class="cartao-ok" id="acompanhar"></div>
   </section>
 
+  <!-- S21 / D21 Promoções -->
+  <section class="tela pagina esqueleto" id="tela-promocoes">
+    <div class="topo so-cel"><h1>Promoções</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Promoções</h1>
+        <p class="pag-s" data-c="intro">Itens com preço de oferta agora.</p>
+        <div id="promocoes" data-c="lista de promoções"></div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+  </section>
+
+  <!-- S22 / D22 Pedidos feitos neste aparelho -->
+  <section class="tela pagina esqueleto" id="tela-pedidos">
+    <div class="topo so-cel"><h1>Pedidos</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Pedidos</h1>
+        <p class="pag-s" data-c="intro"><span class="so-cel">Os pedidos feitos neste aparelho.</span><span class="so-pc">Os pedidos feitos neste computador.</span></p>
+        <div id="lista-pedidos" data-c="pedidos"></div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+  </section>
+
+  <!-- S23 / D23 Perfil: os dados guardados no aparelho -->
+  <section class="tela pagina esqueleto" id="tela-perfil">
+    <div class="topo so-cel"><h1>Perfil</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Perfil</h1>
+        <p class="pag-s so-pc">Não há conta nem senha: estes dados ficam só neste computador.</p>
+        <div class="perfil-grade">
+          <div class="cartao-p" data-c="seus dados">
+            <h2>Seus dados</h2>
+            <p class="sub">Vão junto com o pedido, para o restaurante falar com você.</p>
+            <div class="campo"><label for="p-nome">Nome</label><div class="in"><i data-ic="user"></i><input id="p-nome" maxlength="80" autocomplete="name" /></div></div>
+            <div class="campo"><label for="p-fone">WhatsApp</label><div class="in"><i data-ic="fone"></i><input id="p-fone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div></div>
+            <button type="button" class="btn so-pc" data-salvar-perfil>Salvar</button>
+          </div>
+          <div class="cartao-p" data-c="endereço">
+            <h2>Endereço de entrega</h2>
+            <p class="sub">O último que você usou. Vem preenchido no próximo pedido.</p>
+            <div id="perfil-endereco"></div>
+          </div>
+        </div>
+        <div class="perfil-pe">
+          <p class="guardar-p"><i data-ic="info"></i><span class="so-cel">Não há conta nem senha: estes dados ficam só neste aparelho.</span><span class="so-pc">Para pedir em outro aparelho, digite os dados de novo lá.</span></p>
+          <button type="button" class="apagar" data-apagar-dados>Apagar meus dados deste <span class="so-cel">aparelho</span><span class="so-pc">computador</span></button>
+        </div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+    <div class="salvar-perfil so-cel"><button type="button" class="btn" data-salvar-perfil>Salvar</button></div>
+  </section>
+
+  <!-- S20 / D20 Mais informações: folha no celular, janela no computador -->
+  <div class="info-loja esqueleto" id="info-loja" hidden>
+    <div class="escuro" data-fechar-info></div>
+    <div class="janela-info" role="dialog" aria-modal="true" aria-labelledby="info-titulo" data-c="mais informações">
+      <div class="alca so-cel"></div>
+      <div class="cab-j"><h2 id="info-titulo" class="loja-nome"></h2><button type="button" class="fechar" data-fechar-info aria-label="Fechar"><i data-ic="x"></i></button></div>
+      <div class="corpo-j" id="info-corpo"></div>
+      <div class="rodape-j" id="info-rodape"></div>
+    </div>
+  </div>
+
   <nav class="nav">
-    <a href="#inicio" class="on"><i data-ic="home"></i>Início</a><a href="#inicio"><i data-ic="promo"></i>Promoções</a><a href="#pedido"><i data-ic="sacola"></i>Pedidos</a><a href="#inicio"><i data-ic="user"></i><span class="so-cel">Perfil</span><span class="so-pc">Entrar</span></a>
+    <a href="#inicio" data-aba="inicio" class="on"><i data-ic="home"></i>Início</a><a href="#promocoes" data-aba="promocoes"><i data-ic="promo"></i>Promoções</a><a href="#pedidos" data-aba="pedidos"><i data-ic="sacola"></i>Pedidos</a><a href="#perfil" data-aba="perfil"><i data-ic="user"></i>Perfil</a>
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=17"></script>
+<script type="module" src="./app.js?v=18"></script>
 </body>
 </html>

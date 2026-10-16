@@ -1,0 +1,12 @@
+/* folha que sobe de baixo no celular, por cima da tela escurecida (S20, S24, S25) */
+.escuro { position: absolute; inset: 0; background: var(--overlay); }
+.folha { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--shadow-raised); }
+.folha .alca { width: 40px; height: 4px; border-radius: 2px; background: #d1d5db; margin: 8px auto 0; }
+.folha .cab-f { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.folha .cab-f h2 { flex: 1; font: 500 18px/28px Rubik; color: var(--text-strong); }
+.folha .corpo-f { padding: 16px; }
+.folha .rodape-f { padding: 12px 16px 20px; border-top: 1px solid var(--border); }
+.rot-f { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+.campo-f { display: flex; align-items: center; height: 48px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); font: 400 16px/24px Rubik; color: var(--text-strong); }
+.campo-f.foco { border: 2px solid var(--accent); padding: 0 11px; }
+.ajuda-f { margin-top: 6px; font-size: 12px; line-height: 16px; color: var(--text-muted); }

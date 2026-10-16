@@ -9,9 +9,9 @@
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO } from "./dados-exemplo.js?v=6";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=3";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=4";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
-import { situacao } from "./horario.js?v=1";
+import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
@@ -142,6 +142,7 @@ function faltaEndereco() {
 }
 const campo = (id) => document.getElementById(id).value.trim();
 const CHECKOUT = ["dados", "entrega", "pagamento", "revisar"];
+const ABAS = ["inicio", "promocoes", "pedidos", "perfil"]; // telas da barra de navegação
 
 function irParaHash() {
   let [tela, param, uid] = (location.hash.slice(1) || "inicio").split("/");
@@ -152,14 +153,17 @@ function irParaHash() {
   if (CHECKOUT.includes(tela) && !LOJA.aberta) desvio(pc.matches ? "inicio" : "sacola");
   if (["entrega", "pagamento", "revisar"].includes(tela) && !clienteValido(STATE.cliente)) desvio("dados");
   if (["pagamento", "revisar"].includes(tela) && faltaEndereco()) { toast(faltaEndereco(), "erro", 3500); desvio("entrega"); }
-  if (tela === "pedido") {
-    param = param || ultimoPedido();
-    if (!param) { toast("Você ainda não fez pedido neste restaurante.", "info", 3000); desvio("inicio"); }
-  }
+  if (tela === "pedido" && !param) desvio("pedidos");
   if (tela !== "pedido") pararAcompanhar();
   document.querySelectorAll(".tela").forEach((s) => s.classList.toggle("ativa", s.id === `tela-${tela}`));
   document.body.dataset.tela = tela;
+  const aba = ABAS.includes(tela) ? tela : "inicio";
+  document.querySelectorAll(".nav [data-aba]").forEach((a) => a.classList.toggle("on", a.dataset.aba === aba));
+  if (tela !== "inicio") fecharInfo();
   if (tela === "produto") abrirProduto(param, uid);
+  if (tela === "promocoes") renderPromocoes();
+  if (tela === "pedidos") renderPedidos();
+  if (tela === "perfil") renderPerfil();
   if (tela === "dados") preencherDados();
   if (tela === "pagamento") renderPagamento();
   if (tela === "revisar") renderRevisar();
@@ -458,7 +462,7 @@ function renderSacolas() {
   continuar.innerHTML = LOJA.aberta ? "Continuar pedido" : `<i data-ic="relogio"></i>Restaurante fechado agora`;
 
   // coluna do computador
-  document.getElementById("sacola-lateral").innerHTML = `
+  const lateral = `
     <button class="linha-taxa" data-calcular>${htmlLinhaTaxa()}</button>
     ${vazia
       ? `<div class="sacola-vazia"><i data-ic="sacola"></i><p>Sacola vazia</p></div>`
@@ -481,6 +485,7 @@ function renderSacolas() {
     ${vazia ? `<span class="btn desligado">Sacola vazia</span>`
       : !LOJA.aberta ? `<span class="btn fechada"><i data-ic="relogio"></i>Restaurante fechado agora</span>`
       : `<a class="btn" href="#entrega">Continuar pedido</a>`}`;
+  document.querySelectorAll(".sacola-lateral").forEach((el) => (el.innerHTML = lateral));
 
   // resumo ao lado do checkout (computador)
   document.querySelectorAll(".resumo-lateral").forEach((aside) => (aside.innerHTML = htmlResumoLateral(aside, sub)));
@@ -648,9 +653,9 @@ function preencherDados() {
   document.getElementById("c-nome").value = c.nome || "";
   document.getElementById("c-fone").value = fmtFone(c.telefone || "");
 }
-document.getElementById("c-fone").addEventListener("input", (e) => (e.target.value = fmtFone(soDigitos(e.target.value).slice(0, 11))));
-function salvarDados() {
-  const c = { nome: campo("c-nome").replace(/\s+/g, " "), telefone: soDigitos(campo("c-fone")) };
+document.querySelectorAll("#c-fone, #p-fone").forEach((el) => el.addEventListener("input", (e) => (e.target.value = fmtFone(soDigitos(e.target.value).slice(0, 11)))));
+function salvarDados(idNome = "c-nome", idFone = "c-fone") {
+  const c = { nome: campo(idNome).replace(/\s+/g, " "), telefone: soDigitos(campo(idFone)) };
   if (c.nome.length < 2) { toast("Digite seu nome.", "erro", 3000); return false; }
   if (!/^\d{10,11}$/.test(c.telefone)) { toast("Digite o WhatsApp com DDD.", "erro", 3000); return false; }
   STATE.cliente = c;
@@ -729,7 +734,6 @@ function lerTroco() {
 /* ===== envio: grava em pedidosEntrada; o painel move para pedidos quando aceita ===== */
 const CHAVE_PEDIDOS = `deliverymenu:pedidos:${LOJA.id}`;
 function meusPedidos() { try { return JSON.parse(localStorage.getItem(CHAVE_PEDIDOS)) || []; } catch { return []; } }
-const ultimoPedido = () => (SLUG ? meusPedidos()[0] : STATE.exemploPedido && "exemplo");
 
 async function enviarPedido() {
   if (STATE.enviando) return; // duplo clique não manda dois pedidos
@@ -765,6 +769,7 @@ async function enviarPedido() {
     const { collection, addDoc, serverTimestamp } = await import(FIRESTORE);
     const ref = await addDoc(collection(db, "lojas", LOJA.id, "pedidosEntrada"), { ...pedido, criadoEm: serverTimestamp() });
     try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([ref.id, ...meusPedidos()].slice(0, 20))); } catch { /* sem armazenamento */ }
+    if (pedido.endereco) guardarEndereco(pedido.endereco);
     STATE.sacola = [];
     salvarSacola();
     location.hash = `#pedido/${ref.id}`;
@@ -809,6 +814,7 @@ function pedidoExemplo(id) {
   const p = { id, tipo: "entrega", endereco: { km: 1.6 }, criadoEm: base, status: "novo" };
   if (id === "exemplo-aceito") Object.assign(p, { status: "preparo", numero: 1052, aceitoEm: somaMin(base, 1) });
   if (id === "exemplo-recusado") Object.assign(p, { status: "cancelado", concluidoEm: somaMin(base, 2) });
+  if (id === "exemplo-entregue") Object.assign(p, { status: "entregue", numero: 1031, aceitoEm: somaMin(base, 1), saiuEm: somaMin(base, 20), concluidoEm: somaMin(base, 38) });
   return p;
 }
 const quando = (t) => (t instanceof Date ? t : t?.toDate ? t.toDate() : null);
@@ -862,6 +868,165 @@ function renderAcompanhar(p) {
   pintarIcones(caixa);
 }
 
+/* ===== S20 / D20 mais informações ===== */
+const horaTexto = (hhmm) => (hhmm === "00:00" ? "meia-noite" : hhmm.replace(":", "h"));
+function faixaTaxas() {
+  const valores = BAIRROS.map((b) => calcularEntrega(b.nome)).filter((e) => e.status === "ok").map((e) => e.valor);
+  return valores.length ? [Math.min(...valores), Math.max(...valores)] : null;
+}
+const CHIPS = { dinheiro: "Dinheiro", "pix-entrega": "Pix", credito: "Crédito", debito: "Débito" };
+function abrirInfo() {
+  const hoje = DIAS[agora().dia];
+  const blocos = [];
+  if (LOJA.endereco || LOJA.local) {
+    // bairro e cidade só na linha de baixo quando o endereço ainda não traz
+    const resto = [LOJA.bairro, LOJA.cidade].filter((x) => x && !semAcento(LOJA.endereco || "").includes(semAcento(x.split(" - ")[0])));
+    const mapa = LOJA.local ? `${LOJA.local.lat},${LOJA.local.lng}` : `${LOJA.endereco}, ${LOJA.cidade}`;
+    blocos.push(`<div class="b-info b-end"><div class="rot-i">Endereço</div>
+      <div class="lin"><i data-ic="pino"></i><div><b>${esc(LOJA.endereco || "Ponto marcado no mapa")}</b>${resto.length ? `<p>${esc(resto.join(", "))}</p>` : ""}
+      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(mapa)}" target="_blank" rel="noopener">Ver no mapa</a></div></div></div>`);
+  }
+  if (LOJA.horario) blocos.push(`<div class="b-info b-hor"><div class="rot-i">Horário</div><div class="dias">${ORDEM.map((d) => {
+    const h = LOJA.horario[d];
+    const quando = h?.aberto ? `${horaTexto(h.abre)} ${h.fecha === "00:00" ? "à" : "às"} ${horaTexto(h.fecha)}` : `<span class="fec">Fechado</span>`;
+    return `<div class="dia-i${d === hoje ? " hoje" : ""}"><span>${NOMES[d]}${d === hoje ? " (hoje)" : ""}</span><span>${quando}</span></div>`;
+  }).join("")}</div></div>`);
+  blocos.push(`<div class="b-info b-pag"><div class="rot-i">Pagamento na entrega</div><div class="chips">${FORMAS.entrega.map((f) => `<span class="chip-pag"><i data-ic="${f.ic}"></i>${CHIPS[f.id]}</span>`).join("")}</div></div>`);
+  const faixa = faixaTaxas();
+  if (faixa) blocos.push(`<div class="b-info b-ent"><div class="rot-i">Entrega</div><div class="lin"><i data-ic="entrega"></i><div>
+    <b>${faixa[0] === faixa[1] ? reais(faixa[0]) : `${reais(faixa[0])} a ${reais(faixa[1])}`}</b><p>Depende do bairro. Calcule no endereço de entrega.</p></div></div></div>`);
+  document.getElementById("info-corpo").innerHTML = blocos.join("");
+  const rodape = document.getElementById("info-rodape");
+  rodape.innerHTML = LOJA.whatsapp
+    ? `<a class="btn fantasma" href="https://wa.me/55${soDigitos(LOJA.whatsapp)}" target="_blank" rel="noopener"><i data-ic="conversa"></i>Falar no WhatsApp</a>` : "";
+  rodape.hidden = !LOJA.whatsapp;
+  document.getElementById("info-loja").hidden = false;
+  document.body.classList.add("com-janela");
+  pintarIcones(document.getElementById("info-loja"));
+}
+function fecharInfo() {
+  document.getElementById("info-loja").hidden = true;
+  document.body.classList.remove("com-janela");
+}
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-info]")) abrirInfo();
+  else if (e.target.closest("[data-fechar-info]")) fecharInfo();
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharInfo(); });
+
+/* ===== S21 / D21 promoções: itens com preço de oferta ===== */
+function renderPromocoes() {
+  const promo = ITENS.filter((i) => i.precoPromo && !i.esgotado);
+  document.getElementById("promocoes").innerHTML = promo.length
+    ? `<div class="lista-itens">${promo.map(cardItem).join("")}</div>`
+    : `<div class="vazio-pag"><i data-ic="promo"></i><b>Nenhuma promoção agora</b><p>Quando o restaurante baixar um preço, o item aparece aqui.</p></div>`;
+  pintarIcones(document.getElementById("tela-promocoes"));
+}
+
+/* ===== S22 / D22 pedidos feitos neste aparelho ===== */
+const DIA_CURTO = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
+function quandoFoi(d) {
+  const zero = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()).getTime();
+  const dias = Math.round((zero(new Date()) - zero(d)) / 86400000);
+  const dia = dias === 0 ? "Hoje" : dias === 1 ? "Ontem" : `${DIA_CURTO[d.getDay()]}, ${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}`;
+  return `${dia}, ${hh(d)}`;
+}
+const SITUACAO = {
+  novo: ["novo", "Enviado"], preparo: ["prep", "Em preparo"], saiu: ["prep", "Saiu para entrega"],
+  entregue: ["ok", "Entregue"], cancelado: ["nao", "Não aceito"],
+};
+function cartaoPedido(p) {
+  const [classe, texto] = SITUACAO[p.status] || SITUACAO.novo;
+  const rotulo = p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || texto : texto;
+  const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
+  const itens = (p.itens || []).map((i) => `${i.qtd}x ${i.nome}`).join(", ");
+  return `<a class="ped-c" href="#pedido/${esc(p.id)}"><div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span><i data-ic="direita"></i></div>
+    <p>${esc(itens)}</p><div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div></a>`;
+}
+// pedidos de exemplo das imagens S22 e D22
+function pedidosExemplo() {
+  const em = (dias, h, m) => { const d = new Date(); d.setHours(h, m, 0, 0); d.setDate(d.getDate() - dias); return d; };
+  return [
+    { id: "exemplo-aceito", numero: 1052, status: "preparo", criadoEm: em(0, 19, 5), total: 5490, itens: [{ qtd: 1, nome: "Clássico da Casa" }, { qtd: 1, nome: "Smash Simples" }] },
+    { id: "exemplo-novo", status: "novo", criadoEm: em(0, 19, 22), total: 3100, itens: [{ qtd: 2, nome: "Milk-shake 400 ml" }] },
+    { id: "exemplo-entregue", numero: 1031, status: "entregue", tipo: "entrega", criadoEm: em(4, 20, 14), total: 7790, itens: [{ qtd: 1, nome: "Combo Dupla" }, { qtd: 1, nome: "Batata média" }] },
+    { id: "exemplo-recusado", status: "cancelado", criadoEm: em(5, 21, 40), total: 3700, itens: [{ qtd: 1, nome: "Bacon Duplo" }] },
+  ];
+}
+async function lerPedidos() {
+  if (!SLUG) return EXEMPLO ? pedidosExemplo() : STATE.exemploPedido ? [STATE.exemploPedido] : [];
+  const ids = meusPedidos();
+  if (!ids.length) return [];
+  const { db } = await import("./firebase-init.js?v=2");
+  const { doc, getDoc } = await import(FIRESTORE);
+  const lidos = await Promise.all(ids.map(async (id) => {
+    const [aceito, entrada] = await Promise.all(["pedidos", "pedidosEntrada"].map((c) => getDoc(doc(db, "lojas", LOJA.id, c, id)).catch(() => null)));
+    if (aceito?.exists()) return { id, ...aceito.data({ serverTimestamps: "estimate" }) };
+    if (entrada?.exists()) return { id, ...entrada.data({ serverTimestamps: "estimate" }), status: "novo" };
+    return null; // apagado no painel
+  }));
+  return lidos.filter(Boolean);
+}
+async function renderPedidos() {
+  const caixa = document.getElementById("lista-pedidos");
+  caixa.innerHTML = `<p class="carregando-p">Buscando seus pedidos...</p>`;
+  let lista;
+  try { lista = await lerPedidos(); } catch { caixa.innerHTML = `<p class="carregando-p">Não deu para buscar os pedidos. Confira a internet.</p>`; return; }
+  if (document.body.dataset.tela !== "pedidos") return;
+  const andamento = lista.filter((p) => ["novo", "preparo", "saiu"].includes(p.status));
+  const antes = lista.filter((p) => !andamento.includes(p));
+  caixa.innerHTML = !lista.length
+    ? `<div class="vazio-pag"><i data-ic="sacola"></i><b>Nenhum pedido ainda</b><p>Os pedidos que você fizer neste restaurante aparecem aqui.</p></div>`
+    : (andamento.length ? `<h2 class="sub-t">Em andamento</h2>${andamento.map(cartaoPedido).join("")}` : "")
+      + (antes.length ? `<h2 class="sub-t">Anteriores</h2>${antes.map(cartaoPedido).join("")}` : "");
+  pintarIcones(caixa);
+}
+
+/* ===== S23 / D23 perfil: nome, WhatsApp e o último endereço, só no aparelho ===== */
+const CHAVE_END = "deliverymenu:endereco";
+const ENDERECO_EXEMPLO = { rua: "Travessa das Flores", numero: "120", bairro: "Centro", complemento: "", referencia: "Em frente à praça", cep: "66000-000" };
+function lerEndereco() {
+  if (EXEMPLO) return ENDERECO_EXEMPLO;
+  try { return JSON.parse(localStorage.getItem(CHAVE_END)); } catch { return null; }
+}
+function guardarEndereco(e) {
+  if (EXEMPLO) return;
+  try { localStorage.setItem(CHAVE_END, JSON.stringify({ rua: e.rua, numero: e.numero, bairro: e.bairro, complemento: e.complemento, referencia: e.referencia, cep: e.cep })); } catch { /* sem armazenamento */ }
+}
+// o endereço guardado entra nos campos da entrega, só nos que ainda estão vazios
+function preencherEnderecoGuardado() {
+  const e = lerEndereco();
+  if (!e || EXEMPLO) return;
+  [["f-cep", e.cep], ["f-rua", e.rua], ["f-num", e.numero], ["f-bairro", e.bairro], ["f-compl", e.complemento], ["f-ref", e.referencia]]
+    .forEach(([id, v]) => { const el = document.getElementById(id); if (!el.value && v) el.value = v; });
+}
+function renderPerfil() {
+  const c = STATE.cliente || {};
+  document.getElementById("p-nome").value = c.nome || "";
+  document.getElementById("p-fone").value = fmtFone(c.telefone || "");
+  const e = lerEndereco();
+  document.getElementById("perfil-endereco").innerHTML = e
+    ? `<div class="end-g"><i data-ic="pino"></i><div><b>${esc(e.rua)}, ${esc(e.numero)}</b><p>${esc(e.bairro)}${e.complemento ? `, ${esc(e.complemento)}` : ""} · Ref.: ${esc(e.referencia)}</p></div><button type="button" data-esquecer-end>Esquecer</button></div>`
+    : `<p class="end-vazio">Nenhum endereço guardado. Ele fica aqui depois do primeiro pedido com entrega.</p>`;
+  pintarIcones(document.getElementById("tela-perfil"));
+}
+document.addEventListener("click", async (e) => {
+  if (e.target.closest("[data-salvar-perfil]")) {
+    if (salvarDados("p-nome", "p-fone")) { toast("Dados salvos neste aparelho.", "sucesso", 2500); renderPerfil(); }
+  } else if (e.target.closest("[data-esquecer-end]")) {
+    try { localStorage.removeItem(CHAVE_END); } catch { /* sem armazenamento */ }
+    renderPerfil();
+  } else if (e.target.closest("[data-apagar-dados]")) {
+    if (!(await confirmar("Apagar nome, WhatsApp, endereço e a lista de pedidos deste aparelho?", { textoConfirmar: "Apagar" }))) return;
+    try {
+      Object.keys(localStorage).filter((k) => k === CHAVE_CLIENTE || k === CHAVE_END || k.startsWith("deliverymenu:pedidos:")).forEach((k) => localStorage.removeItem(k));
+    } catch { /* sem armazenamento */ }
+    STATE.cliente = null;
+    toast("Dados apagados deste aparelho.", "info", 2500);
+    renderPerfil();
+  }
+});
+
 function atualizarAberta() {
   const antes = document.getElementById("loja-situacao").textContent;
   const mudou = recalcularAberta();
@@ -890,6 +1055,7 @@ async function vigiarLoja() {
 // modo exemplo: o endereço das imagens validadas (S12, D12)
 if (EXEMPLO) [["f-cep", "66000-000"], ["f-rua", "Travessa das Flores"], ["f-num", "120"], ["f-bairro", "Centro"], ["f-ref", "Em frente à praça"]]
   .forEach(([id, v]) => (document.getElementById(id).value = v));
+preencherEnderecoGuardado();
 vigiarLoja();
 recalcularAberta();
 renderInicio();

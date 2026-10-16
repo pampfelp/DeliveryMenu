@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S08c Sacola com cupom</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .linha { display: flex; align-items: center; gap: 10px; padding: 14px 16px; border-bottom: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .linha span { flex: 1; }
+  .linha .ic:first-child { color: var(--text-muted); }
+  .linha .ic:last-child { color: var(--accent); }
+  .cab { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 8px; }
+  .cab h2 { font: 500 18px/28px Rubik; color: var(--text-strong); }
+  .cab a { font: 500 13px/19.5px Rubik; color: var(--accent); letter-spacing: .03em; }
+  .it { display: flex; gap: 12px; margin: 0 16px 10px; padding: 12px; border: 1px solid var(--border); border-radius: var(--r-md); }
+  .it .t { flex: 1; }
+  .it h3 { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .it h3 b { font-weight: 500; color: var(--text-muted); margin-right: 4px; }
+  .it p { font-size: 13px; line-height: 18px; margin-top: 2px; }
+  .it .acoes { display: flex; gap: 16px; margin-top: 8px; font: 500 13px/19.5px Rubik; }
+  .it .acoes a:first-child { color: var(--accent); }
+  .it .acoes a:last-child { color: var(--text-muted); }
+  .it .lado { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+  .it .foto { width: 56px; height: 56px; border-radius: var(--r-sm); }
+  .it .foto svg.ic { width: 20px; height: 20px; }
+  .mais-itens { display: block; text-align: center; padding: 10px; font: 500 14px/20px Rubik; color: var(--accent); letter-spacing: .02em; }
+  .sug-t { font: 500 16px/24px Rubik; color: var(--text-strong); padding: 8px 16px; }
+  .sug { display: flex; gap: 10px; padding: 0 16px; overflow: hidden; }
+  .sug .c { width: 112px; flex: none; border: 1px solid var(--border); border-radius: var(--r-md); overflow: hidden; }
+  .sug .foto { height: 76px; }
+  .sug .foto svg.ic { width: 22px; height: 22px; }
+  .sug .c div:last-child { padding: 8px; font-size: 13px; line-height: 18px; }
+  .sug .c b { display: block; margin-top: 4px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .totais { position: absolute; left: 0; right: 0; bottom: 0; background: var(--surface); box-shadow: var(--shadow-bar); padding: 12px 16px 20px; }
+  .tl { display: flex; justify-content: space-between; font-size: 14px; line-height: 22px; color: var(--text-muted); }
+  .tl.total { margin-top: 4px; font: 600 18px/28px Rubik; color: var(--text-strong); }
+  .cupom { display: flex; align-items: center; gap: 12px; margin: 12px 0; padding: 10px 0; border-top: 1px solid var(--border); border-bottom: 1px solid var(--border); }
+  .cupom .ic:first-child { color: var(--text-muted); }
+  .cupom div { flex: 1; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .cupom small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .cupom .ic:last-child { color: var(--accent); }
+  .cupom.ok .ic:first-child { color: var(--success); }
+  .cupom.ok small { color: var(--success); }
+  .cupom a { font: 500 13px/19.5px Rubik; color: var(--text-muted); }
+  .tl.desc { color: var(--success); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><h1>Nome do Restaurante</h1><div class="fechar"><i data-ic="x"></i></div></div>
+  <div class="linha"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita"></i></div>
+
+  <div class="cab"><h2>Sua sacola</h2><a>LIMPAR</a></div>
+  <div class="it">
+    <div class="t"><h3><b>1x</b>Clássico da Casa</h3><p class="muted leve">Ao ponto, 1 bacon</p><div class="acoes"><a>Editar</a><a>Remover</a></div></div>
+    <div class="lado"><span class="preco">R$ 31,00</span><div class="foto"><i data-ic="foto"></i></div></div>
+  </div>
+  <div class="it">
+    <div class="t"><h3><b>1x</b>Smash Simples</h3><p class="muted leve">Sem picles</p><div class="acoes"><a>Editar</a><a>Remover</a></div></div>
+    <div class="lado"><span class="preco preco-promo">R$ 19,90</span><div class="foto"><i data-ic="foto"></i></div></div>
+  </div>
+  <a class="mais-itens">ADICIONAR MAIS ITENS</a>
+
+  <div class="sug-t">Peça também</div>
+  <div class="sug">
+    <div class="c"><div class="foto"><i data-ic="foto"></i></div><div class="muted">Batata média<b>R$ 14,00</b></div></div>
+    <div class="c"><div class="foto"><i data-ic="foto"></i></div><div class="muted">Refrigerante lata<b>R$ 6,00</b></div></div>
+    <div class="c"><div class="foto"><i data-ic="foto"></i></div><div class="muted">Onion rings<b>R$ 16,00</b></div></div>
+  </div>
+
+  <div class="totais">
+    <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+    <div class="tl desc"><span>Cupom PIZZA10</span><span>- R$ 5,09</span></div>
+    <div class="tl"><span>Taxa de entrega</span><span>R$ 6,00</span></div>
+    <div class="tl total"><span>Total</span><span>R$ 51,81</span></div>
+    <div class="cupom ok"><i data-ic="cupom"></i><div>PIZZA10<small>10% de desconto aplicado</small></div><a>Remover</a></div>
+    <div class="btn btn-accent">Continuar pedido</div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

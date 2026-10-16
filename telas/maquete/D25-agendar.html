@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>D25 Agendar no computador</title>
+<link rel="stylesheet" href="_pc.css?v=1">
+<style>
+  .tipos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+  .tipo { height: 76px; border: 1px solid var(--border); border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 500 14px/20px Rubik; color: var(--text); }
+  .tipo.on { border: 2px solid var(--accent); color: var(--accent); background: #fdf2f2; }
+  .tipo svg.ic { width: 24px; height: 24px; }
+  .grade { display: grid; grid-template-columns: 200px 1fr 120px; gap: 12px; }
+  .grade2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; }
+  .campo label { display: block; font: 500 12px/16px Rubik; color: var(--text-muted); margin-bottom: 4px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .in { height: 44px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; font-size: 15px; color: var(--text-strong); }
+  .in.vazio { color: var(--text-muted); }
+  .ref { margin-top: 12px; }
+  .acoes-end { display: flex; justify-content: space-between; align-items: center; margin-top: 16px; }
+  .loc { display: flex; align-items: center; gap: 8px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .resultado { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-radius: var(--r-md); background: var(--success-bg); color: var(--success); font: 500 14px/20px Rubik; }
+  .resultado span { flex: 1; }
+  .agendar { display: flex; align-items: center; gap: 10px; margin-top: 16px; padding: 16px 20px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .agendar span { flex: 1; }
+  .agendar small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .agendar .ic:first-child { color: var(--text-muted); }
+  .agendar .ic:last-child { color: var(--accent); }
+
+  .escuro { position: absolute; inset: 0; background: var(--overlay); }
+  .janela { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); overflow: hidden; }
+  .janela .cab-j { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .janela .cab-j h2 { flex: 1; font: 500 18px/28px Rubik; color: var(--text-strong); }
+  .janela .corpo-j { padding: 20px; }
+  .janela .rodape-j { display: flex; justify-content: flex-end; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-muted); }
+  .janela .rodape-j .btn { height: 42px; padding: 0 20px; font-size: 15px; }
+  .fechar-j { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--text-muted); }
+  .fechar-j svg.ic { width: 18px; height: 18px; }
+  .rot-f { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+  .ajuda-f { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+
+  .janela.ag { width: 560px; }
+  .opcs { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .opc { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); }
+  .opc.on { border: 2px solid var(--accent); padding: 11px 13px; background: #fdf2f2; }
+  .opc div { flex: 1; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .opc small { display: block; font: 400 13px/18px Rubik; color: var(--text-muted); }
+  .radio { width: 20px; height: 20px; border-radius: 50%; border: 2px solid #9ca3af; }
+  .radio.on { border: 6px solid var(--accent); }
+  .dias { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 18px; }
+  .dia { height: 54px; border: 1px solid var(--border); border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; font: 500 14px/18px Rubik; color: var(--text); }
+  .dia small { font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .dia.on { border: 2px solid var(--accent); color: var(--accent); background: #fdf2f2; }
+  .rot-f.mt { margin-top: 18px; }
+  .horas { display: grid; grid-template-columns: repeat(6, 1fr); gap: 8px; margin-top: 10px; }
+  .h { height: 40px; border: 1px solid var(--border); border-radius: var(--r-md); display: grid; place-items: center; font: 500 14px/20px Rubik; color: var(--text); }
+  .h.on { border: 2px solid var(--accent); color: var(--accent); background: #fdf2f2; }
+  .h.off { color: #b6bac2; background: var(--surface-muted); text-decoration: line-through; }
+</style></head>
+<body><div class="pc">
+  <div class="faixa-fina"><div class="dentro"><span class="mini foto">LOGO</span>Nome do Restaurante</div></div>
+  <div class="check">
+    <div class="titulo"><i data-ic="esquerda"></i>Como receber</div>
+    <div class="duas">
+      <div>
+        <div class="bloco cartao">
+          <h2>Como você quer receber o pedido?</h2>
+          <div class="tipos">
+            <div class="tipo on"><i data-ic="entrega"></i>Entrega</div>
+            <div class="tipo"><i data-ic="loja"></i>Retirada</div>
+            <div class="tipo"><i data-ic="mesa"></i>No local</div>
+          </div>
+        </div>
+        <div class="bloco cartao">
+          <h2>Endereço de entrega</h2>
+          <div class="grade">
+            <div class="campo"><label>CEP</label><div class="in">66000-000</div></div>
+            <div class="campo"><label>Rua <i>*</i></label><div class="in">Travessa das Flores</div></div>
+            <div class="campo"><label>Número <i>*</i></label><div class="in">120</div></div>
+          </div>
+          <div class="grade2">
+            <div class="campo"><label>Bairro <i>*</i></label><div class="in">Centro</div></div>
+            <div class="campo"><label>Complemento</label><div class="in vazio">Apto, bloco</div></div>
+          </div>
+          <div class="campo ref"><label>Ponto de referência <i>*</i></label><div class="in">Em frente à praça</div></div>
+          <div class="acoes-end"><div class="loc"><i data-ic="alvo"></i>Usar minha localização</div><div class="loc">Buscar pelo CEP</div></div>
+        </div>
+        <div class="resultado"><i data-ic="check"></i><span>Entregamos no seu endereço</span>R$ 6,00 • 35-45 min</div>
+        <div class="agendar cartao"><i data-ic="agenda"></i><span>Agendar pedido<small>Receber agora ou escolher um horário</small></span><i data-ic="direita"></i></div>
+      </div>
+      <aside class="resumo-pc cartao">
+        <h2>Seu pedido</h2>
+        <div class="li"><span><b>1x</b>Clássico da Casa<small>Ao ponto, 1 bacon</small></span><span>R$ 31,00</span></div>
+        <div class="li"><span><b>1x</b>Smash Simples<small>Sem picles</small></span><span class="preco-promo">R$ 19,90</span></div>
+        <div class="tls">
+          <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+          <div class="tl"><span>Taxa de entrega</span><span>R$ 6,00</span></div>
+          <div class="tl total"><span>Total</span><span>R$ 56,90</span></div>
+        </div>
+        <div class="btn btn-accent">Continuar</div>
+      </aside>
+    </div>
+  </div>
+  <div class="escuro"></div>
+  <div class="janela ag">
+    <div class="cab-j"><h2>Quando você quer receber?</h2><div class="fechar-j"><i data-ic="x"></i></div></div>
+    <div class="corpo-j">
+      <div class="opcs">
+        <div class="opc"><div>Agora<small>Chega em 35-45 min</small></div><span class="radio"></span></div>
+        <div class="opc on"><div>Agendar<small>Escolha o dia e a hora</small></div><span class="radio on"></span></div>
+      </div>
+      <div class="dias">
+        <div class="dia on">Hoje<small>Qua, 16/10</small></div>
+        <div class="dia">Amanhã<small>Qui, 17/10</small></div>
+        <div class="dia">Sexta<small>18/10</small></div>
+      </div>
+      <div class="rot-f mt">Horário de entrega</div>
+      <div class="horas">
+        <div class="h off">19h00</div><div class="h">19h30</div><div class="h">20h00</div><div class="h on">20h30</div><div class="h">21h00</div><div class="h">21h30</div>
+        <div class="h">22h00</div><div class="h">22h30</div>
+      </div>
+      <p class="ajuda-f">Só aparecem horários em que o restaurante está aberto. O pedido chega até 15 min depois da hora escolhida.</p>
+    </div>
+    <div class="rodape-j"><div class="btn btn-ghost">Cancelar</div><div class="btn btn-accent">Agendar para hoje, 20h30</div></div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

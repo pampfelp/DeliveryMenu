@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD10c Pedido agendado no computador</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 1fr; background: var(--bg); overflow: hidden; }
+  .lateral { background: var(--accent); padding: 20px 14px; display: flex; flex-direction: column; }
+  .lateral .marca b { font-size: 17px; line-height: 22px; }
+  .lateral .marca small { font-size: 12px; }
+  .menu { margin-top: 28px; display: grid; gap: 4px; }
+  .menu a { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-md); color: rgba(255,255,255,.85); font: 500 15px/20px Rubik; }
+  .menu a.on { background: rgba(255,255,255,.16); color: #fff; }
+  .menu a .cont { margin-left: auto; background: #fff; color: var(--accent); }
+  .loja-atual { margin-top: auto; padding: 12px; border-radius: var(--r-md); background: rgba(255,255,255,.1); color: #fff; }
+  .loja-atual b { display: block; font: 500 14px/20px Rubik; }
+  .loja-atual small { font-size: 12px; opacity: .8; }
+  .principal { padding: 24px 28px; min-width: 0; }
+  .cab { display: flex; align-items: center; gap: 16px; }
+  .cab h1 { font: 600 24px/32px Rubik; color: var(--text-strong); }
+  .cab .sel { height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .cab .chave { margin-left: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); height: 40px; padding: 0 12px; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
+  .quadro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; align-items: start; }
+  .coluna { background: #eceef1; border-radius: var(--r-lg); padding: 12px; display: grid; gap: 10px; }
+  .coluna h2 { display: flex; align-items: center; gap: 8px; font: 600 15px/20px Rubik; color: var(--text-strong); padding: 2px 2px 4px; }
+  .coluna h2 .cont { margin-left: auto; }
+  .mini { display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 10px 12px; font-size: 13px; color: var(--text); }
+  .mini b { font-weight: 600; color: var(--text-strong); }
+  .mini span:last-child { margin-left: auto; font-weight: 500; color: var(--text-strong); }
+  .mais { text-align: center; font: 500 13px/18px Rubik; color: var(--accent); padding: 4px; }
+
+  .agendado { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 8px; border-radius: var(--r-sm); background: var(--info-bg); color: var(--info); font: 500 13px/18px Rubik; }
+  .agendado svg.ic { width: 16px; height: 16px; }
+</style></head>
+<body><div class="pc">
+  <aside class="lateral">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <nav class="menu">
+      <a class="on"><i data-ic="sacola"></i>Pedidos<span class="cont">2</span></a>
+      <a><i data-ic="lista"></i>Cardápio</a>
+      <a><i data-ic="entrega"></i>Entregas e bairros</a>
+      <a><i data-ic="cupom"></i>Cupons</a>
+      <a><i data-ic="loja"></i>Configurações</a>
+    </nav>
+    <div class="loja-atual"><b>Nome do Restaurante</b><small>Você está como dono</small></div>
+  </aside>
+
+  <main class="principal">
+    <div class="cab">
+      <h1>Pedidos</h1>
+      <div class="sel"><i data-ic="agenda"></i>Hoje<i data-ic="baixo"></i></div>
+      <div class="chave"><span class="trilho"></span>Recebendo pedidos</div>
+    </div>
+
+    <div class="kpis">
+      <div class="kpi"><small>Pedidos hoje</small><b>18</b><em>4 a mais que ontem</em></div>
+      <div class="kpi"><small>Faturamento</small><b>R$ 912,40</b><em>sem as taxas de entrega</em></div>
+      <div class="kpi"><small>Ticket médio</small><b>R$ 50,69</b></div>
+      <div class="kpi"><small>Tempo médio até sair</small><b>24 min</b></div>
+    </div>
+
+    <div class="quadro">
+      <section class="coluna">
+        <h2>Novos<span class="cont forte">2</span></h2>
+        <div class="ped novo">
+          <div class="l1"><span class="num">#1051</span><span class="hora">19h12</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+          <div class="cli">Ana P. · Jardim das Flores</div>
+          <div class="itens">2x Clássico da Casa, 1x Batata média</div>
+          <div class="l3"><span class="total">R$ 73,50</span><span class="pag pago">Pix pago</span><span class="tempo">há 1 min</span></div>
+          <div class="btn btn-accent acao">Aceitar pedido</div>
+        </div>
+        <div class="ped novo">
+          <div class="l1"><span class="num">#1050</span><span class="hora">19h10</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+          <div class="cli">Carlos M. · Bela Vista</div>
+          <div class="itens">1x Pizza meio a meio</div>
+          <div class="agendado"><i data-ic="agenda"></i>Agendado para hoje, 20h30</div>
+          <div class="l3"><span class="total">R$ 55,00</span><span class="pag receber">Dinheiro na entrega</span><span class="tempo">há 3 min</span></div>
+          <div class="btn btn-accent acao">Aceitar pedido</div>
+        </div>
+      </section>
+
+      <section class="coluna">
+        <h2>Em preparo<span class="cont">2</span></h2>
+        <div class="ped">
+          <div class="l1"><span class="num">#1049</span><span class="hora">19h01</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+          <div class="cli">Júlia R. · Centro</div>
+          <div class="itens">1x Combo Dupla, 2x Refrigerante lata</div>
+          <div class="l3"><span class="total">R$ 74,90</span><span class="pag pago">Pix pago</span><span class="tempo">há 12 min</span></div>
+          <div class="btn btn-ghost acao">Saiu para entrega</div>
+        </div>
+        <div class="ped">
+          <div class="l1"><span class="num">#1047</span><span class="hora">18h44</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+          <div class="cli">Pedro A. · Parque Sul</div>
+          <div class="itens">3x Smash Simples, 1x Onion rings</div>
+          <div class="l3"><span class="total">R$ 86,70</span><span class="pag receber">Cartão na entrega</span><span class="tempo atrasado">há 29 min</span></div>
+          <div class="btn btn-ghost acao">Saiu para entrega</div>
+        </div>
+      </section>
+
+      <section class="coluna">
+        <h2>Saiu para entrega<span class="cont">1</span></h2>
+        <div class="ped">
+          <div class="l1"><span class="num">#1046</span><span class="hora">18h38</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+          <div class="cli">Luana S. · Vila Nova</div>
+          <div class="itens">2x Bacon Duplo</div>
+          <div class="l3"><span class="total">R$ 76,00</span><span class="pag receber">Dinheiro, troco p/ R$ 100</span></div>
+          <div class="btn btn-ghost acao">Marcar entregue</div>
+        </div>
+      </section>
+
+      <section class="coluna">
+        <h2>Concluídos<span class="cont">13</span></h2>
+        <div class="mini"><b>#1045</b><span>Entregue 18h52</span><span>R$ 34,00</span></div>
+        <div class="mini"><b>#1044</b><span>Retirado 18h40</span><span>R$ 27,00</span></div>
+        <div class="mini"><b>#1043</b><span class="pag cancelado">Cancelado</span><span>R$ 45,00</span></div>
+        <div class="mini"><b>#1042</b><span>Entregue 18h21</span><span>R$ 61,40</span></div>
+        <div class="mais">Ver os 13 de hoje</div>
+      </section>
+    </div>
+  </main>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

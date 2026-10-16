@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P10c Pedido agendado no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--bg); }
+  .barra-topo { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--accent); color: #fff; }
+  .barra-topo b { flex: 1; font: 600 17px/22px Rubik; }
+  .barra-topo .chave { color: #fff; font-size: 13px; }
+  .barra-topo .chave .trilho { background: rgba(255,255,255,.3); }
+  .barra-topo .chave .trilho.ligada { background: #22c55e; }
+  .kpis { display: flex; gap: 10px; padding: 12px 16px 0; overflow: hidden; }
+  .kpi { flex: none; width: 150px; padding: 10px 12px; }
+  .kpi b { font-size: 18px; line-height: 24px; margin-top: 2px; }
+  .abas { display: flex; gap: 6px; padding: 14px 16px 10px; overflow: hidden; }
+  .abas span { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--text); }
+  .abas span.on { background: var(--text-strong); border-color: var(--text-strong); color: #fff; }
+  .abas span.on .cont { background: var(--accent); color: #fff; }
+  .lista { display: grid; gap: 10px; padding: 0 16px; }
+  .nav-p { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); box-shadow: var(--shadow-bar); }
+  .nav-p a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 10px/12px Rubik; color: var(--text-muted); }
+  .nav-p a.on { color: var(--accent); }
+  .nav-p a svg.ic { width: 22px; height: 22px; }
+  .nav-p .cont { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; font-size: 11px; line-height: 18px; padding: 0 5px; }
+
+  .agendado { display: flex; align-items: center; gap: 6px; margin-top: 8px; padding: 6px 8px; border-radius: var(--r-sm); background: var(--info-bg); color: var(--info); font: 500 13px/18px Rubik; }
+  .agendado svg.ic { width: 16px; height: 16px; }
+</style></head>
+<body><div class="tela">
+  <div class="barra-topo"><b>Nome do Restaurante</b><span class="chave"><span class="trilho ligada"></span>Aberto</span></div>
+  <div class="kpis">
+    <div class="kpi"><small>Pedidos hoje</small><b>18</b></div>
+    <div class="kpi"><small>Faturamento</small><b>R$ 912,40</b></div>
+    <div class="kpi"><small>Ticket médio</small><b>R$ 50,69</b></div>
+  </div>
+  <div class="abas">
+    <span class="on">Novos<span class="cont">2</span></span>
+    <span>Preparo<span class="cont">2</span></span>
+    <span>Entrega<span class="cont">1</span></span>
+    <span>Concluídos</span>
+  </div>
+  <div class="lista">
+    <div class="ped novo">
+      <div class="l1"><span class="num">#1051</span><span class="hora">19h12</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+      <div class="cli">Ana P. · Jardim das Flores</div>
+      <div class="itens">2x Clássico da Casa, 1x Batata média</div>
+      <div class="l3"><span class="total">R$ 73,50</span><span class="pag pago">Pix pago</span><span class="tempo">há 1 min</span></div>
+      <div class="btn btn-accent acao">Aceitar pedido</div>
+    </div>
+    <div class="ped novo">
+      <div class="l1"><span class="num">#1050</span><span class="hora">19h10</span><span class="tipo"><i data-ic="entrega"></i>Entrega</span></div>
+      <div class="cli">Carlos M. · Bela Vista</div>
+      <div class="itens">1x Pizza meio a meio</div>
+      <div class="agendado"><i data-ic="agenda"></i>Agendado para hoje, 20h30</div>
+      <div class="l3"><span class="total">R$ 55,00</span><span class="pag receber">Dinheiro na entrega</span><span class="tempo">há 3 min</span></div>
+      <div class="btn btn-accent acao">Aceitar pedido</div>
+    </div>
+  </div>
+  <nav class="nav-p">
+    <a class="on"><i data-ic="sacola"></i>Pedidos<span class="cont forte">2</span></a>
+    <a><i data-ic="lista"></i>Cardápio</a>
+    <a><i data-ic="entrega"></i>Entregas</a>
+    <a><i data-ic="cupom"></i>Cupons</a>
+    <a><i data-ic="loja"></i>Ajustes</a>
+  </nav>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

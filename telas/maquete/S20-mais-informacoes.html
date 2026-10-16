@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S20 Mais informações</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<link rel="stylesheet" href="_folha.css?v=1">
+<style>
+  .faixa { height: 96px; background: var(--accent); }
+  .cabeca { position: relative; margin: -44px 12px 0; padding: 52px 16px 16px; text-align: center; }
+  .logo { position: absolute; top: -40px; left: 50%; transform: translateX(-50%); width: 84px; height: 84px; border-radius: 50%; border: 4px solid var(--surface); font: 500 11px/14px Rubik; }
+  .cabeca h1 { font: 600 20px/28px Rubik; color: var(--text-strong); }
+  .bloco-i { padding: 14px 0; border-top: 1px solid var(--border); }
+  .bloco-i:first-child { border-top: 0; padding-top: 0; }
+  .lin { display: flex; gap: 12px; margin-top: 8px; }
+  .lin svg.ic { color: var(--text-muted); margin-top: 1px; }
+  .lin b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .lin p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .lin a { display: inline-block; margin-top: 4px; font: 500 13px/18px Rubik; color: var(--accent); }
+  .dias { margin-top: 8px; }
+  .dia { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text); }
+  .dia.hoje { font-weight: 500; color: var(--text-strong); }
+  .dia .fec { color: var(--text-muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .chip { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 16px; font: 500 13px/18px Rubik; color: var(--text); }
+  .chip svg.ic { width: 16px; height: 16px; color: var(--text-muted); }
+  .rodape-f .btn { gap: 8px; }
+</style></head>
+<body><div class="tela">
+  <div class="faixa"></div>
+  <div class="cabeca cartao"><div class="logo foto">SEU LOGO</div><h1>Nome do Restaurante</h1></div>
+  <div class="escuro"></div>
+  <div class="folha">
+    <div class="alca"></div>
+    <div class="cab-f"><h2>Nome do Restaurante</h2><div class="fechar"><i data-ic="x"></i></div></div>
+    <div class="corpo-f">
+      <div class="bloco-i">
+        <div class="rot-f">Endereço</div>
+        <div class="lin"><i data-ic="pino"></i><div><b>Travessa das Flores, 120</b><p>Centro, Belém - PA</p><a>Ver no mapa</a></div></div>
+      </div>
+      <div class="bloco-i">
+        <div class="rot-f">Horário</div>
+        <div class="dias">
+          <div class="dia"><span>Segunda</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Terça</span><span>18h00 às 23h00</span></div>
+          <div class="dia hoje"><span>Quarta (hoje)</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Quinta</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Sexta</span><span>18h00 à meia-noite</span></div>
+          <div class="dia"><span>Sábado</span><span>18h00 à meia-noite</span></div>
+          <div class="dia"><span>Domingo</span><span class="fec">Fechado</span></div>
+        </div>
+      </div>
+      <div class="bloco-i">
+        <div class="rot-f">Pagamento na entrega</div>
+        <div class="chips"><span class="chip"><i data-ic="dinheiro"></i>Dinheiro</span><span class="chip"><i data-ic="pix"></i>Pix</span><span class="chip"><i data-ic="cartao"></i>Crédito</span><span class="chip"><i data-ic="cartao"></i>Débito</span></div>
+      </div>
+      <div class="bloco-i">
+        <div class="rot-f">Entrega</div>
+        <div class="lin"><i data-ic="entrega"></i><div><b>R$ 3,00 a R$ 12,00</b><p>Depende do bairro. Calcule no endereço de entrega.</p></div></div>
+      </div>
+    </div>
+    <div class="rodape-f"><div class="btn btn-ghost"><i data-ic="conversa"></i>Falar no WhatsApp</div></div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

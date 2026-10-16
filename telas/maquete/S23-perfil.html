@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S23 Perfil</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .bloco { margin: 12px 12px 0; padding: 16px; }
+  .bloco h2 { font: 500 16px/24px Rubik; color: var(--text-strong); }
+  .bloco .sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .campo { margin-top: 12px; }
+  .campo label { display: block; margin-bottom: 4px; font: 500 12px/16px Rubik; color: var(--text-muted); }
+  .in { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); font-size: 15px; color: var(--text-strong); }
+  .in svg.ic { color: var(--text-muted); }
+  .end { display: flex; gap: 12px; margin-top: 12px; }
+  .end svg.ic { color: var(--text-muted); margin-top: 1px; }
+  .end div { flex: 1; }
+  .end b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .end p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .end a { font: 500 13px/18px Rubik; color: var(--accent); }
+  .guardar { display: flex; gap: 8px; margin: 14px 16px 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .guardar svg.ic { width: 16px; height: 16px; }
+  .apagar { display: block; margin: 18px 16px 0; font: 500 14px/20px Rubik; color: var(--danger); }
+  .salvar { position: absolute; left: 0; right: 0; bottom: 64px; padding: 10px 16px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .salvar .btn { height: 44px; font-size: 15px; }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><h1>Perfil</h1></div>
+  <div class="bloco cartao">
+    <h2>Seus dados</h2>
+    <p class="sub">Vão junto com o pedido, para o restaurante falar com você.</p>
+    <div class="campo"><label>Nome</label><div class="in"><i data-ic="user"></i>Ana Paula</div></div>
+    <div class="campo"><label>WhatsApp</label><div class="in"><i data-ic="fone"></i>(91) 90000-0000</div></div>
+  </div>
+  <div class="bloco cartao">
+    <h2>Endereço de entrega</h2>
+    <p class="sub">O último que você usou. Vem preenchido no próximo pedido.</p>
+    <div class="end"><i data-ic="pino"></i><div><b>Travessa das Flores, 120</b><p>Centro · Ref.: Em frente à praça</p></div><a>Esquecer</a></div>
+  </div>
+  <div class="guardar"><i data-ic="info"></i><span>Não há conta nem senha: estes dados ficam só neste aparelho.</span></div>
+  <a class="apagar">Apagar meus dados deste aparelho</a>
+  <div class="salvar"><div class="btn btn-accent">Salvar</div></div>
+  <nav class="nav">
+    <a><i data-ic="home"></i>Início</a>
+    <a><i data-ic="promo"></i>Promoções</a>
+    <a><i data-ic="sacola"></i>Pedidos</a>
+    <a class="on"><i data-ic="user"></i>Perfil</a>
+  </nav>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

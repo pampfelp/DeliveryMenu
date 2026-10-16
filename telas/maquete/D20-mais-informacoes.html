@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>D20 Mais informações no computador</title>
+<link rel="stylesheet" href="_pc.css?v=1">
+<style>
+  .cabeca { display: flex; align-items: flex-end; gap: 24px; margin-top: -48px; }
+  .logo { width: 160px; height: 160px; border-radius: var(--r-lg); border: 4px solid var(--surface); box-shadow: var(--shadow-card); font: 500 13px/16px Rubik; letter-spacing: .04em; flex: none; }
+  .cabeca .t { padding-bottom: 14px; }
+  .cabeca h1 { font: 600 32px/40px Rubik; color: var(--text-strong); }
+  .linha-info { display: flex; align-items: center; gap: 10px; margin-top: 8px; font-size: 15px; color: var(--text); }
+  .linha-info .ok { font-weight: 500; color: var(--success); }
+  .linha-info .pt { color: var(--text-muted); }
+  .linha-info svg.ic { width: 16px; height: 16px; color: var(--text-muted); }
+  .linha-info a { font-weight: 500; color: var(--text-strong); }
+  .filtros { display: flex; gap: 10px; margin-top: 28px; }
+  .sel { width: 240px; height: 44px; padding: 0 14px; display: flex; align-items: center; justify-content: space-between; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .busca { flex: 1; max-width: 420px; height: 44px; padding: 0 14px; display: flex; align-items: center; gap: 10px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 14px; color: var(--text-muted); }
+  .secao { margin: 28px 0 14px; }
+  .grade-dest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .dest { overflow: hidden; }
+  .dest .foto { height: 190px; }
+  .dest .corpo { padding: 14px; }
+  .dest h3 { font: 500 17px/24px Rubik; color: var(--text-strong); margin-top: 8px; }
+  .dest p { font-size: 14px; line-height: 20px; margin-top: 4px; height: 40px; overflow: hidden; }
+  .dest .preco { margin-top: 12px; }
+  .grade-itens { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .item { display: flex; gap: 14px; padding: 14px; }
+  .item .txt { flex: 1; }
+  .item h3 { font: 500 16px/22px Rubik; color: var(--text-strong); }
+  .item p { font-size: 13px; line-height: 18px; margin-top: 2px; }
+  .item .valores { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+  .item .foto { width: 104px; height: 104px; border-radius: var(--r-md); flex: none; }
+  .esgotado { opacity: .55; }
+  .tag { font: 500 12px/16px Rubik; color: var(--text-muted); background: var(--bg); padding: 2px 6px; border-radius: var(--r-sm); }
+
+  .escuro { position: absolute; inset: 0; background: var(--overlay); }
+  .janela { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); overflow: hidden; }
+  .janela .cab-j { display: flex; align-items: center; gap: 12px; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .janela .cab-j h2 { flex: 1; font: 500 18px/28px Rubik; color: var(--text-strong); }
+  .janela .corpo-j { padding: 20px; }
+  .janela .rodape-j { display: flex; justify-content: flex-end; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-muted); }
+  .janela .rodape-j .btn { height: 42px; padding: 0 20px; font-size: 15px; }
+  .fechar-j { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--text-muted); }
+  .fechar-j svg.ic { width: 18px; height: 18px; }
+  .rot-f { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+  .ajuda-f { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+
+  .janela.info { width: 720px; }
+  .info .corpo-j { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+  .bl + .bl { margin-top: 20px; }
+  .lin { display: flex; gap: 12px; margin-top: 10px; }
+  .lin svg.ic { color: var(--text-muted); margin-top: 1px; }
+  .lin b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .lin p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .lin a { display: inline-block; margin-top: 4px; font: 500 13px/18px Rubik; color: var(--accent); }
+  .dias { margin-top: 10px; }
+  .dia { display: flex; justify-content: space-between; font-size: 14px; line-height: 28px; color: var(--text); border-bottom: 1px solid var(--border); }
+  .dia:last-child { border-bottom: 0; }
+  .dia.hoje { font-weight: 500; color: var(--text-strong); }
+  .dia .fec { color: var(--text-muted); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+  .chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--border); border-radius: 16px; font: 500 13px/18px Rubik; color: var(--text); }
+  .chip svg.ic { width: 16px; height: 16px; color: var(--text-muted); }
+</style></head>
+<body><div class="pc">
+  <div class="faixa-pc">
+    <nav class="nav-pc">
+      <a class="on"><i data-ic="home"></i>Início</a>
+      <a><i data-ic="promo"></i>Promoções</a>
+      <a><i data-ic="sacola"></i>Pedidos</a>
+      <a><i data-ic="user"></i>Perfil</a>
+    </nav>
+  </div>
+
+  <div class="miolo">
+    <div>
+      <div class="cabeca">
+        <div class="logo foto">SEU LOGO</div>
+        <div class="t">
+          <h1>Nome do Restaurante</h1>
+          <div class="linha-info"><span class="ok">Aberto agora • Fecha às 23h00</span><span class="pt">•</span><i data-ic="pino"></i>Belém - PA<span class="pt">•</span><a>Mais informações</a></div>
+        </div>
+      </div>
+
+      <div class="filtros">
+        <div class="sel">Categorias <i data-ic="baixo"></i></div>
+        <div class="busca"><i data-ic="busca"></i>Buscar no cardápio</div>
+      </div>
+
+      <h2 class="secao">Destaques</h2>
+      <div class="grade-dest">
+        <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+          <span class="selo">Recomendado</span><h3>Clássico da Casa</h3><p class="muted leve">Pão brioche, blend de 160 g, queijo prato, alface, tomate e molho especial da casa</p><div class="preco">R$ 27,00</div></div></div>
+        <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+          <span class="selo selo-oferta">Oferta</span><h3>Combo Dupla</h3><p class="muted leve">2 burgers, batata média e refrigerante 1 L</p><div class="preco preco-promo">R$ 59,90</div></div></div>
+        <div class="dest cartao"><div class="foto"><i data-ic="foto"></i></div><div class="corpo">
+          <span class="selo">Novo</span><h3>Bacon Duplo</h3><p class="muted leve">Dois blends, bacon e cheddar</p><div class="preco">R$ 34,00</div></div></div>
+      </div>
+
+      <h2 class="secao">Burgers</h2>
+      <div class="grade-itens">
+        <div class="item cartao">
+          <div class="txt"><h3>Smash Simples</h3><p class="muted leve">Blend de 90 g prensado na chapa, queijo prato e picles</p>
+            <div class="valores"><span class="preco preco-promo">R$ 19,90</span><span class="riscado">R$ 24,00</span><span class="desconto">-17%</span></div></div>
+          <div class="foto"><i data-ic="foto"></i></div>
+        </div>
+        <div class="item cartao esgotado">
+          <div class="txt"><h3>Costela Desfiada</h3><p class="muted leve">Blend de 160 g, costela desfiada e cebola crispy</p>
+            <div class="valores"><span class="preco">R$ 36,00</span><span class="tag">Esgotado</span></div></div>
+          <div class="foto"><i data-ic="foto"></i></div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="sacola-pc">
+      <div class="linha"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita"></i></div>
+      <div class="cab"><h2>Sua sacola</h2><a>LIMPAR</a></div>
+      <div class="it"><div class="l1"><span><b>1x</b>Clássico da Casa</span><span>R$ 31,00</span></div><p>Ao ponto, 1 bacon</p><div class="acoes"><a>Editar</a><a>Remover</a></div></div>
+      <div class="it"><div class="l1"><span><b>1x</b>Smash Simples</span><span class="preco-promo">R$ 19,90</span></div><p>Sem picles</p><div class="acoes"><a>Editar</a><a>Remover</a></div></div>
+      <div class="tot">
+        <div class="tl"><span>Subtotal</span><span>R$ 50,90</span></div>
+        <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
+        <div class="tl total"><span>Total</span><span>R$ 50,90</span></div>
+      </div>
+      <div class="cupom"><i data-ic="cupom"></i><div>Tem um cupom?<small>Clique e digite o código</small></div><i data-ic="direita"></i></div>
+      <div class="btn btn-accent">Continuar pedido</div>
+    </aside>
+  </div>
+  <div class="escuro"></div>
+  <div class="janela info">
+    <div class="cab-j"><h2>Nome do Restaurante</h2><div class="fechar-j"><i data-ic="x"></i></div></div>
+    <div class="corpo-j">
+      <div>
+        <div class="bl"><div class="rot-f">Endereço</div>
+          <div class="lin"><i data-ic="pino"></i><div><b>Travessa das Flores, 120</b><p>Centro, Belém - PA</p><a>Ver no mapa</a></div></div></div>
+        <div class="bl"><div class="rot-f">Pagamento na entrega</div>
+          <div class="chips"><span class="chip"><i data-ic="dinheiro"></i>Dinheiro</span><span class="chip"><i data-ic="pix"></i>Pix</span><span class="chip"><i data-ic="cartao"></i>Crédito</span><span class="chip"><i data-ic="cartao"></i>Débito</span></div></div>
+        <div class="bl"><div class="rot-f">Entrega</div>
+          <div class="lin"><i data-ic="entrega"></i><div><b>R$ 3,00 a R$ 12,00</b><p>Depende do bairro. Calcule no endereço de entrega.</p></div></div></div>
+      </div>
+      <div>
+        <div class="rot-f">Horário</div>
+        <div class="dias">
+          <div class="dia"><span>Segunda</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Terça</span><span>18h00 às 23h00</span></div>
+          <div class="dia hoje"><span>Quarta (hoje)</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Quinta</span><span>18h00 às 23h00</span></div>
+          <div class="dia"><span>Sexta</span><span>18h00 à meia-noite</span></div>
+          <div class="dia"><span>Sábado</span><span>18h00 à meia-noite</span></div>
+          <div class="dia"><span>Domingo</span><span class="fec">Fechado</span></div>
+        </div>
+      </div>
+    </div>
+    <div class="rodape-j"><div class="btn btn-ghost"><i data-ic="conversa"></i>Falar no WhatsApp</div></div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

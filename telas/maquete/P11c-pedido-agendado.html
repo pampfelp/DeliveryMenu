@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P11c Detalhe do pedido agendado no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--bg); }
+  .topo h1 { display: flex; align-items: center; gap: 8px; }
+  .topo .estado { font: 500 12px/16px Rubik; padding: 3px 8px; border-radius: var(--r-sm); color: var(--accent); background: #fdf2f2; }
+  .sec { margin: 12px 12px 0; padding: 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+  .bloco-t { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+  .sec b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .sec p { font-size: 13px; line-height: 18px; color: var(--text); margin-top: 2px; }
+  .sec .ref { color: var(--text-muted); }
+  .acoes-c { display: flex; gap: 8px; margin-top: 10px; }
+  .acoes-c .btn { height: 36px; font-size: 13px; margin: 0; flex: 1; }
+  .acoes-c .btn-ghost svg.ic { color: var(--success); width: 16px; height: 16px; }
+  .item { display: flex; justify-content: space-between; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+  .item b span { color: var(--text-muted); margin-right: 4px; }
+  .item p.obs { color: var(--warning); font-weight: 500; }
+  .item .v { font: 500 14px/20px Rubik; color: var(--text-strong); white-space: nowrap; }
+  .tl { display: flex; justify-content: space-between; font-size: 13px; line-height: 22px; color: var(--text-muted); }
+  .tl.total { margin-top: 4px; padding-top: 6px; border-top: 1px solid var(--border); font: 600 17px/26px Rubik; color: var(--text-strong); }
+  .rodape-d { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: center; gap: 12px; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  .rodape-d .recusar { font: 500 14px/20px Rubik; color: var(--danger); }
+  .rodape-d .btn { flex: 1; margin: 0; }
+
+  .ag-faixa { display: flex; gap: 10px; margin: 12px 16px 0; padding: 12px 14px; border-radius: var(--r-md); background: var(--info-bg); color: var(--info); font: 500 14px/20px Rubik; }
+  .ag-faixa small { display: block; font: 400 13px/18px Rubik; }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar" style="color:var(--text-strong)"><i data-ic="esquerda"></i></span><h1>Pedido #1051 <span class="estado">Novo</span></h1><span class="muted" style="font-size:13px">19h12</span></div>
+  <div class="ag-faixa"><i data-ic="agenda"></i><span>Agendado para hoje, 20h30<small>Entregar até 20h45. Aceite agora e prepare mais perto da hora.</small></span></div>
+  <div class="sec"><div class="bloco-t">Cliente</div><b>Ana P.</b><p>(91) 90000-0000 · 2º pedido</p>
+    <div class="acoes-c"><div class="btn btn-ghost"><i data-ic="conversa"></i>WhatsApp</div><div class="btn btn-ghost">Ligar</div></div></div>
+  <div class="sec"><div class="bloco-t">Entrega</div><b>Travessa das Flores, 120</b><p>Jardim das Flores, apto 302</p><p class="ref">Ref.: em frente à praça · 1,6 km</p></div>
+  <div class="sec"><div class="bloco-t">Itens</div>
+    <div class="item"><div><b><span>2x</span>Clássico da Casa</b><p class="ref">Ao ponto, 1 bacon</p><p class="obs">OBS: sem cebola em um deles</p></div><span class="v">R$ 62,00</span></div>
+    <div class="item"><div><b><span>1x</span>Batata média</b></div><span class="v">R$ 14,00</span></div>
+    <div style="margin-top:8px">
+      <div class="tl"><span>Subtotal</span><span>R$ 76,00</span></div>
+      <div class="tl"><span>Entrega</span><span>R$ 5,50</span></div>
+      <div class="tl"><span>Cupom PRIMEIRA</span><span>- R$ 8,00</span></div>
+      <div class="tl total"><span>Total</span><span>R$ 73,50</span></div>
+    </div>
+    <p style="margin-top:8px"><span class="pag pago">Pix pago às 19h12</span></p>
+  </div>
+  <div class="rodape-d"><span class="recusar">Recusar</span><div class="btn btn-accent">Aceitar pedido</div></div>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

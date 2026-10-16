@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S24 Cupom</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<link rel="stylesheet" href="_folha.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .fundo-cab { display: flex; justify-content: space-between; align-items: center; padding: 16px 16px 8px; font: 500 18px/28px Rubik; color: var(--text-strong); }
+  .fila { display: flex; gap: 8px; }
+  .fila .campo-f { flex: 1; text-transform: uppercase; letter-spacing: .06em; font-weight: 500; }
+  .fila .btn { width: 104px; height: 48px; font-size: 15px; }
+  .erro-f { display: flex; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: var(--r-md); background: #fdf2f2; color: var(--danger); font: 500 13px/18px Rubik; }
+  .erro-f svg.ic { width: 16px; height: 16px; margin-top: 1px; }
+  .nota-v { margin-top: 18px; font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+  .regras { margin-top: 8px; font-size: 13px; line-height: 20px; color: var(--text-muted); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><h1>Nome do Restaurante</h1><div class="fechar"><i data-ic="x"></i></div></div>
+  <div class="fundo-cab">Sua sacola</div>
+  <div class="escuro"></div>
+  <div class="folha">
+    <div class="alca"></div>
+    <div class="cab-f"><h2>Cupom de desconto</h2><div class="fechar"><i data-ic="x"></i></div></div>
+    <div class="corpo-f">
+      <div class="rot-f">Código do cupom</div>
+      <div class="fila" style="margin-top:8px"><div class="campo-f foco">PIZZA10</div><div class="btn btn-accent">Aplicar</div></div>
+      <p class="ajuda-f">O desconto vale sobre os itens, não sobre a taxa de entrega.</p>
+      <div class="nota-v">Quando o código não serve</div>
+      <div class="erro-f"><i data-ic="info"></i><span>Esse cupom vale para pedidos a partir de R$ 60,00. Faltam R$ 9,10.</span></div>
+      <div class="erro-f"><i data-ic="info"></i><span>Não achamos esse cupom. Confira o código.</span></div>
+      <div class="erro-f"><i data-ic="info"></i><span>Esse cupom venceu em 10/10.</span></div>
+    </div>
+    <div style="height:24px"></div>
+  </div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

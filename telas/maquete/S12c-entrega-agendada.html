@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>S12c Entrega agendada</title>
+<link rel="stylesheet" href="_base.css?v=1">
+<style>
+  .topo .voltar { color: var(--text-strong); }
+  .bloco { margin: 12px; padding: 14px; }
+  .bloco h2 { font: 500 16px/24px Rubik; color: var(--text-strong); margin-bottom: 10px; }
+  .tipos { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+  .tipo { height: 72px; border: 1px solid var(--border); border-radius: var(--r-md); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font: 500 13px/18px Rubik; color: var(--text); }
+  .tipo.on { border: 2px solid var(--accent); color: var(--accent); background: #fdf2f2; }
+  .tipo svg.ic { width: 22px; height: 22px; }
+  .campo { margin-top: 10px; }
+  .campo label { display: block; font: 500 12px/16px Rubik; color: var(--text-muted); margin-bottom: 4px; }
+  .campo label i { color: var(--danger); font-style: normal; }
+  .in { height: 44px; border: 1px solid var(--border-input); border-radius: var(--r-md); padding: 0 12px; display: flex; align-items: center; font-size: 15px; color: var(--text-strong); }
+  .in.vazio { color: var(--text-muted); }
+  .dupla { display: grid; grid-template-columns: 1fr 96px; gap: 8px; }
+  .cep { display: grid; grid-template-columns: 1fr auto; gap: 8px; }
+  .cep .btn { height: 44px; padding: 0 14px; font-size: 14px; }
+  .loc { display: flex; align-items: center; gap: 8px; margin-top: 12px; font: 500 14px/20px Rubik; color: var(--accent); }
+  .resultado { display: flex; align-items: center; gap: 10px; margin: 0 12px; padding: 12px 14px; border-radius: var(--r-md); background: var(--success-bg); color: var(--success); font: 500 14px/20px Rubik; }
+  .resultado span { flex: 1; }
+  .agendar { display: flex; align-items: center; gap: 10px; margin: 12px; padding: 14px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .agendar span { flex: 1; }
+  .agendar small { display: block; font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .agendar .ic:first-child { color: var(--text-muted); }
+  .agendar .ic:last-child { color: var(--accent); }
+  .agendar.on { box-shadow: inset 0 0 0 2px var(--accent); }
+  .agendar.on .ic:first-child { color: var(--accent); }
+  .rodape { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span class="voltar"><i data-ic="esquerda"></i></span><h1>Como receber</h1></div>
+
+  <div class="bloco cartao">
+    <h2>Como você quer receber o pedido?</h2>
+    <div class="tipos">
+      <div class="tipo on"><i data-ic="entrega"></i>Entrega</div>
+      <div class="tipo"><i data-ic="loja"></i>Retirada</div>
+      <div class="tipo"><i data-ic="mesa"></i>No local</div>
+    </div>
+  </div>
+
+  <div class="bloco cartao">
+    <h2>Endereço de entrega</h2>
+    <div class="campo"><label>CEP</label><div class="cep"><div class="in">66000-000</div><div class="btn btn-ghost">Buscar CEP</div></div></div>
+    <div class="campo dupla">
+      <div><label>Rua <i>*</i></label><div class="in">Travessa das Flores</div></div>
+      <div><label>Número <i>*</i></label><div class="in">120</div></div>
+    </div>
+    <div class="campo dupla">
+      <div><label>Bairro <i>*</i></label><div class="in">Centro</div></div>
+      <div><label>Compl.</label><div class="in vazio">Apto</div></div>
+    </div>
+    <div class="campo"><label>Ponto de referência <i>*</i></label><div class="in">Em frente à praça</div></div>
+    <div class="loc"><i data-ic="alvo"></i>Usar minha localização</div>
+  </div>
+
+  <div class="resultado"><i data-ic="check"></i><span>Entregamos no seu endereço</span>R$ 6,00 • às 20h30</div>
+
+  <div class="agendar cartao on"><i data-ic="agenda"></i><span>Agendado para hoje, 20h30<small>Toque para trocar ou receber agora</small></span><i data-ic="direita"></i></div>
+
+  <div class="rodape"><div class="btn btn-accent">Continuar</div></div>
+</div>
+<script src="_icones.js?v=1"></script>
+</body></html>

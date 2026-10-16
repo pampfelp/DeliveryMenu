@@ -626,3 +626,148 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
 .loc:disabled { opacity: .5; }
 .carregando { margin: 96px 24px; text-align: center; font-size: 15px; line-height: 22px; color: var(--text-muted); }
 #tela-produto .rodape .btn.escolher { justify-content: center; }
+
+/* ===== funções novas da barra: S20 a S23 e D20 a D23 ===== */
+body[data-tela="promocoes"] .nav, body[data-tela="pedidos"] .nav, body[data-tela="perfil"] .nav { display: grid; }
+.pagina { padding-bottom: 96px; }
+.pag-s { margin: 16px 12px 12px; font-size: 14px; line-height: 20px; color: var(--text-muted); }
+.pagina .lista-itens .item { margin: 0 12px 10px; }
+.vazio-pag { margin: 24px 12px 0; padding: 24px 16px; text-align: center; border: 1px dashed #c4c8cf; border-radius: var(--r-md); }
+.vazio-pag svg.ic { width: 28px; height: 28px; color: var(--text-muted); }
+.vazio-pag b { display: block; margin-top: 8px; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.vazio-pag p { margin-top: 4px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.carregando-p { margin: 24px 12px; text-align: center; font-size: 14px; color: var(--text-muted); }
+
+/* S22 pedidos */
+.sub-t { margin: 18px 12px 10px; font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+.pag-s + #lista-pedidos .sub-t:first-child { margin-top: 0; }
+.ped-c { display: block; margin: 0 12px 10px; padding: 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+.ped-c .l1 { display: flex; align-items: center; gap: 8px; }
+.ped-c .l1 b { font-weight: 600; font-size: 16px; line-height: 22px; color: var(--text-strong); }
+.ped-c .l1 b.espera { font-weight: 500; font-size: 14px; color: var(--text-muted); }
+.ped-c .quando { font-size: 13px; color: var(--text-muted); }
+.ped-c .l1 svg.ic { margin-left: auto; color: var(--accent); }
+.ped-c p { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.ped-c .l3 { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; }
+.ped-c strong { font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.st { font-weight: 500; font-size: 12px; line-height: 16px; padding: 3px 8px; border-radius: var(--r-sm); }
+.st.prep { color: var(--info); background: var(--info-bg); }
+.st.novo { color: var(--warning); background: #fffbeb; }
+.st.ok { color: var(--success); background: var(--success-bg); }
+.st.nao { color: var(--danger); background: #fdf2f2; }
+
+/* S23 perfil */
+.perfil-grade .cartao-p { margin: 12px 12px 0; padding: 16px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+.perfil-grade h2 { font-weight: 500; font-size: 16px; line-height: 24px; color: var(--text-strong); }
+.perfil-grade .sub { margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.perfil-grade .campo { margin-top: 12px; }
+.perfil-grade .campo label { display: block; margin-bottom: 4px; font-weight: 500; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.perfil-grade .in { display: flex; align-items: center; gap: 8px; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); background: var(--surface); }
+.perfil-grade .in:focus-within { border: 2px solid var(--accent); padding: 0 11px; }
+.perfil-grade .in svg.ic { color: var(--text-muted); }
+.perfil-grade .in input { flex: 1; min-width: 0; height: 100%; border: 0; outline: 0; background: transparent; font-size: 15px; color: var(--text-strong); }
+.end-g { display: flex; gap: 12px; margin-top: 12px; }
+.end-g svg.ic { color: var(--text-muted); margin-top: 1px; }
+.end-g div { flex: 1; min-width: 0; }
+.end-g b { display: block; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.end-g p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.end-g button { align-self: flex-start; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--accent); }
+.end-vazio { margin-top: 12px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.perfil-pe .guardar-p { display: flex; gap: 8px; margin: 14px 16px 0; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.perfil-pe .guardar-p svg.ic { width: 16px; height: 16px; flex: none; }
+.perfil-pe .apagar { display: block; margin: 18px 16px 0; font-weight: 500; font-size: 14px; line-height: 20px; color: var(--danger); }
+.salvar-perfil { position: fixed; left: 50%; transform: translateX(-50%); bottom: 64px; width: 100%; max-width: 480px; padding: 10px 16px; background: var(--surface); box-shadow: var(--shadow-bar); z-index: 5; }
+body:not([data-tela="perfil"]) .salvar-perfil { display: none; }
+.salvar-perfil .btn, .perfil-grade .btn { width: 100%; height: 44px; font-size: 15px; }
+#tela-perfil { padding-bottom: 160px; }
+
+/* S20 mais informações: folha que sobe de baixo */
+.linha-info [data-info] { font-weight: 500; color: inherit; }
+.info-loja { position: fixed; inset: 0; z-index: 250; }
+.info-loja[hidden] { display: none; }
+.info-loja .escuro { position: absolute; inset: 0; background: var(--overlay, rgba(0,0,0,.45)); }
+.janela-info { position: absolute; left: 50%; transform: translateX(-50%); bottom: 0; width: 100%; max-width: 480px; max-height: 92vh; display: flex; flex-direction: column; background: var(--surface); border-radius: var(--r-xl) var(--r-xl) 0 0; box-shadow: var(--shadow-raised); }
+.janela-info .alca { width: 40px; height: 4px; border-radius: 2px; background: #d1d5db; margin: 8px auto 0; flex: none; }
+.janela-info .cab-j { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--border); }
+.janela-info .cab-j h2 { flex: 1; font-weight: 500; font-size: 18px; line-height: 28px; color: var(--text-strong); }
+.janela-info .fechar { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--text-muted); }
+.janela-info .fechar svg.ic { width: 18px; height: 18px; }
+.janela-info .corpo-j { display: flex; flex-direction: column; padding: 16px; overflow-y: auto; }
+.b-info { padding: 14px 0; border-top: 1px solid var(--border); }
+.b-info:first-child { border-top: 0; padding-top: 0; }
+.b-end { order: 1; } .b-hor { order: 2; } .b-pag { order: 3; } .b-ent { order: 4; }
+.rot-i { font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+.b-info .lin { display: flex; gap: 12px; margin-top: 8px; }
+.b-info .lin svg.ic { color: var(--text-muted); margin-top: 1px; }
+.b-info .lin b { display: block; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.b-info .lin p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.b-info .lin a { display: inline-block; margin-top: 4px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--accent); }
+.dias { margin-top: 8px; }
+.dia-i { display: flex; justify-content: space-between; font-size: 14px; line-height: 24px; color: var(--text); }
+.dia-i.hoje { font-weight: 500; color: var(--text-strong); }
+.dia-i .fec { color: var(--text-muted); }
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.chip-pag { display: flex; align-items: center; gap: 5px; padding: 5px 9px; border: 1px solid var(--border); border-radius: 16px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text); }
+.chip-pag svg.ic { width: 16px; height: 16px; color: var(--text-muted); }
+.janela-info .rodape-j { padding: 12px 16px 20px; border-top: 1px solid var(--border); }
+.janela-info .rodape-j[hidden] { display: none; }
+.janela-info .rodape-j .btn { width: 100%; }
+.janela-info .btn.fantasma svg.ic { color: var(--accent); }
+body.com-janela { overflow: hidden; }
+
+@media (min-width: 1024px) {
+  body[data-tela="promocoes"] .nav, body[data-tela="pedidos"] .nav, body[data-tela="perfil"] .nav { display: flex; }
+  .pagina::before { content: ""; position: absolute; left: 0; right: 0; top: 0; height: 96px; background: var(--accent); }
+  .pagina .inicio-grade { padding-top: 96px; }
+  .pagina .sacola-lateral { margin-top: 20px; }
+  .pag-t { margin-top: 28px; font-weight: 600; font-size: 28px; line-height: 36px; color: var(--text-strong); }
+  .pag-s { margin: 4px 0 0; font-size: 15px; line-height: 22px; }
+  .pagina .lista-itens { margin-top: 20px; }
+  .pagina .lista-itens .item { margin: 0; }
+  .vazio-pag { margin: 28px 0 0; padding: 28px; }
+  .carregando-p { margin: 24px 0; text-align: left; }
+  /* D22: cada pedido numa linha */
+  .sub-t { margin: 24px 0 10px; }
+  .ped-c { display: grid; grid-template-columns: 150px 150px 1fr 130px 100px 20px; align-items: center; gap: 12px; margin: 0 0 10px; padding: 16px 18px; }
+  .ped-c .l1, .ped-c .l3 { display: contents; }
+  .ped-c .l1 b { order: 1; } .ped-c .quando { order: 2; font-size: 14px; } .ped-c p { order: 3; margin: 0; font-size: 14px; line-height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ped-c .st { order: 4; justify-self: start; } .ped-c strong { order: 5; text-align: right; } .ped-c .l1 svg.ic { order: 6; margin: 0; }
+  /* D23 perfil */
+  .perfil-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 20px; align-items: start; }
+  .perfil-grade .cartao-p { margin: 0; padding: 20px; }
+  .perfil-grade .campo { margin-top: 14px; }
+  .perfil-grade .campo label { margin-bottom: 6px; font-size: 13px; line-height: 18px; }
+  .perfil-grade .in { height: 42px; }
+  .perfil-grade .btn { margin-top: 16px; height: 42px; }
+  .end-g { margin-top: 14px; }
+  .perfil-pe { display: flex; align-items: center; justify-content: space-between; margin-top: 16px; }
+  .perfil-pe .guardar-p { margin: 0; font-size: 13px; line-height: 18px; }
+  .perfil-pe .guardar-p svg.ic { margin-top: 1px; }
+  .perfil-pe .apagar { margin: 0; }
+  #tela-perfil { padding-bottom: 48px; }
+  /* D20 janela no meio da tela, em duas colunas */
+  .janela-info { top: 50%; bottom: auto; transform: translate(-50%, -50%); width: 720px; max-width: calc(100% - 64px); border-radius: var(--r-lg); overflow: hidden; }
+  .janela-info .cab-j { padding: 16px 20px; }
+  .janela-info .corpo-j { display: grid; grid-template-columns: 1fr 1fr; grid-template-areas: "end hor" "pag hor" "ent hor"; column-gap: 28px; align-items: start; padding: 20px; }
+  .b-info { padding: 0; border: 0; }
+  .b-end { grid-area: end; } .b-hor { grid-area: hor; } .b-pag { grid-area: pag; margin-top: 20px; } .b-ent { grid-area: ent; margin-top: 20px; }
+  .b-info .lin { margin-top: 10px; }
+  .dias { margin-top: 10px; }
+  .dia-i { line-height: 28px; border-bottom: 1px solid var(--border); }
+  .dia-i:last-child { border-bottom: 0; }
+  .chips { gap: 8px; margin-top: 10px; }
+  .chip-pag { gap: 6px; padding: 6px 10px; }
+  .janela-info .rodape-j { display: flex; justify-content: flex-end; padding: 14px 20px; background: var(--surface-muted); }
+  .janela-info .rodape-j .btn { width: auto; height: 42px; padding: 0 20px; font-size: 15px; }
+}
+
+/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
+.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
+.esqueleto .btn:not(.fantasma) { background: #8a8a8a !important; }
+.esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
+.esqueleto .st, .esqueleto .preco-promo, .esqueleto .desconto { background: #ddd !important; }
+body:has(.pagina.esqueleto.ativa) .salvar-perfil .btn { background: #8a8a8a !important; color: #fff !important; }
+.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
+:where(.esqueleto [data-c]) { position: relative; }
+.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
+@media (min-width: 1024px) { .pagina.esqueleto::before { background: #8a8a8a; } }

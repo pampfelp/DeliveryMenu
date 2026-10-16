@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P50 Cupons no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--bg); }
+  .barra-topo { height: 56px; display: flex; align-items: center; gap: 10px; padding: 0 16px; background: var(--accent); color: #fff; }
+  .barra-topo b { flex: 1; font: 600 17px/22px Rubik; }
+  .barra-topo .novo { height: 34px; padding: 0 12px; display: flex; align-items: center; gap: 6px; border-radius: var(--r-md); background: #fff; color: var(--accent); font: 500 14px/20px Rubik; }
+  .barra-topo .novo svg.ic { width: 18px; height: 18px; }
+  .kpis { display: flex; gap: 10px; padding: 12px 16px 0; overflow: hidden; }
+  .kpi { flex: none; width: 150px; padding: 10px 12px; }
+  .kpi b { font-size: 18px; line-height: 24px; margin-top: 2px; }
+  .busca { margin: 12px 16px 0; height: 44px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-size: 14px; color: var(--text-muted); }
+  .busca svg.ic { width: 18px; height: 18px; }
+  .abas { display: flex; gap: 6px; padding: 12px 16px 10px; overflow: hidden; }
+  .abas span { flex: none; display: inline-flex; align-items: center; gap: 6px; height: 36px; padding: 0 12px; border-radius: 18px; background: var(--surface); border: 1px solid var(--border); font: 500 14px/20px Rubik; color: var(--text); }
+  .abas span.on { background: var(--text-strong); border-color: var(--text-strong); color: #fff; }
+  .abas span.on .cont { background: var(--accent); color: #fff; }
+  .lista-cab { display: flex; align-items: center; gap: 8px; padding: 2px 16px 8px; }
+  .lista-cab b { font: 600 16px/22px Rubik; color: var(--text-strong); }
+  .lista-cab small { font-size: 13px; color: var(--text-muted); }
+  .lista-cab a { margin-left: auto; font: 500 13px/18px Rubik; color: var(--accent); }
+  .lista { margin: 0 16px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .linha { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); }
+  .linha:last-child { border-bottom: 0; }
+  .linha .foto { width: 52px; height: 52px; border-radius: var(--r-sm); flex: none; }
+  .linha .foto svg.ic { width: 18px; height: 18px; }
+  .linha .t { flex: 1; min-width: 0; }
+  .linha .nome { font: 500 15px/20px Rubik; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .linha .v { margin-top: 2px; display: flex; align-items: center; gap: 6px; font: 500 14px/20px Rubik; color: var(--text-strong); }
+  .linha .v.promo { color: var(--success); }
+  .linha .v s { font: 400 12px/16px Rubik; color: var(--text-muted); }
+  .linha .v .selo-m { font: 500 11px/14px Rubik; padding: 2px 6px; border-radius: 4px; color: var(--info); background: var(--info-bg); }
+  .linha .v .selo-m.oferta { color: var(--accent); background: #fde8e8; }
+  .trilho { width: 36px; height: 22px; border-radius: 11px; background: var(--success); position: relative; flex: none; }
+  .trilho::after { content: ""; position: absolute; top: 3px; right: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: var(--shadow-sm); }
+  .trilho.off { background: #c4c8cf; }
+  .trilho.off::after { right: 17px; }
+  .linha.esgot .foto, .linha.esgot .t { opacity: .55; }
+  .linha .esg { font: 500 11px/14px Rubik; color: var(--text-muted); }
+  .nav-p { position: absolute; left: 0; right: 0; bottom: 0; height: 64px; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); box-shadow: var(--shadow-bar); }
+  .nav-p a { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font: 500 10px/12px Rubik; color: var(--text-muted); }
+  .nav-p a.on { color: var(--accent); }
+  .nav-p a svg.ic { width: 22px; height: 22px; }
+  .nav-p .cont { position: absolute; top: 6px; left: calc(50% + 6px); min-width: 18px; height: 18px; font-size: 11px; line-height: 18px; padding: 0 5px; }
+
+  .sec { margin: 12px 16px 0; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .sec-cab { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px 8px; }
+  .sec-cab span { font: 600 12px/16px Rubik; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
+  .sec-cab a { font: 500 13px/18px Rubik; color: var(--accent); }
+  .ponto { display: flex; gap: 12px; padding: 0 14px 12px; align-items: center; }
+  .ponto .mapa { width: 64px; height: 64px; border-radius: var(--r-sm); overflow: hidden; flex: none; display: block; }
+  .ponto b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .ponto p { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .regra-r { padding: 0 14px 12px; font-size: 14px; line-height: 22px; color: var(--text); }
+  .regra-r b { font-weight: 500; color: var(--text-strong); }
+  .bai { display: flex; align-items: center; gap: 10px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .bai .t { flex: 1; min-width: 0; }
+  .bai .t b { display: block; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .bai .t b span { margin-left: 6px; font: 500 11px/14px Rubik; padding: 2px 6px; border-radius: 4px; color: var(--accent); background: #fdf2f2; }
+  .bai .t small { font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .bai .v { font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .bai > .ic { color: var(--accent); }
+
+  .cup { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .cup:first-of-type { border-top: 0; }
+  .cup .t { flex: 1; min-width: 0; }
+  .cup .cod { font: 600 15px/20px Rubik; letter-spacing: .04em; color: var(--text-strong); }
+  .cup .val { margin-left: 6px; font: 500 12px/16px Rubik; padding: 2px 6px; border-radius: 4px; color: var(--success); background: var(--success-bg); }
+  .cup small { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .cup.off .cod, .cup.off small { opacity: .55; }
+  .cup .venc { color: var(--danger); }
+  .trilho.on { background: var(--success); }
+</style></head>
+<body><div class="tela">
+  <div class="barra-topo"><b>Cupons</b><span class="novo"><i data-ic="mais"></i>Cupom</span></div>
+  <div class="kpis">
+    <div class="kpi"><small>Cupons ativos</small><b>2</b></div>
+    <div class="kpi"><small>Usados este mês</small><b>37</b></div>
+    <div class="kpi"><small>Desconto dado</small><b>R$ 214,60</b></div>
+  </div>
+  <div class="sec">
+    <div class="cup"><div class="t"><span class="cod">PIZZA10</span><span class="val">10%</span><small>A partir de R$ 60,00 · 21 usos</small></div><span class="trilho on"></span><i data-ic="direita"></i></div>
+    <div class="cup"><div class="t"><span class="cod">PRIMEIRA</span><span class="val">R$ 8,00</span><small>Sem mínimo · até 31/10 · 16 de 50 usos</small></div><span class="trilho on"></span><i data-ic="direita"></i></div>
+    <div class="cup off"><div class="t"><span class="cod">SEXTOU</span><span class="val">15%</span><small>A partir de R$ 80,00 · desligado</small></div><span class="trilho off"></span><i data-ic="direita"></i></div>
+    <div class="cup off"><div class="t"><span class="cod">JUNHO5</span><span class="val">R$ 5,00</span><small><span class="venc">Venceu em 30/06</span> · 48 usos</small></div><span class="trilho off"></span><i data-ic="direita"></i></div>
+  </div>
+  <nav class="nav-p">
+    <a><i data-ic="sacola"></i>Pedidos<span class="cont forte">2</span></a>
+    <a><i data-ic="lista"></i>Cardápio</a>
+    <a><i data-ic="entrega"></i>Entregas</a>
+    <a class="on"><i data-ic="cupom"></i>Cupons</a>
+    <a><i data-ic="loja"></i>Ajustes</a>
+  </nav>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>
