@@ -14,10 +14,11 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=16" />
+<link rel="stylesheet" href="./loja.css?v=17" />
 </head>
 <body>
 <div id="app">
+  <p class="carregando" id="carregando">Abrindo o cardápio...</p>
 
   <!-- S01 / D01 Início -->
   <section class="tela" id="tela-inicio">
@@ -36,9 +37,9 @@
         </header>
         <div class="aviso-fechada" hidden><i data-ic="relogio"></i><span><b>Não estamos recebendo pedidos agora</b>Você pode olhar o cardápio e montar a sacola. O envio volta quando o restaurante abrir.</span></div>
         <div class="vazio-cardapio" id="vazio-cardapio" hidden>O cardápio deste restaurante ainda está sendo montado.</div>
-        <button class="linha-taxa so-cel"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
+        <button class="linha-taxa so-cel" data-calcular></button>
         <div class="filtros">
-          <button class="sel"><span>Categorias</span><i data-ic="baixo"></i></button>
+          <label class="sel"><span>Categorias</span><i data-ic="baixo"></i><select id="cat-sel" aria-label="Ir para a categoria"></select></label>
           <label class="lupa" aria-label="Buscar"><i data-ic="busca"></i><input id="busca" type="search" placeholder="Buscar no cardápio" /></label>
         </div>
         <div id="resultado-busca"></div>
@@ -74,7 +75,7 @@
   <!-- S08 Sacola (no computador, a sacola é a coluna do início) -->
   <section class="tela" id="tela-sacola">
     <div class="topo"><h1 class="loja-nome"></h1><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
-    <button class="linha-taxa"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
+    <button class="linha-taxa" data-calcular></button>
     <div class="cab"><h2>Sua sacola</h2><button data-limpar>LIMPAR</button></div>
     <div id="sacola-itens"></div>
     <a class="mais-itens" href="#inicio">ADICIONAR MAIS ITENS</a>
@@ -84,8 +85,8 @@
     </div>
     <div class="totais">
       <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
-      <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
-      <div class="tl total"><span>Total</span><span data-subtotal></span></div>
+      <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
+      <div class="tl total"><span>Total</span><span data-total></span></div>
       <button class="cupom"><i data-ic="cupom"></i><span>Tem um cupom?<small>Toque e digite o código</small></span><i data-ic="direita" class="seta"></i></button>
       <a class="btn" href="#entrega" data-continuar>Continuar pedido</a>
     </div>
@@ -130,13 +131,13 @@
         <div class="bloco so-entrega">
           <h2>Endereço de entrega</h2>
           <div class="end-grade">
-            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" placeholder="00000-000" /><button class="so-cel">Buscar CEP</button></div></div>
+            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" placeholder="00000-000" /><button class="so-cel" data-cep>Buscar CEP</button></div></div>
             <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" maxlength="120" autocomplete="address-line1" /></div>
             <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" maxlength="10" /></div>
             <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" maxlength="60" list="lista-bairros" autocomplete="off" /><datalist id="lista-bairros"></datalist></div>
             <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" maxlength="60" placeholder="Apto" /></div>
             <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" maxlength="120" /></div>
-            <div class="a-loc acoes-end"><button class="loc"><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc">Buscar pelo CEP</button></div>
+            <div class="a-loc acoes-end"><button class="loc" data-localizacao><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc" data-cep>Buscar pelo CEP</button></div>
           </div>
         </div>
         <div class="resultado so-entrega"></div>
@@ -193,6 +194,6 @@
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=16"></script>
+<script type="module" src="./app.js?v=17"></script>
 </body>
 </html>

@@ -611,3 +611,18 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
   .fica { margin: 12px 0 0; font-size: 13px; line-height: 18px; }
   .fica svg.ic { margin-top: 1px; }
 }
+
+/* revisão da área do cliente (2026-10-16) */
+/* a foto do produto ocupa o quadro, sem estourar a largura da tela */
+.hero { position: relative; overflow: hidden; }
+.hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+#tela-produto .x { z-index: 2; }
+/* logo que não é quadrado aparece inteiro (a cor de fundo vem do canto da imagem, em app.js) */
+.cabeca .logo img.inteira, .mini img.inteira { object-fit: contain; padding: 10%; }
+.resultado.neutro { background: var(--surface-muted); color: var(--text-muted); }
+/* Categorias: a lista nativa fica invisível por cima do botão */
+.filtros .sel { position: relative; cursor: pointer; }
+.filtros .sel select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
+.loc:disabled { opacity: .5; }
+.carregando { margin: 96px 24px; text-align: center; font-size: 15px; line-height: 22px; color: var(--text-muted); }
+#tela-produto .rodape .btn.escolher { justify-content: center; }

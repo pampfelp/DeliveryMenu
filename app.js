@@ -89,13 +89,13 @@ function valorGrupo(grupo, escolhaDoGrupo = {}) {
 const precoBase = (i) => i.precoPromo ?? i.preco;
 // item sem preço próprio (pizza meio a meio): mostra o menor valor possível pelas opções obrigatórias.
 // Num grupo somável a mesma opção pode ser repetida, então o mínimo é a mais barata repetida.
+const precoMinimo = (i) => i.grupos.filter((g) => g.min > 0).reduce((s, g) => {
+  const barata = g.opcoes.filter((o) => !o.esgotado).sort((x, y) => x.preco - y.preco)[0];
+  return barata ? s + valorGrupo(g, { [barata.id]: g.min }) : s;
+}, 0);
 function precoVitrine(i) {
   if (i.preco) return reais(precoBase(i));
-  const minimo = i.grupos.filter((g) => g.min > 0).reduce((s, g) => {
-    const barata = g.opcoes.filter((o) => !o.esgotado).sort((x, y) => x.preco - y.preco)[0];
-    return barata ? s + valorGrupo(g, { [barata.id]: g.min }) : s;
-  }, 0);
-  return `A partir de ${reais(minimo)}`;
+  return `A partir de ${reais(precoMinimo(i))}`;
 }
 const precoUnitario = (i, escolhas) => precoBase(i) + i.grupos.reduce((s, g) => s + valorGrupo(g, escolhas[g.id]), 0);
 const totalLinha = (l) => precoUnitario(item(l.itemId), l.escolhas) * l.qtd;
@@ -184,6 +184,7 @@ function renderInicio() {
   document.body.classList.toggle("sem-logo", !LOJA.logoUrl);
   document.getElementById("loja-logo").innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="${esc(LOJA.nome)}" />` : "";
   document.querySelectorAll(".mini").forEach((el) => (el.innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="" />` : ""));
+  document.querySelectorAll("#loja-logo img, .mini img").forEach(logoInteiro);
   document.title = `${LOJA.nome} | Cardápio Delivery`;
 
   document.getElementById("destaques").innerHTML = ITENS.filter((i) => i.destaque).map((i) => `
@@ -198,9 +199,41 @@ function renderInicio() {
 
   document.querySelector("#cardapio > .secao").hidden = !ITENS.some((i) => i.destaque);
   document.getElementById("vazio-cardapio").hidden = ITENS.length > 0;
-  document.getElementById("categorias").innerHTML = CATEGORIAS.map((c) => `
-    <h2 class="secao">${esc(c.nome)}</h2>
+  // categoria só com itens em destaque não tem seção própria
+  const comSecao = CATEGORIAS.filter((c) => c.itens.some((i) => !i.destaque));
+  document.getElementById("categorias").innerHTML = comSecao.map((c) => `
+    <h2 class="secao" id="cat-${esc(c.id)}">${esc(c.nome)}</h2>
     <div class="lista-itens">${c.itens.filter((i) => !i.destaque).map(cardItem).join("")}</div>`).join("");
+  document.getElementById("cat-sel").innerHTML = `<option value="" selected disabled>Categorias</option>`
+    + (ITENS.some((i) => i.destaque) ? `<option value="destaques">Destaques</option>` : "")
+    + comSecao.map((c) => `<option value="cat-${esc(c.id)}">${esc(c.nome)}</option>`).join("");
+}
+
+/* Categorias: a lista nativa do aparelho leva até a seção escolhida */
+document.getElementById("cat-sel").addEventListener("change", (e) => {
+  const alvo = e.target.value === "destaques" ? document.querySelector("#cardapio > .secao") : document.getElementById(e.target.value);
+  e.target.value = "";
+  if (!alvo) return;
+  if (campoBusca.value) { campoBusca.value = ""; campoBusca.dispatchEvent(new Event("input")); document.querySelector(".filtros").classList.remove("buscando"); }
+  window.scrollTo({ top: alvo.getBoundingClientRect().top + window.scrollY - 12, behavior: "smooth" });
+});
+
+// logo que não é quadrado aparece inteiro no círculo, sobre a cor do canto da própria imagem
+function logoInteiro(img) {
+  const ajustar = () => {
+    const proporcao = img.naturalWidth / img.naturalHeight;
+    if (!proporcao || Math.abs(proporcao - 1) < 0.08) return;
+    img.classList.add("inteira");
+    try {
+      const c = document.createElement("canvas"); c.width = c.height = 1;
+      const ctx = c.getContext("2d");
+      // um pouco para dentro do canto: a borda da imagem costuma vir clareada
+      ctx.drawImage(img, img.naturalWidth * 0.04, img.naturalHeight * 0.04, 1, 1, 0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      img.style.background = `rgb(${r}, ${g}, ${b})`;
+    } catch { img.style.background = "#fff"; } // imagem de outro site não deixa ler a cor
+  };
+  if (img.complete) ajustar(); else img.addEventListener("load", ajustar, { once: true });
 }
 
 // aberta agora = chave de Pedidos + horário, quando a loja abre e fecha sozinha (horario.js).
@@ -225,7 +258,7 @@ function renderAberta() {
 function cardItem(i) {
   const desconto = i.precoPromo ? Math.round((1 - i.precoPromo / i.preco) * 100) : 0;
   const valores = i.esgotado
-    ? `<span class="preco">${reais(i.preco)}</span><span class="tag">Esgotado</span>`
+    ? `<span class="preco">${precoVitrine(i)}</span><span class="tag">Esgotado</span>`
     : i.precoPromo
       ? `<span class="preco promo">${reais(i.precoPromo)}</span><span class="riscado">${reais(i.preco)}</span><span class="desconto">-${desconto}%</span>`
       : `<span class="preco">${precoVitrine(i)}</span>`;
@@ -271,6 +304,8 @@ function abrirProduto(id, uid) {
     escolhas: linha ? structuredClone(linha.escolhas) : {},
     obs: linha ? linha.obs : "",
   };
+  // editando pela sacola do celular, fechar volta para a sacola
+  document.querySelector("#tela-produto .x").setAttribute("href", linha && !pc.matches ? "#sacola" : "#inicio");
   document.getElementById("produto-foto").innerHTML = i.fotoUrl ? `<img src="${esc(i.fotoUrl)}" alt="" />` : `<i data-ic="foto"></i>`;
   document.getElementById("produto-info").innerHTML = `
     <h1>${esc(i.nome)}</h1><p>${esc(i.descricao)}</p><div class="preco${i.precoPromo ? " promo" : ""}">${precoVitrine(i)}</div>`;
@@ -292,7 +327,9 @@ function renderProduto() {
       <div class="grupo"><div class="t"><h2>${esc(g.nome)}</h2><small>${regra}</small></div>${chip}</div>
       ${g.opcoes.map((o) => {
         const n = (escolhas[g.id] || {})[o.id] || 0;
-        const preco = o.preco ? ` <span class="v">+ ${reais(o.preco)}</span>` : "";
+        // pizza sem preço próprio: o tamanho é o preço, não um acréscimo
+        const soma = precoBase(i) > 0 || g.tipo !== "unica" || !g.min;
+        const preco = o.preco ? ` <span class="v">${soma ? "+ " : ""}${reais(o.preco)}</span>` : "";
         const controle = o.esgotado
           ? `<span class="falta">EM FALTA</span>`
           : g.tipo === "unica"
@@ -303,8 +340,13 @@ function renderProduto() {
       }).join("")}`;
   }).join("");
   document.getElementById("qtd-valor").textContent = qtd;
-  document.getElementById("btn-adicionar").innerHTML =
-    `<span>${STATE.produto.uid ? "Atualizar" : "Adicionar"}</span><span>${reais(precoUnitario(i, escolhas) * qtd)}</span>`;
+  // pizza sem preço próprio: antes de escolher o tamanho, o botão pede a escolha em vez de mostrar R$ 0,00
+  const unitario = precoUnitario(i, escolhas);
+  const falta = !unitario && i.grupos.find((g) => Object.values(escolhas[g.id] || {}).reduce((s, n) => s + n, 0) < g.min);
+  const botao = document.getElementById("btn-adicionar");
+  botao.classList.toggle("escolher", !!falta);
+  botao.innerHTML = falta ? `<span>Escolha: ${esc(falta.nome)}</span>`
+    : `<span>${STATE.produto.uid ? "Atualizar" : "Adicionar"}</span><span>${reais(unitario * qtd)}</span>`;
   pintarIcones(document.getElementById("tela-produto"));
 }
 
@@ -337,7 +379,7 @@ telaProduto.addEventListener("keydown", (e) => {
   if (alvo && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); mudarOpcao(alvo.dataset.unica, +1); }
 });
 document.addEventListener("keydown", (e) => {
-  if (e.key === "Escape" && document.body.dataset.tela === "produto") location.hash = "#inicio";
+  if (e.key === "Escape" && document.body.dataset.tela === "produto") location.hash = document.querySelector("#tela-produto .x").getAttribute("href");
 });
 document.getElementById("qtd-mais").addEventListener("click", () => { STATE.produto.qtd++; renderProduto(); });
 document.getElementById("qtd-menos").addEventListener("click", () => { STATE.produto.qtd = Math.max(1, STATE.produto.qtd - 1); renderProduto(); });
@@ -354,7 +396,7 @@ document.getElementById("btn-adicionar").addEventListener("click", () => {
   STATE.produto.salvo = true;
   salvarSacola();
   toast(uid ? "Item atualizado." : "Adicionado à sacola.", "sucesso", 2500);
-  location.hash = "#inicio";
+  location.hash = document.querySelector("#tela-produto .x").getAttribute("href");
 });
 
 /* ===== S08 sacola (celular) e coluna da sacola (computador) ===== */
@@ -374,9 +416,17 @@ function htmlResumoLateral(aside, sub) {
     <a class="btn" href="${aside.dataset.destino}">${esc(aside.dataset.resumo)}</a>`;
 }
 
+// "Calcular taxa e tempo de entrega": depois do bairro informado, mostra a taxa e o tempo
+function htmlLinhaTaxa() {
+  const e = STATE.entrega;
+  const texto = STATE.tipo === "entrega" && e.status === "ok" ? `${esc(e.bairro)}: ${reais(e.valor)} • ${e.min}-${e.max} min` : "Calcular taxa e tempo de entrega";
+  return `<i data-ic="pino"></i><span>${texto}</span><i data-ic="direita" class="seta"></i>`;
+}
+
 function renderSacolas() {
   const vazia = !STATE.sacola.length;
   const sub = subtotal();
+  document.querySelectorAll(".linha-taxa").forEach((el) => (el.innerHTML = htmlLinhaTaxa()));
   document.querySelectorAll("[data-subtotal]").forEach((el) => (el.textContent = reais(sub)));
   document.querySelectorAll("[data-taxa]").forEach((el) => (el.textContent = textoTaxa()));
   document.querySelectorAll("[data-total]").forEach((el) => (el.textContent = reais(sub + taxa())));
@@ -397,10 +447,11 @@ function renderSacolas() {
           <div class="lado"><span class="preco${i.precoPromo ? " promo" : ""}">${reais(totalLinha(l))}</span>${foto(i.fotoUrl)}</div>
         </div>`;
     }).join("");
-  const sugeridos = SUGESTOES.filter((id) => !STATE.sacola.some((l) => l.itemId === id)).map(item);
+  // sugestão que saiu do cardápio ou esgotou não aparece
+  const sugeridos = SUGESTOES.filter((id) => !STATE.sacola.some((l) => l.itemId === id)).map(item).filter((s) => s && !s.esgotado);
   document.getElementById("sacola-sugestoes").hidden = !sugeridos.length;
   document.getElementById("sugestoes").innerHTML = sugeridos.map((s) => `
-    <a class="c" href="#produto/${esc(s.id)}">${foto(s.fotoUrl)}<div>${esc(s.nome)}<b>${reais(s.preco)}</b></div></a>`).join("");
+    <a class="c" href="#produto/${esc(s.id)}">${foto(s.fotoUrl)}<div>${esc(s.nome)}<b>${precoVitrine(s)}</b></div></a>`).join("");
   const continuar = document.querySelector("[data-continuar]");
   continuar.classList.toggle("desligado", vazia);
   continuar.classList.toggle("fechada", !LOJA.aberta);
@@ -408,7 +459,7 @@ function renderSacolas() {
 
   // coluna do computador
   document.getElementById("sacola-lateral").innerHTML = `
-    <button class="linha-taxa"><i data-ic="pino"></i><span>Calcular taxa e tempo de entrega</span><i data-ic="direita" class="seta"></i></button>
+    <button class="linha-taxa" data-calcular>${htmlLinhaTaxa()}</button>
     ${vazia
       ? `<div class="sacola-vazia"><i data-ic="sacola"></i><p>Sacola vazia</p></div>`
       : `<div class="cab"><h2>Sua sacola</h2><button data-limpar>LIMPAR</button></div>
@@ -423,8 +474,8 @@ function renderSacolas() {
         }).join("")}
         <div class="tot">
           <div class="tl"><span>Subtotal</span><span>${reais(sub)}</span></div>
-          <div class="tl"><span>Taxa de entrega</span><span>A definir</span></div>
-          <div class="tl total"><span>Total</span><span>${reais(sub)}</span></div>
+          <div class="tl"><span>Taxa de entrega</span><span>${textoTaxa()}</span></div>
+          <div class="tl total"><span>Total</span><span>${reais(sub + taxa())}</span></div>
         </div>`}
     <button class="cupom"><i data-ic="cupom"></i><span>Tem um cupom?<small>Clique e digite o código</small></span><i data-ic="direita" class="seta"></i></button>
     ${vazia ? `<span class="btn desligado">Sacola vazia</span>`
@@ -450,6 +501,12 @@ document.addEventListener("click", async (e) => {
     location.hash = "#inicio";
     return;
   }
+  if (e.target.closest("[data-calcular]")) {
+    if (!STATE.sacola.length) toast("Escolha um item primeiro. A taxa sai pelo bairro, no endereço de entrega.", "info", 3500);
+    else if (!LOJA.aberta) toast("O restaurante está fechado agora.", "info", 3000);
+    else location.hash = "#entrega";
+    return;
+  }
   if (e.target.closest(".desligado, .fechada")) { e.preventDefault(); return; }
   if (e.target.closest('#tela-dados a[href="#entrega"]') && !salvarDados()) { e.preventDefault(); return; }
   if (e.target.closest("[data-sem-troco]")) { document.getElementById("troco").value = ""; toast("Certo, sem troco.", "info", 2000); return; }
@@ -462,6 +519,7 @@ function renderEntrega() {
   const caixa = document.querySelector(".resultado");
   const e = STATE.entrega;
   caixa.classList.toggle("fora", e.status === "fora");
+  caixa.classList.toggle("neutro", e.status === "vazio");
   caixa.innerHTML = e.status === "ok"
     ? `<i data-ic="check"></i><span>Entregamos no seu endereço</span><span>${reais(e.valor)} • ${e.min}-${e.max} min</span>`
     : e.status === "fora"
@@ -471,6 +529,54 @@ function renderEntrega() {
   renderSacolas();
 }
 document.getElementById("f-bairro").addEventListener("input", renderEntrega);
+
+/* CEP e localização preenchem rua e bairro; o bairro vira o nome da lista da loja quando bate */
+function preencherEndereco({ rua, numero, bairros }) {
+  const set = (id, v) => { if (v) document.getElementById(id).value = v; };
+  set("f-rua", rua);
+  set("f-num", numero);
+  const nomes = bairros.filter(Boolean);
+  const daLoja = nomes.map((n) => BAIRROS.find((b) => semAcento(n).includes(semAcento(b.nome)))).find(Boolean);
+  set("f-bairro", daLoja ? daLoja.nome : nomes[0]);
+  renderEntrega();
+}
+const campoCep = document.getElementById("f-cep");
+campoCep.addEventListener("input", () => {
+  const d = soDigitos(campoCep.value).slice(0, 8);
+  campoCep.value = d.length > 5 ? `${d.slice(0, 5)}-${d.slice(5)}` : d;
+});
+async function buscarCep() {
+  const cep = soDigitos(campoCep.value);
+  if (cep.length !== 8) { toast("Digite os 8 números do CEP.", "erro", 3000); campoCep.focus(); return; }
+  try {
+    const r = await (await fetch(`https://viacep.com.br/ws/${cep}/json/`)).json();
+    if (r.erro) { toast("Não achamos esse CEP. Confira os números.", "erro", 3500); return; }
+    preencherEndereco({ rua: r.logradouro, bairros: [r.bairro] });
+    toast(r.logradouro ? "Endereço preenchido. Falta o número." : "CEP sem rua cadastrada. Digite a rua.", "info", 3000);
+    document.getElementById(r.logradouro ? "f-num" : "f-rua").focus();
+  } catch { toast("Não deu para buscar o CEP. Confira a internet ou digite o endereço.", "erro", 4000); }
+}
+document.querySelectorAll("[data-cep]").forEach((b) => b.addEventListener("click", buscarCep));
+campoCep.addEventListener("keydown", (e) => { if (e.key === "Enter") buscarCep(); });
+
+document.querySelector("[data-localizacao]").addEventListener("click", (e) => {
+  const botao = e.currentTarget;
+  if (!navigator.geolocation) { toast("Este aparelho não informa a localização. Digite o endereço.", "erro", 4000); return; }
+  botao.disabled = true;
+  navigator.geolocation.getCurrentPosition(async ({ coords }) => {
+    try {
+      const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&addressdetails=1&accept-language=pt-BR&lat=${coords.latitude}&lon=${coords.longitude}`;
+      const a = (await (await fetch(url)).json()).address || {};
+      preencherEndereco({ rua: a.road, numero: a.house_number, bairros: [a.suburb, a.neighbourhood, a.quarter, a.city_district] });
+      if (a.postcode) campoCep.value = a.postcode;
+      toast("Confira o endereço e o número antes de seguir.", "info", 3500);
+    } catch { toast("Não deu para achar o endereço. Digite ele, por favor.", "erro", 4000); }
+    botao.disabled = false;
+  }, () => {
+    botao.disabled = false;
+    toast("Sem permissão para a localização. Digite o endereço.", "erro", 4000);
+  }, { enableHighAccuracy: true, timeout: 15000 });
+});
 document.getElementById("lista-bairros").innerHTML = BAIRROS.map((b) => `<option value="${esc(b.nome)}"></option>`).join("");
 
 function renderTipo() {
@@ -740,14 +846,16 @@ function renderAcompanhar(p) {
   const [min, max] = janela(p.tipo, p.endereco?.km);
   const rotuloPrazo = entrega ? "Previsão de entrega" : p.tipo === "retirada" ? "Previsão para retirar" : "Previsão";
   const numero = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${cancelado ? "Sem número" : "Aguardando aceite"}</b>`;
-  const prazo = cancelado ? `<b class="espera">-</b>` : `<b>${hh(somaMin(criado, min))} - ${hh(somaMin(criado, max))}</b>`;
+  // depois de entregue, a previsão dá lugar à hora em que terminou
+  const terminou = p.status === "entregue";
+  const prazo = cancelado ? `<b class="espera">-</b>` : terminou ? `<b>${fim ? hh(fim) : "-"}</b>` : `<b>${hh(somaMin(criado, min))} - ${hh(somaMin(criado, max))}</b>`;
   const segue = !cancelado && p.status !== "entregue";
   const zap = LOJA.whatsapp ? `<a class="btn fantasma" href="https://wa.me/55${soDigitos(LOJA.whatsapp)}" target="_blank" rel="noopener"><i data-ic="conversa"></i>Falar com o restaurante</a>` : "";
 
   const caixa = document.getElementById("acompanhar");
   caixa.innerHTML = `
     <div class="ok"><div class="selo-ok ${topo[1]}"><i data-ic="${topo[0]}"></i></div><h1>${topo[2]}</h1><p>${topo[3]}</p></div>
-    <div class="num"><div><small>Pedido</small>${numero}</div><div><small>${rotuloPrazo}</small>${prazo}</div></div>
+    <div class="num"><div><small>Pedido</small>${numero}</div><div><small>${terminou ? `${nomeFim} às` : rotuloPrazo}</small>${prazo}</div></div>
     <ol class="passos">${passos}</ol>
     ${segue ? `<p class="fica"><i data-ic="info"></i><span><span class="so-cel">Pode fechar esta tela: o pedido fica em Pedidos, na barra de baixo, e a situação atualiza sozinha.</span><span class="so-pc">Pode fechar esta página: o pedido fica em Pedidos, no topo, e a situação atualiza sozinha.</span></span></p>` : ""}
     <div class="rodape duplo${zap ? "" : " um"}">${zap}<a class="btn" href="#inicio">Voltar ao cardápio</a></div>`;
@@ -788,3 +896,4 @@ renderInicio();
 renderEntrega();
 renderTipo();
 irParaHash();
+document.getElementById("carregando").remove();
