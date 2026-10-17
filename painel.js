@@ -19,7 +19,7 @@ import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=7";
 import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
 import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=1";
-import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=1";
+import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=2";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";

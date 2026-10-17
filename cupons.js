@@ -34,11 +34,13 @@ function textoValidade(c) {
   return vencido(c) ? `venceu ${ddmm(d)}` : `até ${ddmm(d)}`;
 }
 // linha de baixo no celular: "A partir de R$ 60,00 · 21 usos"
+// vencido mostra só a data e os usos (P50)
 function resumoCel(c) {
+  const usos = c.limite != null ? `${c.usos || 0} de ${c.limite} usos` : `${c.usos || 0} usos`;
+  if (vencido(c)) return `<span class="venc">Venceu em ${ddmm(comoData(c.validoAte))}</span> · ${usos}`;
   const partes = [textoMinimo(c)];
-  if (comoData(c.validoAte)) partes.push(vencido(c) ? `<span class="venc">Venceu em ${ddmm(comoData(c.validoAte))}</span>` : `até ${ddmm(comoData(c.validoAte))}`);
-  if (!c.ativo && !vencido(c)) partes.push("desligado");
-  else partes.push(c.limite != null ? `${c.usos || 0} de ${c.limite} usos` : `${c.usos || 0} usos`);
+  if (comoData(c.validoAte)) partes.push(`até ${ddmm(comoData(c.validoAte))}`);
+  partes.push(c.ativo ? usos : "desligado");
   return partes.join(" · ");
 }
 
@@ -64,7 +66,9 @@ function render() {
     <div class="kpi"><small>Usados este mês</small><b>${U.mes.usos}</b><em class="neutro so-pc">pedidos com cupom</em></div>
     <div class="kpi"><small>Desconto dado</small><b>${reais(U.mes.desconto)}</b><em class="neutro so-pc">este mês</em></div>
     <div class="kpi so-pc"><small>Vendido com cupom</small><b>${reais(U.mes.vendido)}</b><em class="neutro">este mês</em></div>`;
-  const ordem = [...U.cupons].sort((a, b) => (valeAgora(b) - valeAgora(a)) || a.codigo.localeCompare(b.codigo));
+  // valendo primeiro, depois os desligados, os vencidos por último
+  const peso = (c) => (valeAgora(c) ? 0 : vencido(c) ? 2 : 1);
+  const ordem = [...U.cupons].sort((a, b) => peso(a) - peso(b) || a.codigo.localeCompare(b.codigo));
   $("u-lista").innerHTML = !ordem.length
     ? `<p class="vazio-c">Nenhum cupom ainda. Use ${pc.matches ? "Novo cupom" : "+ Cupom"} para criar o primeiro.</p>`
     : `
@@ -140,7 +144,7 @@ function abrirCupom(codigo) {
         <div class="campo"><label for="u-minimo">Pedido mínimo</label><div class="in"><small>R$</small><input id="u-minimo" inputmode="decimal" value="${r.minimo ? mostrarCentavos(r.minimo) : ""}" placeholder="Sem mínimo" /></div></div>
       </div>
       <div class="dupla">
-        <div class="campo"><label for="u-validade">Válido até</label><input id="u-validade" type="date" value="${esc(r.validoAte || "")}" /></div>
+        <div class="campo"><label for="u-validade">Válido até</label><input id="u-validade" type="${r.validoAte ? "date" : "text"}" value="${esc(r.validoAte || "")}" placeholder="Sem data" data-data /></div>
         <div class="campo"><label for="u-limite">Limite de usos</label><input id="u-limite" inputmode="numeric" value="${r.limite ?? ""}" placeholder="Sem limite" /></div>
       </div>
       <div class="auto-u"><div>Cupom ligado<small>Desligado, o código deixa de valer na hora.</small></div><button type="button" class="chave-u${r.ativo ? "" : " off"}" data-ativo-form aria-label="Ligar ou desligar o cupom"><span class="trilho"></span></button></div>
@@ -204,7 +208,10 @@ function fecharJanela() {
 export function mostrarCupons(partes) {
   const [, codigo] = partes;
   if (!U.loja) return;
-  if (codigo) { if (!U.janela || (U.rasc?.editando ? U.rasc.codigo : "novo") !== codigo) { fecharJanela(); abrirJanela(); abrirCupom(codigo); } return; }
+  if (codigo) {
+    if (!U.janela || (U.rasc?.editando ? U.rasc.codigo : "novo") !== codigo) { fecharJanela(); render(); lerMes(); abrirJanela(); abrirCupom(codigo); }
+    return;
+  }
   fecharJanela();
   render();
   lerMes();
@@ -228,6 +235,16 @@ function aoDigitar(e) {
   const p = document.querySelector("[data-previa-u]");
   if (p) p.textContent = textoPrevia(lerForm());
 }
+function aoFocar(e) {
+  const d = e.target.closest?.("[data-data]");
+  if (!d || d.type === "date") return;
+  d.type = "date";
+  try { d.showPicker(); } catch { /* navegador sem showPicker */ }
+}
+function aoSair(e) {
+  const d = e.target.closest?.("[data-data]");
+  if (d && !d.value) d.type = "text";
+}
 function aoTeclar(e) {
   if (e.key === "Escape" && U.janela) { e.preventDefault(); location.hash = "#cupons"; }
 }
@@ -239,6 +256,8 @@ export function iniciarCupons(loja, { exemplo = null } = {}) {
   document.addEventListener("click", aoClicar);
   document.addEventListener("input", aoDigitar);
   document.addEventListener("keydown", aoTeclar);
+  document.addEventListener("focusin", aoFocar);
+  document.addEventListener("focusout", aoSair);
   if (exemplo) {
     U.exemplo = true;
     U.cupons = exemplo.map((c) => ({ ...c }));
@@ -261,5 +280,7 @@ export function pararCupons() {
   document.removeEventListener("click", aoClicar);
   document.removeEventListener("input", aoDigitar);
   document.removeEventListener("keydown", aoTeclar);
+  document.removeEventListener("focusin", aoFocar);
+  document.removeEventListener("focusout", aoSair);
 }
 

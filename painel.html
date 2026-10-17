@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=17" />
+<link rel="stylesheet" href="./painel.css?v=18" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
 <body data-tela="carregando">
@@ -153,11 +153,11 @@
   </main>
 
   <!-- PD50 / P50 Cupons -->
-  <main class="principal cupons esqueleto" id="vista-cupons" hidden>
-    <div class="barra-topo so-cel" data-c="T topo"><b>Cupons</b><a class="novo-item" href="#cupons/novo"><i data-ic="mais"></i>Cupom</a></div>
-    <div class="cab so-pc" data-c="T cabeçalho"><h1>Cupons</h1><a class="btn" href="#cupons/novo"><i data-ic="mais"></i>Novo cupom</a></div>
-    <div class="kpis" id="u-kpis" data-c="K indicadores"></div>
-    <section class="u-cartao" id="u-lista" data-c="L cupons"></section>
+  <main class="principal cupons" id="vista-cupons" hidden>
+    <div class="barra-topo so-cel"><b>Cupons</b><a class="novo-item" href="#cupons/novo"><i data-ic="mais"></i>Cupom</a></div>
+    <div class="cab so-pc"><h1>Cupons</h1><a class="btn" href="#cupons/novo"><i data-ic="mais"></i>Novo cupom</a></div>
+    <div class="kpis" id="u-kpis"></div>
+    <section class="u-cartao" id="u-lista"></section>
   </main>
 
   <!-- PD40 / P40 Configurações -->
@@ -199,8 +199,8 @@
 </div>
 
 <!-- P51 / janela do PD50: novo cupom e editar (tela cheia no celular) -->
-<div class="detalhe-veu esqueleto" id="u-modal" hidden>
-  <section class="c-janela u-janela" role="dialog" aria-modal="true" aria-labelledby="u-titulo" data-c="J janela do cupom">
+<div class="detalhe-veu" id="u-modal" hidden>
+  <section class="c-janela u-janela" role="dialog" aria-modal="true" aria-labelledby="u-titulo">
     <div class="c-cab" id="u-cab"></div>
     <div class="c-corpo-m" id="u-corpo"></div>
     <div class="c-pe" id="u-pe"></div>
@@ -216,6 +216,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=20"></script>
+<script type="module" src="./painel.js?v=21"></script>
 </body>
 </html>

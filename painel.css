@@ -733,8 +733,8 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .cup .cod { font-weight: 600; font-size: 15px; line-height: 20px; letter-spacing: .04em; color: var(--text-strong); }
 .cup .val { margin-left: 6px; font-weight: 500; font-size: 12px; line-height: 16px; padding: 2px 6px; border-radius: 4px; color: var(--success); background: var(--success-bg); }
 .cup small { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
-.cup.off .cod, .cup.off .val, .cup.off small { opacity: .55; }
-.cup > a:last-child { color: var(--accent); display: grid; place-items: center; }
+.cup.off .cod, .cup.off small { opacity: .55; }
+.cup > a:last-child { color: var(--text-strong); display: grid; place-items: center; }
 .u-form .dupla { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 10px; }
 .u-form .dupla .campo { margin-top: 12px; }
 .u-form input.cod { font-weight: 500; letter-spacing: .06em; text-transform: uppercase; }
@@ -756,6 +756,9 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .u-cartao .vazio-c { padding: 12px 14px; }
   .u-janela .sec.u-form { margin: 0; border-radius: 0; box-shadow: none; padding: 16px; background: var(--surface); }
   .u-janela .c-corpo-m { background: var(--surface); }
+  .u-janela .u-form .campo, .u-janela .u-form .dupla .campo { margin-top: 14px; } /* como na P51 */
+  .u-seg button { height: 42px; } /* com a borda, 44 como na P51 */
+  .u-janela .u-form > .campo:first-child { margin-top: 14px; } /* a janela do cardápio zera o primeiro */
 }
 @media (min-width: 1024px) {
   .cupons .cab .btn { margin-left: auto; width: auto; height: 40px; padding: 0 16px; font-size: 15px; }
@@ -774,20 +777,13 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .u-cartao .rodape-t { display: flex; gap: 8px; padding: 12px 16px; background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
   .u-cartao .rodape-t svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
   .u-janela { width: 560px; }
+  .u-janela .c-cab { padding: 16px 20px; }
   .u-janela .c-cab h2 { font-weight: 500; font-size: 18px; }
+  .u-janela .c-pe { padding: 14px 20px; }
+  .u-janela .c-pe .btn { height: 42px; padding: 0 20px; font-size: 15px; }
   .u-janela .c-corpo-m { padding: 20px; }
   .u-janela .c-pe { justify-content: flex-end; background: var(--surface-muted); }
   .u-janela .c-pe .excluir { margin-right: auto; }
   .u-janela .c-pe .fantasma { margin-left: 0; }
   .u-seg button { height: 42px; }
 }
-
-/* esqueleto dos cupons (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.cupons.esqueleto .barra-topo, .esqueleto .btn:not(.fantasma) { background: #8a8a8a !important; }
-.esqueleto .previa-u, .esqueleto .cup .val, .esqueleto .u-seg button.on { background: #ddd !important; color: #444 !important; }
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .barra-topo *, .esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
-.esqueleto .barra-topo .novo-item, .esqueleto .barra-topo .novo-item * { color: #444 !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }

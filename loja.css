@@ -784,11 +784,4 @@ body.com-janela { overflow: hidden; }
   .fila-cupom input { height: 46px; }
   .ajuda-cupom { font-size: 13px; line-height: 18px; }
 }
-
-/* esqueleto do cupom (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .btn { background: #8a8a8a !important; color: #fff !important; }
-.esqueleto .erro-cupom { background: #ddd !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
 .cupom > span { text-align: left; }
