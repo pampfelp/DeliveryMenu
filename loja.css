@@ -759,3 +759,4 @@ body.com-janela { overflow: hidden; }
   .janela-info .rodape-j { display: flex; justify-content: flex-end; padding: 14px 20px; background: var(--surface-muted); }
   .janela-info .rodape-j .btn { width: auto; height: 42px; padding: 0 20px; font-size: 15px; }
 }
+.vazio-pag p a { font-weight: 500; color: var(--accent); }

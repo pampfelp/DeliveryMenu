@@ -13,6 +13,7 @@ import { carregarLoja, SLUG } from "./loja-dados.js?v=4";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
+import { chavePedido } from "./ficha-cliente.js?v=1";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const EXEMPLO = new URLSearchParams(location.search).has("exemplo");
@@ -653,7 +654,19 @@ function preencherDados() {
   document.getElementById("c-nome").value = c.nome || "";
   document.getElementById("c-fone").value = fmtFone(c.telefone || "");
 }
-document.querySelectorAll("#c-fone, #p-fone").forEach((el) => el.addEventListener("input", (e) => (e.target.value = fmtFone(soDigitos(e.target.value).slice(0, 11)))));
+document.querySelectorAll("#c-fone, #p-fone").forEach((el) => el.addEventListener("input", (e) => {
+  e.target.value = fmtFone(soDigitos(e.target.value).slice(0, 11));
+  if (soDigitos(e.target.value).length === 11) buscarNome(e.target);
+}));
+// número de quem já pediu: o nome vem da ficha, em qualquer aparelho
+async function buscarNome(campoFone) {
+  const campoNome = document.getElementById(campoFone.id === "p-fone" ? "p-nome" : "c-nome");
+  if (campoNome.value.trim()) return;
+  const ficha = await lerFicha(soDigitos(campoFone.value)).catch(() => null);
+  if (!ficha?.nome || campoNome.value.trim()) return;
+  campoNome.value = ficha.nome;
+  toast(`Que bom te ver de novo, ${ficha.nome.split(" ")[0]}.`, "sucesso", 3000);
+}
 function salvarDados(idNome = "c-nome", idFone = "c-fone") {
   const c = { nome: campo(idNome).replace(/\s+/g, " "), telefone: soDigitos(campo(idFone)) };
   if (c.nome.length < 2) { toast("Digite seu nome.", "erro", 3000); return false; }
@@ -940,8 +953,10 @@ function cartaoPedido(p) {
   const rotulo = p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || texto : texto;
   const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${i.nome}`).join(", ");
-  return `<a class="ped-c" href="#pedido/${esc(p.id)}"><div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span><i data-ic="direita"></i></div>
-    <p>${esc(itens)}</p><div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div></a>`;
+  const corpo = `<div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span>${p.id ? '<i data-ic="direita"></i>' : ""}</div>
+    <p>${esc(itens)}</p><div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div>`;
+  // pedido feito em outro aparelho vem só da ficha, sem o acompanhamento
+  return p.id ? `<a class="ped-c" href="#pedido/${esc(p.id)}">${corpo}</a>` : `<div class="ped-c">${corpo}</div>`;
 }
 // pedidos de exemplo das imagens S22 e D22
 function pedidosExemplo() {
@@ -953,19 +968,33 @@ function pedidosExemplo() {
     { id: "exemplo-recusado", status: "cancelado", criadoEm: em(5, 21, 40), total: 3700, itens: [{ qtd: 1, nome: "Bacon Duplo" }] },
   ];
 }
+// ficha do cliente pelo número (ficha-cliente.js): o nome e o resumo dos pedidos, sem endereço
+async function lerFicha(telefone) {
+  if (!SLUG || !/^\d{10,11}$/.test(telefone || "")) return null;
+  const { db } = await import("./firebase-init.js?v=2");
+  const { doc, getDoc } = await import(FIRESTORE);
+  const snap = await getDoc(doc(db, "lojas", LOJA.id, "clientes", telefone));
+  return snap.exists() ? snap.data() : null;
+}
+// os pedidos deste aparelho (abrem o acompanhamento) e os da ficha do número, feitos em outro aparelho
 async function lerPedidos() {
   if (!SLUG) return EXEMPLO ? pedidosExemplo() : STATE.exemploPedido ? [STATE.exemploPedido] : [];
   const ids = meusPedidos();
-  if (!ids.length) return [];
   const { db } = await import("./firebase-init.js?v=2");
   const { doc, getDoc } = await import(FIRESTORE);
-  const lidos = await Promise.all(ids.map(async (id) => {
-    const [aceito, entrada] = await Promise.all(["pedidos", "pedidosEntrada"].map((c) => getDoc(doc(db, "lojas", LOJA.id, c, id)).catch(() => null)));
-    if (aceito?.exists()) return { id, ...aceito.data({ serverTimestamps: "estimate" }) };
-    if (entrada?.exists()) return { id, ...entrada.data({ serverTimestamps: "estimate" }), status: "novo" };
-    return null; // apagado no painel
-  }));
-  return lidos.filter(Boolean);
+  const [lidos, ficha] = await Promise.all([
+    Promise.all(ids.map(async (id) => {
+      const [aceito, entrada] = await Promise.all(["pedidos", "pedidosEntrada"].map((c) => getDoc(doc(db, "lojas", LOJA.id, c, id)).catch(() => null)));
+      if (aceito?.exists()) return { id, ...aceito.data({ serverTimestamps: "estimate" }) };
+      if (entrada?.exists()) return { id, ...entrada.data({ serverTimestamps: "estimate" }), status: "novo" };
+      return null; // apagado no painel
+    })),
+    lerFicha(STATE.cliente?.telefone).catch(() => null),
+  ]);
+  const daqui = lidos.filter(Boolean);
+  const chaves = new Set(await Promise.all(daqui.map((x) => chavePedido(x.id))));
+  const deFora = Object.entries(ficha?.pedidos || {}).filter(([k, r]) => !chaves.has(k) && r.status).map(([, r]) => r);
+  return [...daqui, ...deFora].sort((a, b) => (quando(b.criadoEm)?.getTime() || 0) - (quando(a.criadoEm)?.getTime() || 0));
 }
 async function renderPedidos() {
   const caixa = document.getElementById("lista-pedidos");
@@ -976,7 +1005,8 @@ async function renderPedidos() {
   const andamento = lista.filter((p) => ["novo", "preparo", "saiu"].includes(p.status));
   const antes = lista.filter((p) => !andamento.includes(p));
   caixa.innerHTML = !lista.length
-    ? `<div class="vazio-pag"><i data-ic="sacola"></i><b>Nenhum pedido ainda</b><p>Os pedidos que você fizer neste restaurante aparecem aqui.</p></div>`
+    ? `<div class="vazio-pag"><i data-ic="sacola"></i><b>Nenhum pedido ainda</b><p>${STATE.cliente ? "Os pedidos que você fizer neste restaurante aparecem aqui."
+      : `Já pediu antes em outro aparelho? Salve seu WhatsApp em <a href="#perfil">Perfil</a> e os pedidos aparecem aqui.`}</p></div>`
     : (andamento.length ? `<h2 class="sub-t">Em andamento</h2>${andamento.map(cartaoPedido).join("")}` : "")
       + (antes.length ? `<h2 class="sub-t">Anteriores</h2>${antes.map(cartaoPedido).join("")}` : "");
   pintarIcones(caixa);

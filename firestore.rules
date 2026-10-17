@@ -74,6 +74,15 @@ service cloud.firestore {
         allow get: if true;
         allow list, write: if donoDa(lojaId);
       }
+
+      // ficha do cliente pelo número (decisão dele, 2026-10-17): quem sabe o número lê
+      // o nome e o resumo dos pedidos, sem endereço e sem o id do pedido. Ninguém lista
+      // as fichas; só o painel do dono escreve, ao aceitar, recusar ou mudar o pedido.
+      match /clientes/{telefone} {
+        allow get: if true;
+        allow list: if false;
+        allow write: if donoDa(lojaId) && telefone.matches("^[0-9]{10,11}$");
+      }
     }
 
     match /donos/{uid} {

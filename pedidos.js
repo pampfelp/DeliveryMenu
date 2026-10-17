@@ -5,13 +5,16 @@
     lojas/{loja}/pedidosEntrada/{id}   o cliente cria (status "novo")
     lojas/{loja}/pedidos/{id}          o dono aceita e o pedido passa para cá
   Situações: novo -> preparo -> saiu (só entrega) -> entregue; recusado = cancelado.
+  A cada aceite, recusa ou mudança, o resumo vai para a ficha do cliente pelo
+  número (lojas/{loja}/clientes/{telefone}, ver ficha-cliente.js).
   O número do pedido (#1051) nasce no aceite, a partir do contador da loja.
 */
 
 import { db } from "./firebase-init.js?v=2";
 import {
-  collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp,
+  collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp, getDocs,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { camposFicha, telefoneDe } from "./ficha-cliente.js?v=1";
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
@@ -192,9 +195,11 @@ async function aceitar(p) {
       const loja = await tx.get(lojaRef);
       const n = (loja.data().contador || 1000) + 1;
       const { id, ...dados } = p;
+      const ficha = await camposFicha(p, { status: "preparo", numero: n }, serverTimestamp());
       tx.update(lojaRef, { contador: n });
       tx.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "preparo", numero: n, aceitoEm: serverTimestamp() });
       tx.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
+      if (telefoneDe(p)) tx.set(refFicha(p), ficha, { merge: true });
     });
     toast("Pedido aceito.", "sucesso", 2500);
   } catch { toast("Não deu para aceitar. Tente de novo.", "erro", 4000); }
@@ -202,8 +207,12 @@ async function aceitar(p) {
 async function mudarStatus(p, status) {
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
   const campo = status === "saiu" ? { saiuEm: serverTimestamp() } : { concluidoEm: serverTimestamp() };
-  try { await updateDoc(doc(db, "lojas", P.loja.id, "pedidos", p.id), { status, ...campo }); }
-  catch { toast("Não deu para atualizar. Tente de novo.", "erro", 4000); }
+  try {
+    const batch = writeBatch(db);
+    batch.update(doc(db, "lojas", P.loja.id, "pedidos", p.id), { status, ...campo });
+    if (telefoneDe(p)) batch.set(refFicha(p), await camposFicha(p, { status }, serverTimestamp()), { merge: true });
+    await batch.commit();
+  } catch { toast("Não deu para atualizar. Tente de novo.", "erro", 4000); }
 }
 async function recusar(p) {
   if (!(await confirmar("Recusar este pedido? O cliente vê na tela do pedido que ele não foi aceito.", { textoConfirmar: "Recusar" }))) return;
@@ -212,9 +221,27 @@ async function recusar(p) {
   const { id, ...dados } = p;
   batch.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "cancelado", concluidoEm: serverTimestamp() });
   batch.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
+  if (telefoneDe(p)) batch.set(refFicha(p), await camposFicha(p, { status: "cancelado" }, serverTimestamp()), { merge: true });
   try { await batch.commit(); fecharDetalhe(); toast("Pedido recusado.", "info", 2500); }
   catch { toast("Não deu para recusar. Tente de novo.", "erro", 4000); }
 }
+const refFicha = (p) => doc(db, "lojas", P.loja.id, "clientes", telefoneDe(p));
+
+// uma vez por loja: os pedidos de antes da ficha também entram nela
+async function fichasDosAntigos() {
+  if (P.exemplo || P.loja.fichasV1) return;
+  try {
+    const snap = await getDocs(collection(db, "lojas", P.loja.id, "pedidos"));
+    const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter(telefoneDe);
+    for (let i = 0; i < lista.length; i += 400) {
+      const batch = writeBatch(db);
+      for (const p of lista.slice(i, i + 400)) batch.set(refFicha(p), await camposFicha(p), { merge: true });
+      await batch.commit();
+    }
+    await updateDoc(doc(db, "lojas", P.loja.id), { fichasV1: true });
+  } catch { /* tenta de novo na próxima vez que o painel abrir */ }
+}
+
 async function alternarAberta() {
   const aberta = P.loja.aberta !== false;
   if (P.exemplo) { P.loja.aberta = !aberta; renderChave(); return; }
@@ -299,6 +326,7 @@ export function iniciarPedidos(loja, { exemplo = null } = {}) {
     if (P.aberto) abrirDetalhe(P.aberto);
   }, () => toast("Não deu para ler os pedidos.", "erro", 5000)));
   P.parar.push(onSnapshot(doc(db, "lojas", loja.id), (snap) => { if (snap.exists()) { P.loja = { id: snap.id, ...snap.data() }; renderChave(); } }));
+  fichasDosAntigos();
 }
 export function abrirPedido(id) { abrirDetalhe(id); }
 export function pararPedidos() {
