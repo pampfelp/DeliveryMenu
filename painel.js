@@ -15,7 +15,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=5";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=6";
 import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
 import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=1";

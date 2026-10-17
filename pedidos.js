@@ -199,7 +199,7 @@ async function aceitar(p) {
       tx.update(lojaRef, { contador: n });
       tx.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "preparo", numero: n, aceitoEm: serverTimestamp() });
       tx.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
-      if (telefoneDe(p)) tx.set(refFicha(p), ficha, { merge: true });
+      if (temFicha(p)) tx.set(refFicha(p), ficha, { merge: true });
     });
     toast("Pedido aceito.", "sucesso", 2500);
   } catch { toast("Não deu para aceitar. Tente de novo.", "erro", 4000); }
@@ -210,7 +210,7 @@ async function mudarStatus(p, status) {
   try {
     const batch = writeBatch(db);
     batch.update(doc(db, "lojas", P.loja.id, "pedidos", p.id), { status, ...campo });
-    if (telefoneDe(p)) batch.set(refFicha(p), await camposFicha(p, { status }, serverTimestamp()), { merge: true });
+    if (temFicha(p)) batch.set(refFicha(p), await camposFicha(p, { status }, serverTimestamp()), { merge: true });
     await batch.commit();
   } catch { toast("Não deu para atualizar. Tente de novo.", "erro", 4000); }
 }
@@ -221,25 +221,26 @@ async function recusar(p) {
   const { id, ...dados } = p;
   batch.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "cancelado", concluidoEm: serverTimestamp() });
   batch.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
-  if (telefoneDe(p)) batch.set(refFicha(p), await camposFicha(p, { status: "cancelado" }, serverTimestamp()), { merge: true });
+  if (temFicha(p)) batch.set(refFicha(p), await camposFicha(p, { status: "cancelado" }, serverTimestamp()), { merge: true });
   try { await batch.commit(); fecharDetalhe(); toast("Pedido recusado.", "info", 2500); }
   catch { toast("Não deu para recusar. Tente de novo.", "erro", 4000); }
 }
 const refFicha = (p) => doc(db, "lojas", P.loja.id, "clientes", telefoneDe(p));
+const temFicha = (p) => /^\d{10,11}$/.test(telefoneDe(p)); // a regra só aceita ficha com 10 ou 11 dígitos
 
 // uma vez por loja: os pedidos de antes da ficha também entram nela
 async function fichasDosAntigos() {
   if (P.exemplo || P.loja.fichasV1) return;
   try {
     const snap = await getDocs(collection(db, "lojas", P.loja.id, "pedidos"));
-    const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter(telefoneDe);
+    const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => /^\d{10,11}$/.test(telefoneDe(p)));
     for (let i = 0; i < lista.length; i += 400) {
       const batch = writeBatch(db);
       for (const p of lista.slice(i, i + 400)) batch.set(refFicha(p), await camposFicha(p), { merge: true });
       await batch.commit();
     }
     await updateDoc(doc(db, "lojas", P.loja.id), { fichasV1: true });
-  } catch { /* tenta de novo na próxima vez que o painel abrir */ }
+  } catch (e) { console.warn("fichas dos pedidos antigos: tenta de novo na próxima abertura", e); }
 }
 
 async function alternarAberta() {
