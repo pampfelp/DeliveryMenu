@@ -187,3 +187,13 @@ export const PEDIDOS_EXEMPLO = {
     { id: "1042", numero: 1042, status: "entregue", tipo: "entrega", criadoEm: as("17:55"), saiuEm: as("18:10"), concluidoEm: as("18:21"), cliente: { nome: "Cliente" }, itens: [item(2, "Smash Simples", 3980)], subtotal: 5840, taxa: 300, total: 6140, pagamento: { forma: "Pix", pago: true } },
   ],
 };
+
+// Cupons das imagens validadas (S24, D24, P50, PD50). Na loja de exemplo o código
+// é conferido aqui; no painel com ?exemplo=painel, a lista aparece sem gravar nada.
+const fimDoDia = (iso) => new Date(`${iso}T23:59:59`);
+export const CUPONS_EXEMPLO = [
+  { codigo: "PIZZA10", tipo: "pct", valor: 10, minimo: 6000, validoAte: null, limite: null, usos: 21, ativo: true },
+  { codigo: "PRIMEIRA", tipo: "valor", valor: 800, minimo: 0, validoAte: fimDoDia("2026-10-31"), limite: 50, usos: 16, ativo: true },
+  { codigo: "SEXTOU", tipo: "pct", valor: 15, minimo: 8000, validoAte: null, limite: null, usos: 0, ativo: false },
+  { codigo: "JUNHO5", tipo: "valor", valor: 500, minimo: 0, validoAte: fimDoDia("2026-06-30"), limite: null, usos: 48, ativo: false },
+];

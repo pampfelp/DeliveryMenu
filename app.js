@@ -8,8 +8,9 @@
 */
 
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
-import { SACOLA_EXEMPLO } from "./dados-exemplo.js?v=6";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=4";
+import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
+import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=5";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
@@ -67,10 +68,14 @@ const STATE = {
   sacola: lerSacola(), tipo: "entrega", produto: null, entrega: { status: "vazio" },
   // pagar online só aparece com o Mercado Pago ligado (decisão 8)
   aba: LOJA.pagamentoOnline ? "online" : "entrega", forma: LOJA.pagamentoOnline ? "pix" : "dinheiro",
-  cliente: lerCliente(), enviando: false, exemploPedido: null,
+  cliente: lerCliente(), enviando: false, exemploPedido: null, cupom: null,
 };
 function salvarSacola() {
   try { localStorage.setItem(CHAVE, JSON.stringify(STATE.sacola)); } catch { /* modo anônimo: a sacola vale só nesta aba */ }
+  if (STATE.cupom && subtotal() < (STATE.cupom.minimo || 0)) {
+    toast(`O cupom ${STATE.cupom.codigo} saiu: ele vale a partir de ${reais(STATE.cupom.minimo)} em itens.`, "info", 4500);
+    tirarCupom(false);
+  }
   renderSacolas();
 }
 
@@ -102,6 +107,9 @@ const precoUnitario = (i, escolhas) => precoBase(i) + i.grupos.reduce((s, g) => 
 const totalLinha = (l) => precoUnitario(item(l.itemId), l.escolhas) * l.qtd;
 const subtotal = () => STATE.sacola.reduce((s, l) => s + totalLinha(l), 0);
 const taxa = () => (STATE.tipo === "entrega" && STATE.entrega.status === "ok" ? STATE.entrega.valor : 0);
+const desconto = () => descontoDe(STATE.cupom, subtotal()); // só sobre os itens (cupom.js)
+const totalPedido = () => subtotal() + taxa() - desconto();
+const linhaDesconto = () => (desconto() ? `<div class="tl desc"><span>Cupom ${esc(STATE.cupom.codigo)}</span><span>- ${reais(desconto())}</span></div>` : "");
 
 /* ===== taxa de entrega por bairro: a conta mora em conta-entrega.js ===== */
 function calcularEntrega(nomeBairro) {
@@ -415,8 +423,9 @@ function htmlResumoLateral(aside, sub) {
     }).join("")}
     <div class="tls">
       <div class="tl"><span>Subtotal</span><span>${reais(sub)}</span></div>
+      ${linhaDesconto()}
       <div class="tl"><span>Taxa de entrega</span><span>${textoTaxa()}</span></div>
-      <div class="tl total"><span>Total</span><span>${reais(sub + taxa())}</span></div>
+      <div class="tl total"><span>Total</span><span>${reais(totalPedido())}</span></div>
     </div>
     <a class="btn" href="${aside.dataset.destino}">${esc(aside.dataset.resumo)}</a>`;
 }
@@ -434,7 +443,11 @@ function renderSacolas() {
   document.querySelectorAll(".linha-taxa").forEach((el) => (el.innerHTML = htmlLinhaTaxa()));
   document.querySelectorAll("[data-subtotal]").forEach((el) => (el.textContent = reais(sub)));
   document.querySelectorAll("[data-taxa]").forEach((el) => (el.textContent = textoTaxa()));
-  document.querySelectorAll("[data-total]").forEach((el) => (el.textContent = reais(sub + taxa())));
+  document.querySelectorAll("[data-total]").forEach((el) => (el.textContent = reais(totalPedido())));
+  document.querySelectorAll("[data-desc-linha]").forEach((el) => (el.hidden = !desconto()));
+  document.querySelectorAll("[data-desc-nome]").forEach((el) => (el.textContent = STATE.cupom ? `Cupom ${STATE.cupom.codigo}` : ""));
+  document.querySelectorAll("[data-desc]").forEach((el) => (el.textContent = `- ${reais(desconto())}`));
+  document.querySelectorAll("[data-cupom-linha]").forEach((el) => (el.innerHTML = htmlCupom()));
 
   // barra do início
   document.querySelector(".barra-sacola").hidden = vazia;
@@ -479,10 +492,11 @@ function renderSacolas() {
         }).join("")}
         <div class="tot">
           <div class="tl"><span>Subtotal</span><span>${reais(sub)}</span></div>
+          ${linhaDesconto()}
           <div class="tl"><span>Taxa de entrega</span><span>${textoTaxa()}</span></div>
-          <div class="tl total"><span>Total</span><span>${reais(sub + taxa())}</span></div>
+          <div class="tl total"><span>Total</span><span>${reais(totalPedido())}</span></div>
         </div>`}
-    <button class="cupom"><i data-ic="cupom"></i><span>Tem um cupom?<small>Clique e digite o código</small></span><i data-ic="direita" class="seta"></i></button>
+    ${htmlCupom()}
     ${vazia ? `<span class="btn desligado">Sacola vazia</span>`
       : !LOJA.aberta ? `<span class="btn fechada"><i data-ic="relogio"></i>Restaurante fechado agora</span>`
       : `<a class="btn" href="#entrega">Continuar pedido</a>`}`;
@@ -705,8 +719,9 @@ function renderRevisar() {
   }).join("");
   const totais = `
     <div class="tl"><span>Subtotal</span><span>${reais(sub)}</span></div>
+    ${linhaDesconto()}
     ${STATE.tipo === "entrega" ? `<div class="tl"><span>Taxa de entrega</span><span>${reais(tx)}</span></div>` : ""}
-    <div class="tl total"><span>Total</span><span>${reais(sub + tx)}</span></div>`;
+    <div class="tl total"><span>Total</span><span>${reais(totalPedido())}</span></div>`;
 
   document.getElementById("revisar-main").innerHTML = `
     <div class="sec so-cel"><div class="sec-t"><span>Itens</span><a href="#sacola">Editar</a></div>${linhas}</div>
@@ -731,7 +746,7 @@ function renderRevisar() {
 function marcarEnviar() {
   document.querySelectorAll(".btn.enviar").forEach((b) => {
     b.classList.toggle("desligado", STATE.enviando);
-    b.innerHTML = STATE.enviando ? "<span>Enviando...</span>" : `<span>Enviar pedido</span><span>${reais(subtotal() + taxa())}</span>`;
+    b.innerHTML = STATE.enviando ? "<span>Enviando...</span>" : `<span>Enviar pedido</span><span>${reais(totalPedido())}</span>`;
   });
 }
 // "100", "100,00" ou "1.000,50" em centavos; vazio é sem troco
@@ -740,7 +755,7 @@ function lerTroco() {
   if (!el || !el.value.trim()) return 0;
   const n = Math.round(Number(el.value.replace(/\./g, "").replace(",", ".")) * 100);
   if (!Number.isFinite(n) || n <= 0) { toast("Troco: digite só o valor, por exemplo 100,00.", "erro", 3500); return null; }
-  if (n <= subtotal() + taxa()) { toast("O troco precisa ser para um valor maior que o total.", "erro", 3500); return null; }
+  if (n <= totalPedido()) { toast("O troco precisa ser para um valor maior que o total.", "erro", 3500); return null; }
   return n;
 }
 
@@ -763,14 +778,15 @@ async function enviarPedido() {
     itens: STATE.sacola.map((l) => ({ qtd: l.qtd, nome: item(l.itemId).nome, total: totalLinha(l), resumo: resumoLinha(l, false), obs: l.obs || "" })),
     subtotal: subtotal(),
     taxa: taxa(),
-    total: subtotal() + taxa(),
+    total: totalPedido(),
+    ...(desconto() ? { cupom: STATE.cupom.codigo, desconto: desconto() } : {}),
     pagamento: { forma: formaAtual().nome, online: STATE.aba === "online", ...(troco ? { troco } : {}) },
     status: "novo",
   };
 
   if (!SLUG) { // loja de exemplo: mostra o acompanhamento sem mandar nada
     STATE.exemploPedido = { id: "exemplo", ...pedido, criadoEm: new Date() };
-    if (!EXEMPLO) { STATE.sacola = []; salvarSacola(); }
+    if (!EXEMPLO) { STATE.sacola = []; salvarSacola(); tirarCupom(false); }
     location.hash = "#pedido/exemplo";
     toast("Versão de demonstração: o pedido não foi enviado a nenhum restaurante.", "info", 6000);
     return;
@@ -783,10 +799,14 @@ async function enviarPedido() {
     const ref = await addDoc(collection(db, "lojas", LOJA.id, "pedidosEntrada"), { ...pedido, criadoEm: serverTimestamp() });
     try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([ref.id, ...meusPedidos()].slice(0, 20))); } catch { /* sem armazenamento */ }
     if (pedido.endereco) guardarEndereco(pedido.endereco);
+    tirarCupom(false);
     STATE.sacola = [];
     salvarSacola();
     location.hash = `#pedido/${ref.id}`;
   } catch (err) {
+    // o cupom pode ter vencido ou esgotado entre a sacola e o envio
+    const motivo = err?.code === "permission-denied" && STATE.cupom ? await cupomAindaServe() : "";
+    if (motivo) { tirarCupom(false); toast(`${motivo} O cupom saiu do pedido; confira o total e envie de novo.`, "erro", 6000); renderRevisar(); return; }
     toast(err?.code === "permission-denied" ? "O restaurante não está recebendo pedidos agora." : "Não deu para enviar. Confira a internet e tente de novo.", "erro", 5000);
   } finally {
     STATE.enviando = false;
@@ -1057,6 +1077,85 @@ document.addEventListener("click", async (e) => {
   }
 });
 
+/* ===== S24 / D24 cupom: a conta mora em cupom.js ===== */
+const CHAVE_CUPOM = `deliverymenu:cupom:${LOJA.id}`;
+function htmlCupom() {
+  const c = STATE.cupom;
+  return c
+    ? `<div class="cupom ok"><i data-ic="cupom"></i><span>${esc(c.codigo)}<small>${textoDesconto(c, reais)} aplicado</small></span><button type="button" class="tirar" data-tirar-cupom>Remover</button></div>`
+    : `<button type="button" class="cupom" data-cupom><i data-ic="cupom"></i><span>Tem um cupom?<small>${pc.matches ? "Clique" : "Toque"} e digite o código</small></span><i data-ic="direita" class="seta"></i></button>`;
+}
+async function buscarCupom(codigo) {
+  if (!SLUG) return CUPONS_EXEMPLO.find((c) => c.codigo === codigo) || null;
+  const { db } = await import("./firebase-init.js?v=2");
+  const { doc, getDoc } = await import(FIRESTORE);
+  const snap = await getDoc(doc(db, "lojas", LOJA.id, "cupons", codigo));
+  return snap.exists() ? { codigo, ...snap.data() } : null;
+}
+const guardavel = (c) => ({ codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimo: c.minimo || 0,
+  validoAte: c.validoAte ? (c.validoAte.toDate ? c.validoAte.toDate() : new Date(c.validoAte)).toISOString() : null });
+function abrirCupom() {
+  document.getElementById("cupom-erro").hidden = true;
+  document.getElementById("cupom-codigo").value = "";
+  document.getElementById("cupom-janela").hidden = false;
+  document.body.classList.add("com-janela");
+  pintarIcones(document.getElementById("cupom-janela"));
+  document.getElementById("cupom-codigo").focus();
+}
+function fecharCupom() {
+  document.getElementById("cupom-janela").hidden = true;
+  if (document.getElementById("info-loja").hidden) document.body.classList.remove("com-janela");
+}
+function erroCupom(texto) {
+  const el = document.getElementById("cupom-erro");
+  el.innerHTML = `<i data-ic="info"></i><span>${esc(texto)}</span>`;
+  el.hidden = false;
+  pintarIcones(el);
+}
+async function aplicarCupom() {
+  const codigo = normalizarCodigo(document.getElementById("cupom-codigo").value);
+  if (!codigoValido(codigo)) { erroCupom("Digite o código do cupom."); return; }
+  const botao = document.querySelector("[data-aplicar-cupom]");
+  botao.classList.add("desligado");
+  try {
+    const c = await buscarCupom(codigo);
+    const motivo = motivoRecusa(c, subtotal(), reais);
+    if (motivo) { erroCupom(motivo); return; }
+    STATE.cupom = guardavel(c);
+    if (!EXEMPLO) try { localStorage.setItem(CHAVE_CUPOM, JSON.stringify(STATE.cupom)); } catch { /* vale só nesta visita */ }
+    fecharCupom();
+    renderSacolas();
+    if (document.body.dataset.tela === "revisar") renderRevisar();
+    toast("Cupom aplicado.", "sucesso", 2500);
+  } catch { erroCupom("Não deu para conferir o cupom. Confira a internet e tente de novo."); }
+  finally { botao.classList.remove("desligado"); }
+}
+function tirarCupom(redesenhar = true) {
+  STATE.cupom = null;
+  try { localStorage.removeItem(CHAVE_CUPOM); } catch { /* sem armazenamento */ }
+  if (redesenhar) { renderSacolas(); if (document.body.dataset.tela === "revisar") renderRevisar(); }
+}
+// antes do envio recusado: o cupom ainda serve? devolve o motivo quando não serve
+async function cupomAindaServe() {
+  try { return motivoRecusa(await buscarCupom(STATE.cupom.codigo), subtotal(), reais); } catch { return ""; }
+}
+function lerCupomGuardado() {
+  if (EXEMPLO) return null;
+  try { return JSON.parse(localStorage.getItem(CHAVE_CUPOM)); } catch { return null; }
+}
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-cupom]")) abrirCupom();
+  else if (e.target.closest("[data-fechar-cupom]")) fecharCupom();
+  else if (e.target.closest("[data-aplicar-cupom]")) aplicarCupom();
+  else if (e.target.closest("[data-tirar-cupom]")) tirarCupom();
+});
+document.getElementById("cupom-codigo").addEventListener("keydown", (e) => { if (e.key === "Enter") aplicarCupom(); });
+document.getElementById("cupom-codigo").addEventListener("input", (e) => {
+  e.target.value = normalizarCodigo(e.target.value);
+  document.getElementById("cupom-erro").hidden = true;
+});
+document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharCupom(); });
+
 function atualizarAberta() {
   const antes = document.getElementById("loja-situacao").textContent;
   const mudou = recalcularAberta();
@@ -1086,6 +1185,7 @@ async function vigiarLoja() {
 if (EXEMPLO) [["f-cep", "66000-000"], ["f-rua", "Travessa das Flores"], ["f-num", "120"], ["f-bairro", "Centro"], ["f-ref", "Em frente à praça"]]
   .forEach(([id, v]) => (document.getElementById(id).value = v));
 preencherEnderecoGuardado();
+STATE.cupom = lerCupomGuardado();
 vigiarLoja();
 recalcularAberta();
 renderInicio();

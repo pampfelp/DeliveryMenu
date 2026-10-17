@@ -12,7 +12,7 @@
     bairros/{id}     nome, lat, lng
 */
 
-import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=6";
+import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=7";
 import { regraDe } from "./conta-entrega.js?v=1";
 
 export const SLUG = new URLSearchParams(location.search).get("loja");

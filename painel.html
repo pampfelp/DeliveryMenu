@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=16" />
+<link rel="stylesheet" href="./painel.css?v=17" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
 <body data-tela="carregando">
@@ -95,6 +95,7 @@
       <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont" data-novos></span></a>
       <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
       <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas e bairros</a>
+      <a href="#cupons" data-vista="cupons"><i data-ic="cupom"></i>Cupons</a>
       <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Configurações</a>
     </nav>
     <div class="loja-atual"><b class="nome-loja"></b><small>Você está como dono · <button type="button" data-sair>Sair</button></small></div>
@@ -151,6 +152,14 @@
     </div>
   </main>
 
+  <!-- PD50 / P50 Cupons -->
+  <main class="principal cupons esqueleto" id="vista-cupons" hidden>
+    <div class="barra-topo so-cel" data-c="T topo"><b>Cupons</b><a class="novo-item" href="#cupons/novo"><i data-ic="mais"></i>Cupom</a></div>
+    <div class="cab so-pc" data-c="T cabeçalho"><h1>Cupons</h1><a class="btn" href="#cupons/novo"><i data-ic="mais"></i>Novo cupom</a></div>
+    <div class="kpis" id="u-kpis" data-c="K indicadores"></div>
+    <section class="u-cartao" id="u-lista" data-c="L cupons"></section>
+  </main>
+
   <!-- PD40 / P40 Configurações -->
   <main class="principal configuracoes" id="vista-configuracoes" hidden>
     <div class="barra-topo so-cel" data-c="T topo"><b>Ajustes</b></div>
@@ -164,6 +173,7 @@
     <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
     <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
     <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas</a>
+    <a href="#cupons" data-vista="cupons"><i data-ic="cupom"></i>Cupons</a>
     <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Ajustes</a>
   </nav>
 </div>
@@ -188,6 +198,15 @@
   </section>
 </div>
 
+<!-- P51 / janela do PD50: novo cupom e editar (tela cheia no celular) -->
+<div class="detalhe-veu esqueleto" id="u-modal" hidden>
+  <section class="c-janela u-janela" role="dialog" aria-modal="true" aria-labelledby="u-titulo" data-c="J janela do cupom">
+    <div class="c-cab" id="u-cab"></div>
+    <div class="c-corpo-m" id="u-corpo"></div>
+    <div class="c-pe" id="u-pe"></div>
+  </section>
+</div>
+
 <!-- PD11 / P11 Detalhe do pedido: janela no computador, tela cheia no celular -->
 <div class="detalhe-veu" id="detalhe" hidden>
   <section class="detalhe" role="dialog" aria-modal="true" aria-labelledby="d-titulo" data-c="D detalhe">
@@ -197,6 +216,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=19"></script>
+<script type="module" src="./painel.js?v=20"></script>
 </body>
 </html>

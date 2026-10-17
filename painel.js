@@ -15,11 +15,12 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=6";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=7";
 import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
 import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=1";
-import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO } from "./dados-exemplo.js?v=6";
+import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=1";
+import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 
 const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
 const $ = (id) => document.getElementById(id);
@@ -45,7 +46,7 @@ function irParaHash() {
   let [tela, passo] = partes;
   let vista = "pedidos";
   if (STATE.user || EXEMPLO_PAINEL) {
-    if (["cardapio", "entregas", "configuracoes"].includes(tela)) vista = tela;
+    if (["cardapio", "entregas", "cupons", "configuracoes"].includes(tela)) vista = tela;
     else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
   }
@@ -66,12 +67,15 @@ function irParaHash() {
   $("vista-cardapio").hidden = vista !== "cardapio";
   $("vista-entregas").hidden = vista !== "entregas";
   $("vista-configuracoes").hidden = vista !== "configuracoes";
+  $("vista-cupons").hidden = vista !== "cupons";
   document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista === vista));
   if (vista !== "cardapio") fecharCardapio();
   if (vista !== "entregas") fecharEntregas();
+  if (vista !== "cupons") fecharCupons();
   if (vista === "cardapio") mostrarCardapio(partes);
   else if (vista === "entregas") mostrarEntregas(partes);
   else if (vista === "configuracoes") mostrarConfiguracoes();
+  else if (vista === "cupons") mostrarCupons(partes);
   else if (passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
@@ -203,7 +207,8 @@ async function abrirPainel(user) {
   iniciarCardapio(STATE.loja);
   iniciarEntregas(STATE.loja);
   iniciarConfiguracoes(STATE.loja);
-  if (!/^#(painel|cardapio|entregas|configuracoes)/.test(location.hash)) location.hash = "#painel";
+  iniciarCupons(STATE.loja);
+  if (!/^#(painel|cardapio|entregas|cupons|configuracoes)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
 document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
@@ -211,6 +216,7 @@ document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("clic
   pararCardapio();
   pararEntregas();
   pararConfiguracoes();
+  pararCupons();
   await signOut(auth);
   location.hash = "#entrar";
 }));
@@ -221,6 +227,7 @@ setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash()
 if (EXEMPLO_PAINEL) {
   iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
   iniciarCardapio({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CATEGORIAS });
+  iniciarCupons({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CUPONS_EXEMPLO });
   iniciarEntregas({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: {
     loja: { bairro: LOJA_EXEMPLO.bairro, cidade: LOJA_EXEMPLO.cidade, local: LOJA_EXEMPLO.local, entrega: LOJA_EXEMPLO.entrega, endereco: "Rua do Exemplo, 100" },
     bairros: BAIRROS_EXEMPLO } });
@@ -235,7 +242,7 @@ if (EXEMPLO_PAINEL) {
   onAuthStateChanged(auth, async (user) => {
     STATE.user = user;
     if (user && !STATE.ocupado) await abrirPainel(user);
-    else { pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); irParaHash(); }
+    else { pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); pararCupons(); irParaHash(); }
   });
 }
 

@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=20" />
+<link rel="stylesheet" href="./loja.css?v=21" />
 </head>
 <body>
 <div id="app">
@@ -85,9 +85,10 @@
     </div>
     <div class="totais">
       <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
+      <div class="tl desc" data-desc-linha hidden><span data-desc-nome></span><span data-desc></span></div>
       <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
       <div class="tl total"><span>Total</span><span data-total></span></div>
-      <button class="cupom"><i data-ic="cupom"></i><span>Tem um cupom?<small>Toque e digite o código</small></span><i data-ic="direita" class="seta"></i></button>
+      <div data-cupom-linha></div>
       <a class="btn" href="#entrega" data-continuar>Continuar pedido</a>
     </div>
   </section>
@@ -161,6 +162,7 @@
         </div>
         <div class="bloco resumo so-cel">
           <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
+          <div class="tl desc" data-desc-linha hidden><span data-desc-nome></span><span data-desc></span></div>
           <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
           <div class="tl total"><span>Total</span><span data-total></span></div>
         </div>
@@ -257,11 +259,26 @@
     </div>
   </div>
 
+  <!-- S24 / D24 Cupom: folha no celular, janela no computador -->
+  <div class="info-loja esqueleto" id="cupom-janela" hidden>
+    <div class="escuro" data-fechar-cupom></div>
+    <div class="janela-info janela-cupom" role="dialog" aria-modal="true" aria-labelledby="cupom-titulo" data-c="cupom">
+      <div class="alca so-cel"></div>
+      <div class="cab-j"><h2 id="cupom-titulo">Cupom de desconto</h2><button type="button" class="fechar" data-fechar-cupom aria-label="Fechar"><i data-ic="x"></i></button></div>
+      <div class="corpo-j">
+        <label class="rot-i" for="cupom-codigo">Código do cupom</label>
+        <div class="fila-cupom"><input id="cupom-codigo" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button type="button" class="btn" data-aplicar-cupom>Aplicar</button></div>
+        <p class="ajuda-cupom">O desconto vale sobre os itens, não sobre a taxa de entrega.</p>
+        <div class="erro-cupom" id="cupom-erro" hidden></div>
+      </div>
+    </div>
+  </div>
+
   <nav class="nav">
     <a href="#inicio" data-aba="inicio" class="on"><i data-ic="home"></i>Início</a><a href="#promocoes" data-aba="promocoes"><i data-ic="promo"></i>Promoções</a><a href="#pedidos" data-aba="pedidos"><i data-ic="sacola"></i>Pedidos</a><a href="#perfil" data-aba="perfil"><i data-ic="user"></i>Perfil</a>
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=19"></script>
+<script type="module" src="./app.js?v=20"></script>
 </body>
 </html>

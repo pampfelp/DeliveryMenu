@@ -193,10 +193,14 @@ async function aceitar(p) {
   try {
     await runTransaction(db, async (tx) => {
       const loja = await tx.get(lojaRef);
+      // pedido com cupom: o uso conta no aceite (cupom.js)
+      const refC = p.cupom ? doc(db, "lojas", P.loja.id, "cupons", p.cupom) : null;
+      const cupom = refC ? await tx.get(refC) : null;
       const n = (loja.data().contador || 1000) + 1;
       const { id, ...dados } = p;
       const ficha = await camposFicha(p, { status: "preparo", numero: n }, serverTimestamp());
       tx.update(lojaRef, { contador: n });
+      if (cupom?.exists()) tx.update(refC, { usos: (cupom.data().usos || 0) + 1 });
       tx.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "preparo", numero: n, aceitoEm: serverTimestamp() });
       tx.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
       if (temFicha(p)) tx.set(refFicha(p), ficha, { merge: true });

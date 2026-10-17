@@ -22,6 +22,20 @@ service cloud.firestore {
     function texto(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
     function centavos(v) { return v is int && v >= 0 && v <= 10000000; }
 
+    // cupom do pedido (cupom.js): o desconto tem de ser exatamente o que o cupom dá,
+    // só sobre os itens, com o cupom ligado, no prazo, dentro do limite e do mínimo
+    function cupomConfere(lojaId, d) {
+      let c = get(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(d.cupom)).data;
+      return d.cupom is string && d.cupom.matches("^[A-Z0-9]{3,20}$")
+        && exists(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(d.cupom))
+        && c.ativo == true
+        && (c.get("validoAte", null) == null || request.time <= c.validoAte)
+        && (c.get("limite", null) == null || c.get("usos", 0) < c.limite)
+        && d.subtotal >= c.get("minimo", 0)
+        && d.desconto == (c.tipo == "pct" ? math.round(d.subtotal * c.valor / 100) : math.min(c.valor, d.subtotal))
+        && d.total == d.subtotal + d.taxa - d.desconto;
+    }
+
     match /lojas/{lojaId} {
       allow read: if true;
       allow create: if logado() && request.resource.data.donoId == request.auth.uid
@@ -53,7 +67,7 @@ service cloud.firestore {
       match /pedidosEntrada/{id} {
         allow create: if exists(/databases/$(database)/documents/lojas/$(lojaId))
           && get(/databases/$(database)/documents/lojas/$(lojaId)).data.get("aberta", true) != false
-          && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm"])
+          && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm", "cupom", "desconto"])
           && request.resource.data.status == "novo"
           && request.resource.data.criadoEm == request.time
           && request.resource.data.tipo in ["entrega", "retirada", "local"]
@@ -61,7 +75,9 @@ service cloud.firestore {
           && request.resource.data.itens.size() > 0 && request.resource.data.itens.size() <= 50
           && centavos(request.resource.data.subtotal)
           && centavos(request.resource.data.taxa)
-          && request.resource.data.total == request.resource.data.subtotal + request.resource.data.taxa
+          && (("cupom" in request.resource.data || "desconto" in request.resource.data)
+            ? cupomConfere(lojaId, request.resource.data)
+            : request.resource.data.total == request.resource.data.subtotal + request.resource.data.taxa)
           && texto(request.resource.data.cliente.nome, 80)
           && texto(request.resource.data.cliente.telefone, 20)
           && request.resource.data.pagamento is map
@@ -73,6 +89,19 @@ service cloud.firestore {
       match /pedidos/{id} {
         allow get: if true;
         allow list, write: if donoDa(lojaId);
+      }
+
+      // cupons: quem tem o código lê (para conferir na sacola); a lista e a escrita são do dono
+      match /cupons/{codigo} {
+        allow get: if true;
+        allow list, delete: if donoDa(lojaId);
+        allow create, update: if donoDa(lojaId) && codigo.matches("^[A-Z0-9]{3,20}$")
+          && request.resource.data.tipo in ["pct", "valor"]
+          && request.resource.data.valor is int && request.resource.data.valor > 0
+          && (request.resource.data.tipo == "valor" || request.resource.data.valor <= 100)
+          && centavos(request.resource.data.minimo)
+          && request.resource.data.ativo is bool
+          && request.resource.data.usos is int && request.resource.data.usos >= 0;
       }
 
       // ficha do cliente pelo número (decisão dele, 2026-10-17): quem sabe o número lê
