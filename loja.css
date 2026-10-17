@@ -640,7 +640,6 @@ body[data-tela="promocoes"] .nav, body[data-tela="pedidos"] .nav, body[data-tela
 
 /* S22 pedidos */
 .sub-t { margin: 18px 12px 10px; font-weight: 600; font-size: 12px; line-height: 16px; letter-spacing: .02em; text-transform: uppercase; color: var(--text-muted); }
-.pag-s + #lista-pedidos .sub-t:first-child { margin-top: 0; }
 .ped-c { display: block; margin: 0 12px 10px; padding: 14px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
 .ped-c .l1 { display: flex; align-items: center; gap: 8px; }
 .ped-c .l1 b { font-weight: 600; font-size: 16px; line-height: 22px; color: var(--text-strong); }
@@ -760,14 +759,3 @@ body.com-janela { overflow: hidden; }
   .janela-info .rodape-j { display: flex; justify-content: flex-end; padding: 14px 20px; background: var(--surface-muted); }
   .janela-info .rodape-j .btn { width: auto; height: 42px; padding: 0 20px; font-size: 15px; }
 }
-
-/* esqueleto (passo 2 do imagem-primeiro): só para a revisão, sai depois da aprovação */
-.esqueleto, .esqueleto * { color: #444 !important; font-family: system-ui, sans-serif !important; }
-.esqueleto .btn:not(.fantasma) { background: #8a8a8a !important; }
-.esqueleto .btn:not(.fantasma), .esqueleto .btn:not(.fantasma) * { color: #fff !important; }
-.esqueleto .st, .esqueleto .preco-promo, .esqueleto .desconto { background: #ddd !important; }
-body:has(.pagina.esqueleto.ativa) .salvar-perfil .btn { background: #8a8a8a !important; color: #fff !important; }
-.esqueleto [data-c] { outline: 1px dashed #9a9a9a; outline-offset: -1px; }
-:where(.esqueleto [data-c]) { position: relative; }
-.esqueleto [data-c]::after { content: attr(data-c); position: absolute; top: 0; left: 0; z-index: 5; font: 9px/12px monospace; color: #333 !important; background: #ffe58a; padding: 0 3px; pointer-events: none; }
-@media (min-width: 1024px) { .pagina.esqueleto::before { background: #8a8a8a; } }

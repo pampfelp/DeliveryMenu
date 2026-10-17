@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=18" />
+<link rel="stylesheet" href="./loja.css?v=19" />
 </head>
 <body>
 <div id="app">
@@ -190,47 +190,47 @@
   </section>
 
   <!-- S21 / D21 Promoções -->
-  <section class="tela pagina esqueleto" id="tela-promocoes">
+  <section class="tela pagina" id="tela-promocoes">
     <div class="topo so-cel"><h1>Promoções</h1></div>
     <div class="inicio-grade">
       <div class="inicio-main">
         <h1 class="pag-t so-pc">Promoções</h1>
-        <p class="pag-s" data-c="intro">Itens com preço de oferta agora.</p>
-        <div id="promocoes" data-c="lista de promoções"></div>
+        <p class="pag-s">Itens com preço de oferta agora.</p>
+        <div id="promocoes"></div>
       </div>
       <aside class="sacola-lateral so-pc"></aside>
     </div>
   </section>
 
   <!-- S22 / D22 Pedidos feitos neste aparelho -->
-  <section class="tela pagina esqueleto" id="tela-pedidos">
+  <section class="tela pagina" id="tela-pedidos">
     <div class="topo so-cel"><h1>Pedidos</h1></div>
     <div class="inicio-grade">
       <div class="inicio-main">
         <h1 class="pag-t so-pc">Pedidos</h1>
-        <p class="pag-s" data-c="intro"><span class="so-cel">Os pedidos feitos neste aparelho.</span><span class="so-pc">Os pedidos feitos neste computador.</span></p>
-        <div id="lista-pedidos" data-c="pedidos"></div>
+        <p class="pag-s"><span class="so-cel">Os pedidos feitos neste aparelho.</span><span class="so-pc">Os pedidos feitos neste computador.</span></p>
+        <div id="lista-pedidos"></div>
       </div>
       <aside class="sacola-lateral so-pc"></aside>
     </div>
   </section>
 
   <!-- S23 / D23 Perfil: os dados guardados no aparelho -->
-  <section class="tela pagina esqueleto" id="tela-perfil">
+  <section class="tela pagina" id="tela-perfil">
     <div class="topo so-cel"><h1>Perfil</h1></div>
     <div class="inicio-grade">
       <div class="inicio-main">
         <h1 class="pag-t so-pc">Perfil</h1>
         <p class="pag-s so-pc">Não há conta nem senha: estes dados ficam só neste computador.</p>
         <div class="perfil-grade">
-          <div class="cartao-p" data-c="seus dados">
+          <div class="cartao-p">
             <h2>Seus dados</h2>
             <p class="sub">Vão junto com o pedido, para o restaurante falar com você.</p>
             <div class="campo"><label for="p-nome">Nome</label><div class="in"><i data-ic="user"></i><input id="p-nome" maxlength="80" autocomplete="name" /></div></div>
             <div class="campo"><label for="p-fone">WhatsApp</label><div class="in"><i data-ic="fone"></i><input id="p-fone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div></div>
             <button type="button" class="btn so-pc" data-salvar-perfil>Salvar</button>
           </div>
-          <div class="cartao-p" data-c="endereço">
+          <div class="cartao-p">
             <h2>Endereço de entrega</h2>
             <p class="sub">O último que você usou. Vem preenchido no próximo pedido.</p>
             <div id="perfil-endereco"></div>
@@ -247,9 +247,9 @@
   </section>
 
   <!-- S20 / D20 Mais informações: folha no celular, janela no computador -->
-  <div class="info-loja esqueleto" id="info-loja" hidden>
+  <div class="info-loja" id="info-loja" hidden>
     <div class="escuro" data-fechar-info></div>
-    <div class="janela-info" role="dialog" aria-modal="true" aria-labelledby="info-titulo" data-c="mais informações">
+    <div class="janela-info" role="dialog" aria-modal="true" aria-labelledby="info-titulo">
       <div class="alca so-cel"></div>
       <div class="cab-j"><h2 id="info-titulo" class="loja-nome"></h2><button type="button" class="fechar" data-fechar-info aria-label="Fechar"><i data-ic="x"></i></button></div>
       <div class="corpo-j" id="info-corpo"></div>
