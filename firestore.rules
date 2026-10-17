@@ -32,7 +32,7 @@ service cloud.firestore {
         && (c.get("validoAte", null) == null || request.time <= c.validoAte)
         && (c.get("limite", null) == null || c.get("usos", 0) < c.limite)
         && d.subtotal >= c.get("minimo", 0)
-        && d.desconto == (c.tipo == "pct" ? math.round(d.subtotal * c.valor / 100) : math.min(c.valor, d.subtotal))
+        && d.desconto == (c.tipo == "pct" ? math.round(d.subtotal * c.valor / 100.0) : (c.valor < d.subtotal ? c.valor : d.subtotal))
         && d.total == d.subtotal + d.taxa - d.desconto;
     }
 
