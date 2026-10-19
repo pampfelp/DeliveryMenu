@@ -785,3 +785,14 @@ body.com-janela { overflow: hidden; }
   .ajuda-cupom { font-size: 13px; line-height: 18px; }
 }
 .cupom > span { text-align: left; }
+
+/* Bairro: lista da loja no lugar do datalist do navegador */
+.combo { position: relative; }
+.combo input { padding-right: 40px; }
+.combo-seta { position: absolute; right: 12px; top: 12px; color: var(--text-muted); pointer-events: none; }
+.combo-lista { position: absolute; left: 0; right: 0; top: calc(100% + 4px); z-index: 20; max-height: 240px; overflow-y: auto; margin: 0; padding: 4px 0; list-style: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); box-shadow: var(--shadow-raised); }
+.combo-lista li { padding: 10px 12px; font-size: 15px; line-height: 20px; color: var(--text-strong); cursor: pointer; }
+.combo-lista li:hover, .combo-lista li.ativo { background: var(--surface-muted); }
+.combo-lista li[aria-selected="true"] { font-weight: 500; color: var(--accent); }
+.combo-lista li.nada { font-size: 14px; color: var(--text-muted); cursor: default; }
+.combo-lista li.nada:hover { background: none; }

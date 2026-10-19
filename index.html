@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=22" />
+<link rel="stylesheet" href="./loja.css?v=23" />
 </head>
 <body>
 <div id="app">
@@ -135,7 +135,7 @@
             <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" placeholder="00000-000" /><button class="so-cel" data-cep>Buscar CEP</button></div></div>
             <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" maxlength="120" autocomplete="address-line1" /></div>
             <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" maxlength="10" /></div>
-            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><input id="f-bairro" maxlength="60" list="lista-bairros" autocomplete="off" /><datalist id="lista-bairros"></datalist></div>
+            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><div class="combo"><input id="f-bairro" maxlength="60" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lista-bairros" /><i data-ic="baixo" class="combo-seta"></i><ul id="lista-bairros" class="combo-lista" role="listbox" hidden></ul></div></div>
             <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" maxlength="60" placeholder="Apto" /></div>
             <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" maxlength="120" /></div>
             <div class="a-loc acoes-end"><button class="loc" data-localizacao><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc" data-cep>Buscar pelo CEP</button></div>
@@ -279,6 +279,6 @@
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=20"></script>
+<script type="module" src="./app.js?v=21"></script>
 </body>
 </html>

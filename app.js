@@ -597,7 +597,63 @@ document.querySelector("[data-localizacao]").addEventListener("click", (e) => {
     toast("Sem permissão para a localização. Digite o endereço.", "erro", 4000);
   }, { enableHighAccuracy: true, timeout: 15000 });
 });
-document.getElementById("lista-bairros").innerHTML = BAIRROS.map((b) => `<option value="${esc(b.nome)}"></option>`).join("");
+/* Bairro: lista da loja dentro do app (o datalist abria o menu do navegador), filtrada pelo que se digita */
+const campoBairro = document.getElementById("f-bairro");
+const listaBairros = document.getElementById("lista-bairros");
+let bairroAtivo = -1;
+function abrirBairros() {
+  const q = semAcento(campoBairro.value.trim());
+  // com um bairro já escolhido, a lista volta inteira para dar pra trocar
+  const exato = BAIRROS.some((b) => semAcento(b.nome) === q);
+  const achados = exato ? BAIRROS : BAIRROS.filter((b) => semAcento(b.nome).includes(q));
+  bairroAtivo = -1;
+  listaBairros.innerHTML = achados.length
+    ? achados.map((b, n) => `<li id="bairro-${n}" role="option" data-bairro="${esc(b.nome)}" aria-selected="${semAcento(b.nome) === q}">${esc(b.nome)}</li>`).join("")
+    : `<li class="nada">Bairro não encontrado</li>`;
+  listaBairros.hidden = false;
+  campoBairro.setAttribute("aria-expanded", "true");
+}
+function fecharBairros() {
+  listaBairros.hidden = true;
+  campoBairro.setAttribute("aria-expanded", "false");
+  campoBairro.removeAttribute("aria-activedescendant");
+}
+function escolherBairro(nome) {
+  campoBairro.value = nome;
+  fecharBairros();
+  renderEntrega();
+}
+function marcarBairro(n) {
+  const itens = listaBairros.querySelectorAll("[data-bairro]");
+  if (!itens.length) return;
+  bairroAtivo = (n + itens.length) % itens.length;
+  itens.forEach((li, i) => li.classList.toggle("ativo", i === bairroAtivo));
+  itens[bairroAtivo].scrollIntoView({ block: "nearest" });
+  campoBairro.setAttribute("aria-activedescendant", itens[bairroAtivo].id);
+}
+campoBairro.addEventListener("focus", abrirBairros);
+campoBairro.addEventListener("click", () => { if (listaBairros.hidden) abrirBairros(); });
+campoBairro.addEventListener("input", abrirBairros);
+campoBairro.addEventListener("blur", fecharBairros);
+campoBairro.addEventListener("keydown", (e) => {
+  if (e.key === "ArrowDown" || e.key === "ArrowUp") {
+    e.preventDefault();
+    if (listaBairros.hidden) abrirBairros();
+    marcarBairro(bairroAtivo + (e.key === "ArrowDown" ? 1 : -1));
+  } else if (e.key === "Enter" && !listaBairros.hidden && bairroAtivo >= 0) {
+    e.preventDefault();
+    escolherBairro(listaBairros.querySelectorAll("[data-bairro]")[bairroAtivo].dataset.bairro);
+  } else if (e.key === "Escape" && !listaBairros.hidden) {
+    e.preventDefault();
+    fecharBairros();
+  }
+});
+// mousedown com preventDefault: o campo não perde o foco antes do clique contar
+listaBairros.addEventListener("mousedown", (e) => {
+  e.preventDefault();
+  const li = e.target.closest("[data-bairro]");
+  if (li) escolherBairro(li.dataset.bairro);
+});
 
 function renderTipo() {
   document.querySelectorAll("#tipos [data-tipo]").forEach((b) => b.classList.toggle("on", b.dataset.tipo === STATE.tipo));
