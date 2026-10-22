@@ -8,6 +8,9 @@
 // - O cliente acompanha o próprio pedido lendo pelo id (get, nunca a lista).
 //   O id é aleatório e funciona como senha do pedido (decisão dele, 2026-10-15).
 // - Dados pessoais do dono (donos/{uid}): só o próprio dono.
+// - Usuários do painel (decisão dele, 2026-10-22): acessos/{email} liga um e-mail a uma
+//   loja só. Quem tem acesso faz tudo o que o dono faz, menos apagar a loja. Ninguém
+//   tira o acesso do dono nem o próprio. Excluir é apagar o acesso; a conta do Auth fica.
 // - O id da loja é o link do cardápio (slug), então dois restaurantes não pegam o mesmo.
 // - Qualquer outro caminho: fechado.
 
@@ -18,6 +21,13 @@ service cloud.firestore {
     function logado() { return request.auth != null; }
     function donoDa(lojaId) {
       return logado() && get(/databases/$(database)/documents/lojas/$(lojaId)).data.donoId == request.auth.uid;
+    }
+    function meuEmail() { return request.auth.token.email.lower(); }
+    // dono, ou alguém com acesso a esta loja (acessos/{email})
+    function membroDa(lojaId) {
+      return donoDa(lojaId) || (logado()
+        && exists(/databases/$(database)/documents/acessos/$(meuEmail()))
+        && get(/databases/$(database)/documents/acessos/$(meuEmail())).data.lojaId == lojaId);
     }
     function texto(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
     function centavos(v) { return v is int && v >= 0 && v <= 10000000; }
@@ -45,20 +55,20 @@ service cloud.firestore {
         && texto(request.resource.data.nome, 120)
         && texto(request.resource.data.cidade, 60)
         && texto(request.resource.data.bairro, 60);
-      allow update: if donoDa(lojaId) && request.resource.data.donoId == resource.data.donoId;
+      allow update: if membroDa(lojaId) && request.resource.data.donoId == resource.data.donoId;
       allow delete: if donoDa(lojaId);
 
       match /categorias/{id} {
         allow read: if true;
-        allow write: if donoDa(lojaId);
+        allow write: if membroDa(lojaId);
       }
       match /itens/{id} {
         allow read: if true;
-        allow write: if donoDa(lojaId);
+        allow write: if membroDa(lojaId);
       }
       match /bairros/{id} {
         allow read: if true;
-        allow write: if donoDa(lojaId);
+        allow write: if membroDa(lojaId);
       }
 
       // antessala: o cliente cria, o painel lê e move para "pedidos" com o mesmo id.
@@ -83,19 +93,19 @@ service cloud.firestore {
           && request.resource.data.pagamento is map
           && request.resource.data.pagamento.get("pago", false) == false;
         allow get: if true;
-        allow list, update, delete: if donoDa(lojaId);
+        allow list, update, delete: if membroDa(lojaId);
       }
 
       match /pedidos/{id} {
         allow get: if true;
-        allow list, write: if donoDa(lojaId);
+        allow list, write: if membroDa(lojaId);
       }
 
       // cupons: quem tem o código lê (para conferir na sacola); a lista e a escrita são do dono
       match /cupons/{codigo} {
         allow get: if true;
-        allow list, delete: if donoDa(lojaId);
-        allow create, update: if donoDa(lojaId) && codigo.matches("^[A-Z0-9]{3,20}$")
+        allow list, delete: if membroDa(lojaId);
+        allow create, update: if membroDa(lojaId) && codigo.matches("^[A-Z0-9]{3,20}$")
           && request.resource.data.tipo in ["pct", "valor"]
           && request.resource.data.valor is int && request.resource.data.valor > 0
           && (request.resource.data.tipo == "valor" || request.resource.data.valor <= 100)
@@ -110,8 +120,31 @@ service cloud.firestore {
       match /clientes/{telefone} {
         allow get: if true;
         allow list: if false;
-        allow write: if donoDa(lojaId) && telefone.matches("^[0-9]{10,11}$");
+        allow write: if membroDa(lojaId) && telefone.matches("^[0-9]{10,11}$");
       }
+    }
+
+    // usuários do painel. O id é o e-mail em minúsculas: tirar e devolver o acesso
+    // funciona sem apagar a conta do Auth, e um e-mail fica numa loja só.
+    match /acessos/{email} {
+      allow get: if logado() && (email == meuEmail() || membroDa(resource.data.lojaId));
+      allow list: if logado() && membroDa(resource.data.lojaId);
+      allow create: if logado() && membroDa(request.resource.data.lojaId)
+        && request.resource.data.keys().hasOnly(["lojaId", "nome", "email", "dono", "trocarSenha", "criadoEm"])
+        && request.resource.data.email == email
+        && email.matches("^[^@ /]+@[^@ /]+[.][^@ /]+$") && email == email.lower()
+        && texto(request.resource.data.nome, 80)
+        && request.resource.data.criadoEm == request.time
+        && request.resource.data.trocarSenha is bool
+        // o acesso do dono só o próprio dono cria, para si, e sem senha provisória
+        && (request.resource.data.dono == true
+          ? donoDa(request.resource.data.lojaId) && email == meuEmail() && request.resource.data.trocarSenha == false
+          : request.resource.data.dono == false && request.resource.data.trocarSenha == true);
+      // só a própria pessoa, e só para dizer que já trocou a senha provisória
+      allow update: if logado() && email == meuEmail()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["trocarSenha"])
+        && request.resource.data.trocarSenha == false;
+      allow delete: if logado() && membroDa(resource.data.lojaId) && resource.data.dono != true && email != meuEmail();
     }
 
     match /donos/{uid} {

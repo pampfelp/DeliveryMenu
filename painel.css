@@ -16,7 +16,8 @@ svg.ic { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-wid
 body[data-tela="carregando"] .direita > * { visibility: hidden; }
 
 /* textos que só valem numa das telas */
-body:not([data-tela="entrar"]) .lema-entrar { display: none !important; }
+/* a P62 / PD62 (criar a senha) usa a mesma marca e o mesmo cartão do login */
+body:not([data-tela="entrar"]):not([data-tela="senha"]) .lema-entrar { display: none !important; }
 body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 
 /* ===== marca ===== */
@@ -45,7 +46,9 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; height: 48px; border-radius: var(--r-md); background: var(--accent); color: var(--on-accent); font-weight: 500; font-size: 16px; line-height: 24px; text-align: center; }
 .btn.fantasma { background: var(--surface); color: var(--accent); border: 1px solid var(--border); }
 .btn.desligado { opacity: .5; pointer-events: none; }
-#tela-entrar .btn[type="submit"] { margin-top: 20px; }
+#tela-entrar .btn[type="submit"], #tela-senha .btn[type="submit"] { margin-top: 20px; }
+#tela-senha .linha-entre { justify-content: center; margin-top: 16px; }
+#tela-senha .ajuda { margin-top: 8px; }
 .ou { display: flex; align-items: center; gap: 12px; margin: 22px 0 20px; font-size: 13px; color: var(--text-muted); }
 .ou::before, .ou::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .passos-cad { display: flex; align-items: center; gap: 8px; margin-bottom: 18px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--text-muted); }
@@ -73,9 +76,9 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 @media (max-width: 1023px) {
   .lado { height: 220px; padding: 56px 24px 0; background: var(--accent); }
   .lado p { margin-top: 18px; max-width: 300px; color: #fff; font-size: 15px; line-height: 22px; opacity: .92; }
-  body:not([data-tela="entrar"]) .lado { display: none; }
-  #tela-entrar { margin: -40px 16px 24px; padding: 24px 20px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); }
-  #tela-entrar .rodape-txt { position: absolute; left: 0; right: 0; margin-top: 42px; }
+  body:not([data-tela="entrar"]):not([data-tela="senha"]) .lado { display: none; }
+  #tela-entrar, #tela-senha { margin: -40px 16px 24px; padding: 24px 20px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); }
+  #tela-entrar .rodape-txt, #tela-senha .rodape-txt { position: absolute; left: 0; right: 0; margin-top: 42px; }
   body[data-tela="cadastro"] { background: var(--surface); }
   #tela-cadastro { min-height: 100vh; padding-bottom: 120px; }
   #tela-cadastro .topo { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; border-bottom: 1px solid var(--border); }
@@ -97,7 +100,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .lado .pe { margin-top: auto; font-size: 13px; line-height: 20px; opacity: .75; }
   .direita { display: grid; place-items: center; padding: 32px; }
   .direita > .form { background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
-  #tela-entrar { width: 420px; padding: 36px 36px 32px; }
+  #tela-entrar, #tela-senha { width: 420px; padding: 36px 36px 32px; }
   #tela-cadastro { width: 520px; padding: 32px 36px; }
   #tela-cadastro .rodape { display: flex; gap: 12px; margin-top: 22px; }
   #tela-cadastro .rodape .fantasma { width: 140px; flex: none; }
@@ -786,6 +789,76 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .u-janela .c-pe .excluir { margin-right: auto; }
   .u-janela .c-pe .fantasma { margin-left: 0; }
   .u-seg button { height: 42px; }
+}
+
+/* ===== usuários (PD60, PD61, P60, P61) ===== */
+.us-cartao { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+.usuarios .kpi em.neutro { color: var(--text-muted); }
+.usuarios .kpi em.alerta { color: var(--warning); }
+.avatar { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #fdf2f2; color: var(--accent); font-weight: 600; font-size: 14px; line-height: 20px; }
+.usuarios .selo { font-weight: 500; font-size: 11px; line-height: 14px; padding: 3px 6px; border-radius: 4px; color: var(--accent); background: #fdf2f2; text-transform: uppercase; }
+.usuarios .selo.voce { color: var(--text-muted); background: var(--bg); }
+.sit { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--success); }
+.sit::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.sit.espera { color: var(--warning); }
+.lixo { display: grid; place-items: center; color: var(--text-muted); }
+.us-form .in .un { flex: none; font-weight: 500; font-size: 13px; line-height: 18px; color: var(--accent); }
+.aviso-us { display: flex; gap: 10px; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--info-bg); color: var(--info); font-weight: 500; font-size: 13px; line-height: 18px; }
+.aviso-us svg.ic { width: 18px; height: 18px; flex: none; }
+
+@media (max-width: 1023px) {
+  .usuarios { min-height: 100vh; padding-bottom: 96px; }
+  .topo-v { height: 56px; display: flex; align-items: center; gap: 12px; padding: 0 16px; background: var(--surface); border-bottom: 1px solid var(--border); }
+  .topo-v h1 { font-weight: 500; font-size: 18px; line-height: 28px; color: var(--text-strong); }
+  .topo-v .voltar { display: grid; place-items: center; color: var(--text-strong); }
+  .usuarios .kpi { width: 160px; }
+  .us-cartao { margin: 12px 16px 0; }
+  .pes { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .pes:first-child { border-top: 0; }
+  .pes .avatar { width: 40px; height: 40px; }
+  .pes .t { flex: 1; min-width: 0; }
+  .pes b { display: flex; align-items: center; gap: 6px; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+  .pes .selo { padding: 2px 6px; }
+  .pes small { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pes small.espera { color: var(--warning); }
+  .pes .lixo { width: 36px; height: 36px; }
+  .us-nota { display: flex; gap: 8px; margin: 12px 16px 0; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .us-nota svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .us-rodape { position: fixed; left: 0; right: 0; bottom: 0; z-index: 11; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+  body[data-vista="usuarios"] .nav-p { display: none; } /* a P60 é uma tela de dentro dos Ajustes */
+  .us-janela .sec.us-form { margin: 0; border-radius: 0; box-shadow: none; padding: 16px; background: var(--surface); }
+  .us-janela .c-corpo-m { background: var(--surface); }
+  .us-janela .us-form .campo { margin-top: 14px; }
+  .us-janela .us-form > .campo:first-child { margin-top: 14px; } /* a janela do cardápio zera o primeiro; a P61 tem */
+  .us-janela .c-pe { position: fixed; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; box-shadow: var(--shadow-bar); }
+  .us-janela .c-pe .btn { width: 100%; height: 48px; }
+}
+@media (min-width: 1024px) {
+  .usuarios .cab .btn { margin-left: auto; width: auto; height: 40px; padding: 0 16px; font-size: 15px; }
+  .usuarios .kpis { grid-template-columns: repeat(3, 1fr); }
+  .us-cartao { margin-top: 20px; }
+  .tab-cab.us-g, .tab-l.us-g { display: grid; grid-template-columns: 1.3fr 1.4fr 1fr 1fr 48px; gap: 12px; align-items: center; padding: 0 16px; }
+  .tab-cab.us-g { height: 36px; font-weight: 500; font-size: 12px; line-height: 16px; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+  .tab-l.us-g { min-height: 64px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+  .tab-cab.us-g > span, .tab-l.us-g > span { text-align: left; } /* a tabela de Entregas alinha à direita */
+  .tab-l.us-g:nth-last-child(2) { border-bottom: 0; }
+  .pessoa { display: flex; align-items: center; gap: 12px; min-width: 0; }
+  .pessoa b { font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pessoa .selo { margin-left: -4px; }
+  .tab-l.us-g .acoes { display: flex; justify-content: flex-end; }
+  .tab-l.us-g .lixo { width: 32px; height: 32px; }
+  .tab-l.us-g .lixo svg.ic { width: 18px; height: 18px; }
+  .us-cartao .rodape-t { display: flex; gap: 8px; padding: 12px 16px; background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .us-cartao .rodape-t svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .us-janela { width: 520px; }
+  .us-janela .c-cab { padding: 16px 20px; }
+  .us-janela .c-cab h2 { font-weight: 500; font-size: 18px; line-height: 28px; }
+  .us-janela .c-corpo-m { padding: 20px; }
+  .us-janela .us-form .campo + .campo { margin-top: 14px; }
+  .us-janela .campo label { font-size: 12px; line-height: 16px; margin-bottom: 4px; }
+  .us-janela input:not([type="checkbox"]), .us-janela .in { height: 44px; }
+  .us-janela .c-pe { justify-content: flex-end; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-muted); }
+  .us-janela .c-pe .btn { height: 42px; padding: 0 20px; font-size: 15px; }
 }
 
 /* Mídias do item: foto e vídeo independentes, com prévia antes de salvar. */

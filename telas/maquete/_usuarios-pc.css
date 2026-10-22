@@ -1,0 +1,60 @@
+/* Partes das maquetes PD60 a PD62 (Usuários no computador). */
+html, body { width: 1440px; }
+.pc { position: relative; width: 1440px; height: 900px; display: grid; grid-template-columns: 240px 1fr; background: var(--bg); overflow: hidden; }
+.lateral { background: var(--accent); padding: 20px 14px; display: flex; flex-direction: column; }
+.lateral .marca b { font-size: 17px; line-height: 22px; }
+.lateral .marca small { font-size: 12px; }
+.menu { margin-top: 28px; display: grid; gap: 4px; }
+.menu a { display: flex; align-items: center; gap: 12px; height: 44px; padding: 0 12px; border-radius: var(--r-md); color: rgba(255,255,255,.85); font: 500 15px/20px Rubik; }
+.menu a.on { background: rgba(255,255,255,.16); color: #fff; }
+.menu a .cont { margin-left: auto; background: #fff; color: var(--accent); }
+.loja-atual { margin-top: auto; padding: 12px; border-radius: var(--r-md); background: rgba(255,255,255,.1); color: #fff; }
+.loja-atual b { display: block; font: 500 14px/20px Rubik; }
+.loja-atual small { font-size: 12px; opacity: .8; }
+.principal { padding: 24px 28px; min-width: 0; }
+.cab { display: flex; align-items: center; gap: 12px; }
+.cab h1 { font: 600 24px/32px Rubik; color: var(--text-strong); }
+.cab .btn { margin-left: auto; height: 40px; padding: 0 16px; font-size: 15px; }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 20px; }
+.kpi em.neutro { color: var(--text-muted); }
+.kpi em.alerta { color: var(--warning); }
+.cartao-e { margin-top: 20px; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); }
+.tab-cab, .tab-l { display: grid; grid-template-columns: 1.3fr 1.4fr 1fr 1fr 48px; gap: 12px; align-items: center; padding: 0 16px; }
+.tab-cab { height: 36px; font: 500 12px/16px Rubik; color: var(--text-muted); border-bottom: 1px solid var(--border); }
+.tab-l { min-height: 64px; border-bottom: 1px solid var(--border); font-size: 14px; color: var(--text); }
+.pessoa { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.avatar { width: 36px; height: 36px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #fdf2f2; color: var(--accent); font: 600 14px/20px Rubik; }
+.pessoa b { font: 500 15px/20px Rubik; color: var(--text-strong); }
+.selo { font: 500 11px/14px Rubik; padding: 3px 6px; border-radius: 4px; color: var(--accent); background: #fdf2f2; }
+.selo.voce { color: var(--text-muted); background: var(--bg); }
+.pessoa .selo { margin-left: -4px; }
+.sit { display: inline-flex; align-items: center; gap: 6px; font: 500 13px/18px Rubik; color: var(--success); }
+.sit::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: currentColor; }
+.sit.espera { color: var(--warning); }
+.acoes { display: flex; justify-content: flex-end; }
+.acoes span { width: 32px; height: 32px; display: grid; place-items: center; color: var(--text-muted); }
+.acoes svg.ic { width: 18px; height: 18px; }
+.rodape-t { display: flex; gap: 8px; padding: 12px 16px; background: var(--surface-muted); font-size: 13px; line-height: 18px; color: var(--text-muted); border-radius: 0 0 var(--r-md) var(--r-md); }
+.rodape-t svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+
+/* janela (PD61 novo usuário, PD62 confirmação) */
+.escuro { position: absolute; inset: 0; background: var(--overlay); }
+.janela { position: absolute; left: 50%; top: 50%; width: 520px; transform: translate(-50%, -50%); background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-raised); overflow: hidden; }
+.cab-j { display: flex; align-items: center; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+.cab-j h2 { flex: 1; font: 500 18px/28px Rubik; color: var(--text-strong); }
+.fechar-j { width: 32px; height: 32px; border-radius: 50%; background: var(--bg); display: grid; place-items: center; color: var(--text-muted); }
+.janela .form { padding: 20px; }
+.janela .campo + .campo { margin-top: 14px; }
+.janela .campo label { display: block; margin-bottom: 4px; font: 500 12px/16px Rubik; color: var(--text-muted); }
+.janela .in { display: flex; align-items: center; justify-content: space-between; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); font-size: 15px; color: var(--text-strong); }
+.janela .in.foco { border: 2px solid var(--accent); padding: 0 11px; }
+.janela .in .un { margin-left: auto; font: 500 13px/18px Rubik; color: var(--accent); }
+.ajuda { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.aviso-j { display: flex; gap: 10px; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--info-bg); color: var(--info); font: 500 13px/18px Rubik; }
+.aviso-j svg.ic { width: 18px; height: 18px; flex: none; }
+.rodape-j { display: flex; justify-content: flex-end; gap: 12px; padding: 14px 20px; border-top: 1px solid var(--border); background: var(--surface-muted); }
+.rodape-j .btn { height: 42px; padding: 0 20px; font-size: 15px; }
+.janela.conf { width: 440px; }
+.janela.conf .txt { padding: 20px; font-size: 15px; line-height: 22px; color: var(--text); }
+.janela.conf .txt b { color: var(--text-strong); font-weight: 500; }
+.btn-perigo { background: var(--danger); color: #fff; }

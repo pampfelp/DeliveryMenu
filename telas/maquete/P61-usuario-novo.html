@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P61 Novo usuário no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--surface); }
+  .form { padding: 16px; }
+  .campo + .campo { margin-top: 14px; }
+  .campo label { display: block; margin-bottom: 4px; font: 500 12px/16px Rubik; color: var(--text-muted); }
+  .in { display: flex; align-items: center; justify-content: space-between; gap: 6px; height: 44px; padding: 0 12px; border: 1px solid var(--border-input); border-radius: var(--r-md); font-size: 15px; color: var(--text-strong); }
+  .in.foco { border: 2px solid var(--accent); padding: 0 11px; }
+  .in .un { margin-left: auto; font: 500 13px/18px Rubik; color: var(--accent); }
+  .ajuda { margin-top: 4px; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+  .aviso-j { display: flex; gap: 10px; margin-top: 16px; padding: 12px 14px; border-radius: var(--r-md); background: var(--info-bg); color: var(--info); font: 500 13px/18px Rubik; }
+  .aviso-j svg.ic { width: 18px; height: 18px; flex: none; }
+  .rodape-c { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span style="color:var(--text-strong)"><i data-ic="esquerda"></i></span><h1>Novo usuário</h1></div>
+  <div class="form">
+    <div class="campo"><label>Nome</label><div class="in foco">Carla Dias</div></div>
+    <div class="campo"><label>E-mail</label><div class="in">carla@restaurante.com</div><p class="ajuda">É com ele que a pessoa entra no painel.</p></div>
+    <div class="campo"><label>Senha provisória</label><div class="in"><span>pizza-4821</span><b class="un">Gerar outra</b></div><p class="ajuda">Passe essa senha para a pessoa. No primeiro acesso ela cria uma senha só dela.</p></div>
+    <div class="aviso-j"><i data-ic="info"></i><span>Carla vai ver e mexer em tudo deste restaurante, como você.</span></div>
+  </div>
+  <div class="rodape-c"><div class="btn btn-accent">Adicionar usuário</div></div>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>

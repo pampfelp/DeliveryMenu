@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>P60 Usuários no celular</title>
+<link rel="stylesheet" href="_painel-app.css?v=1">
+<style>
+  .tela { background: var(--bg); }
+  .kpis { display: flex; gap: 10px; padding: 12px 16px 0; overflow: hidden; }
+  .kpi { flex: none; width: 160px; padding: 10px 12px; }
+  .kpi b { font-size: 18px; line-height: 24px; margin-top: 2px; }
+  .kpi em.neutro { color: var(--text-muted); }
+  .kpi em.alerta { color: var(--warning); }
+  .sec { margin: 12px 16px 0; background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); overflow: hidden; }
+  .pes { display: flex; align-items: center; gap: 12px; padding: 12px 14px; border-top: 1px solid var(--border); }
+  .pes:first-child { border-top: 0; }
+  .avatar { width: 40px; height: 40px; flex: none; border-radius: 50%; display: grid; place-items: center; background: #fdf2f2; color: var(--accent); font: 600 14px/20px Rubik; }
+  .pes .t { flex: 1; min-width: 0; }
+  .pes b { display: flex; align-items: center; gap: 6px; font: 500 15px/20px Rubik; color: var(--text-strong); }
+  .pes small { display: block; margin-top: 2px; font-size: 13px; line-height: 18px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pes small.espera { color: var(--warning); }
+  .selo { font: 500 11px/14px Rubik; padding: 2px 6px; border-radius: 4px; color: var(--accent); background: #fdf2f2; }
+  .selo.voce { color: var(--text-muted); background: var(--bg); }
+  .lixo { width: 36px; height: 36px; display: grid; place-items: center; color: var(--text-muted); }
+  .lixo svg.ic { width: 20px; height: 20px; }
+  .nota { display: flex; gap: 8px; margin: 12px 16px 0; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+  .nota svg.ic { width: 16px; height: 16px; flex: none; margin-top: 1px; }
+  .rodape-c { position: absolute; left: 0; right: 0; bottom: 0; padding: 12px 16px 20px; background: var(--surface); box-shadow: var(--shadow-bar); }
+</style></head>
+<body><div class="tela">
+  <div class="topo"><span style="color:var(--text-strong)"><i data-ic="esquerda"></i></span><h1>Usuários</h1></div>
+  <div class="kpis">
+    <div class="kpi"><small>Com acesso</small><b>4</b><em class="neutro">contando com você</em></div>
+    <div class="kpi"><small>Falta o 1º acesso</small><b>1</b><em class="alerta">senha provisória</em></div>
+  </div>
+  <div class="sec">
+    <div class="pes"><span class="avatar">NS</span><div class="t"><b>Nome Sobrenome <span class="selo">Dono</span><span class="selo voce">Você</span></b><small>dono@restaurante.com</small></div></div>
+    <div class="pes"><span class="avatar">AS</span><div class="t"><b>Ana Souza</b><small>ana@restaurante.com · 16/10</small></div><span class="lixo"><i data-ic="lixo"></i></span></div>
+    <div class="pes"><span class="avatar">BL</span><div class="t"><b>Bruno Lima</b><small>bruno@restaurante.com · 18/10</small></div><span class="lixo"><i data-ic="lixo"></i></span></div>
+    <div class="pes"><span class="avatar">CD</span><div class="t"><b>Carla Dias</b><small class="espera">Falta o 1º acesso · 20/10</small></div><span class="lixo"><i data-ic="lixo"></i></span></div>
+  </div>
+  <p class="nota"><i data-ic="info"></i><span>Todo usuário vê e mexe em tudo deste restaurante. Ninguém daqui vê outro restaurante.</span></p>
+  <div class="rodape-c"><div class="btn btn-accent"><i data-ic="mais"></i>Novo usuário</div></div>
+</div>
+<script src="_icones.js?v=3"></script>
+</body></html>

@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>PD62 Criar senha no primeiro acesso no computador</title>
+<link rel="stylesheet" href="_painel.css?v=1">
+<style>
+  html, body { width: 1440px; }
+  .pc { width: 1440px; height: 900px; display: grid; grid-template-columns: 560px 1fr; background: var(--bg); }
+  .lado { background: var(--accent); padding: 64px 56px; color: #fff; display: flex; flex-direction: column; }
+  .lado h2 { margin-top: 120px; font: 600 32px/40px Rubik; max-width: 420px; }
+  .lado ul { list-style: none; margin-top: 28px; display: grid; gap: 18px; }
+  .lado li { display: flex; align-items: center; gap: 14px; font: 400 16px/24px Rubik; opacity: .95; }
+  .lado li span { width: 40px; height: 40px; flex: none; border-radius: var(--r-md); background: rgba(255,255,255,.14); display: grid; place-items: center; }
+  .lado li svg.ic { width: 20px; height: 20px; }
+  .lado .pe { margin-top: auto; font-size: 13px; opacity: .75; }
+  .direita { display: grid; place-items: center; }
+  .form { width: 420px; padding: 36px 36px 32px; background: var(--surface); border-radius: var(--r-lg); box-shadow: var(--shadow-card); }
+</style></head>
+<body><div class="pc">
+  <div class="lado">
+    <div class="marca"><span class="selo-marca"><i data-ic="lista"></i></span><span><b>Cardápio Delivery</b><small>Painel do restaurante</small></span></div>
+    <h2>Seu delivery, do pedido à entrega.</h2>
+    <ul>
+      <li><span><i data-ic="sino"></i></span>Pedido chega na hora, com som</li>
+      <li><span><i data-ic="lista"></i></span>Cardápio com fotos, adicionais e promoções</li>
+      <li><span><i data-ic="entrega"></i></span>Taxa calculada pelo bairro do cliente</li>
+    </ul>
+    <p class="pe">Cardápio Delivery</p>
+  </div>
+  <div class="direita">
+    <div class="form">
+      <h1>Crie a sua senha</h1>
+      <p class="sub">Você entrou com a senha provisória. Escolha uma senha só sua para abrir o painel de Nome do Restaurante.</p>
+      <div class="campo"><label>Nova senha</label><div class="in foco"><i data-ic="cadeado"></i><span>••••••••••</span><i data-ic="olho"></i></div></div>
+      <div class="campo"><label>Repita a nova senha</label><div class="in"><i data-ic="cadeado"></i><span>••••••••••</span><i data-ic="olho"></i></div></div>
+      <p class="sub" style="margin-top:8px;font-size:12px;line-height:16px">Pelo menos 8 caracteres.</p>
+      <div class="btn btn-accent">Salvar e abrir o painel</div>
+      <div class="linha-entre" style="justify-content:center;margin-top:16px">Sair</div>
+    </div>
+  </div>
+</div>
+<script src="_icones.js?v=2"></script>
+</body></html>

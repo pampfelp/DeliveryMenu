@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=19" />
+<link rel="stylesheet" href="./painel.css?v=20" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
 <body data-tela="carregando">
@@ -43,6 +43,20 @@
       <button class="btn" type="submit" id="btn-entrar">Entrar</button>
       <div class="ou">Ainda não tem conta?</div>
       <a class="btn fantasma" href="#cadastro/1">Cadastrar meu restaurante</a>
+      <p class="rodape-txt so-cel">Cardápio Delivery</p>
+    </form>
+
+    <!-- P62 / PD62 Criar a senha no primeiro acesso de quem entrou com a senha provisória -->
+    <form class="form" id="tela-senha" novalidate>
+      <h1>Crie a sua senha</h1>
+      <p class="sub">Você entrou com a senha provisória. Escolha uma senha só sua para abrir o painel de <span class="nome-loja"></span>.</p>
+      <div class="campo"><label for="s-senha">Nova senha</label>
+        <div class="in"><i data-ic="cadeado"></i><input id="s-senha" type="password" autocomplete="new-password" /><button type="button" class="ver-senha" aria-label="Mostrar senha"><i data-ic="olho"></i></button></div></div>
+      <div class="campo"><label for="s-senha2">Repita a nova senha</label>
+        <div class="in"><i data-ic="cadeado"></i><input id="s-senha2" type="password" autocomplete="new-password" /><button type="button" class="ver-senha" aria-label="Mostrar senha"><i data-ic="olho"></i></button></div>
+        <p class="ajuda">Pelo menos 8 caracteres.</p></div>
+      <button class="btn" type="submit" id="btn-senha">Salvar e abrir o painel</button>
+      <div class="linha-entre"><button type="button" data-sair>Sair</button></div>
       <p class="rodape-txt so-cel">Cardápio Delivery</p>
     </form>
 
@@ -97,8 +111,9 @@
       <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas e bairros</a>
       <a href="#cupons" data-vista="cupons"><i data-ic="cupom"></i>Cupons</a>
       <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Configurações</a>
+      <a href="#usuarios" data-vista="usuarios"><i data-ic="user"></i>Usuários</a>
     </nav>
-    <div class="loja-atual"><b class="nome-loja"></b><small>Você está como dono · <button type="button" data-sair>Sair</button></small></div>
+    <div class="loja-atual"><b class="nome-loja"></b><small><span id="papel">Você está como dono</span> · <button type="button" data-sair>Sair</button></small></div>
   </aside>
 
   <main class="principal" id="vista-pedidos">
@@ -162,19 +177,29 @@
 
   <!-- PD40 / P40 Configurações -->
   <main class="principal configuracoes" id="vista-configuracoes" hidden>
-    <div class="barra-topo so-cel" data-c="T topo"><b>Ajustes</b></div>
+    <div class="barra-topo so-cel" data-c="T topo"><b>Ajustes</b><a class="novo-item" href="#usuarios"><i data-ic="user"></i>Usuários</a></div>
     <div class="cab so-pc" data-c="T cabeçalho"><h1>Configurações</h1><a class="ver" id="cf-ver" target="_blank" rel="noopener"><i data-ic="olho"></i>Ver como o cliente</a><button type="button" class="btn" data-cf-salvar>Salvar alterações</button></div>
     <div class="cf-grade" id="cf-grade" data-c="C dados, horário e aparência"></div>
     <div class="cf-salvar so-cel" data-c="S salvar"><button type="button" class="btn" data-cf-salvar>Salvar alterações</button></div>
   </main>
   <input type="file" id="cf-logo" accept="image/*" hidden />
 
+  <!-- PD60 / P60 Usuários. No celular abre pelos Ajustes -->
+  <main class="principal usuarios" id="vista-usuarios" hidden>
+    <div class="topo-v so-cel"><a class="voltar" href="#configuracoes" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Usuários</h1></div>
+    <div class="cab so-pc"><h1>Usuários</h1><a class="btn" href="#usuarios/novo"><i data-ic="mais"></i>Novo usuário</a></div>
+    <div class="kpis" id="us-kpis"></div>
+    <section class="us-cartao" id="us-lista"></section>
+    <p class="us-nota so-cel"><i data-ic="info"></i><span>Todo usuário vê e mexe em tudo deste restaurante. Ninguém daqui vê outro restaurante.</span></p>
+    <div class="us-rodape so-cel"><a class="btn" href="#usuarios/novo"><i data-ic="mais"></i>Novo usuário</a></div>
+  </main>
+
   <nav class="nav-p so-cel" data-c="N navegação">
     <a class="on" href="#painel" data-vista="pedidos"><i data-ic="sacola"></i>Pedidos<span class="cont forte" data-novos></span></a>
     <a href="#cardapio" data-vista="cardapio"><i data-ic="lista"></i>Cardápio</a>
     <a href="#entregas" data-vista="entregas"><i data-ic="entrega"></i>Entregas</a>
     <a href="#cupons" data-vista="cupons"><i data-ic="cupom"></i>Cupons</a>
-    <a href="#configuracoes" data-vista="configuracoes"><i data-ic="loja"></i>Ajustes</a>
+    <a href="#configuracoes" data-vista="configuracoes usuarios"><i data-ic="loja"></i>Ajustes</a>
   </nav>
 </div>
 
@@ -208,6 +233,24 @@
   </section>
 </div>
 
+<!-- P61 / janela do PD61: novo usuário (tela cheia no celular) -->
+<div class="detalhe-veu" id="us-modal" hidden>
+  <section class="c-janela us-janela" role="dialog" aria-modal="true" aria-labelledby="us-titulo">
+    <div class="c-cab"><a class="voltar so-cel" href="#usuarios" aria-label="Voltar"><i data-ic="esquerda"></i></a><h2 id="us-titulo">Novo usuário</h2><a class="fechar so-pc" href="#usuarios" aria-label="Fechar"><i data-ic="x"></i></a></div>
+    <form class="c-corpo-m" id="us-form" novalidate>
+      <div class="sec us-form">
+        <div class="campo"><label for="us-nome">Nome</label><input id="us-nome" maxlength="80" autocomplete="off" /></div>
+        <div class="campo"><label for="us-email">E-mail</label><input id="us-email" type="email" maxlength="120" autocomplete="off" autocapitalize="off" spellcheck="false" />
+          <p class="ajuda">É com ele que a pessoa entra no painel.</p></div>
+        <div class="campo"><label for="us-senha">Senha provisória</label><div class="in"><input id="us-senha" maxlength="40" autocomplete="off" spellcheck="false" /><button type="button" class="un" data-gerar-senha>Gerar outra</button></div>
+          <p class="ajuda">Passe essa senha para a pessoa. No primeiro acesso ela cria uma senha só dela.</p></div>
+        <div class="aviso-us"><i data-ic="info"></i><span id="us-aviso">Essa pessoa vai ver e mexer em tudo deste restaurante, como você.</span></div>
+      </div>
+    </form>
+    <div class="c-pe"><a class="btn fantasma so-pc" href="#usuarios">Cancelar</a><button type="submit" form="us-form" class="btn" id="us-salvar">Adicionar usuário</button></div>
+  </section>
+</div>
+
 <!-- PD11 / P11 Detalhe do pedido: janela no computador, tela cheia no celular -->
 <div class="detalhe-veu" id="detalhe" hidden>
   <section class="detalhe" role="dialog" aria-modal="true" aria-labelledby="d-titulo" data-c="D detalhe">
@@ -217,6 +260,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=23"></script>
+<script type="module" src="./painel.js?v=24"></script>
 </body>
 </html>

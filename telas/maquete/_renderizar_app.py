@@ -26,13 +26,15 @@ PAINEL_CEL = {"P01-login": "entrar", "P02-cadastro-dados": "cadastro/1", "P03-ca
               "P20-cardapio": "cardapio", "P21-editar-item": "cardapio/item/classico",
               "P22-grupo-opcoes": "cardapio/item/classico/grupo/1", "P23-categorias": "cardapio/categorias",
               "P30-entregas": "entregas", "P31-bairro": "entregas/bairro/b1", "P32-regra-taxa": "entregas/regra",
-              "P33-ponto-saida": "entregas/ponto", "P40-ajustes": "configuracoes"}
+              "P33-ponto-saida": "entregas/ponto", "P40-ajustes": "configuracoes",
+              "P60-usuarios": "usuarios", "P61-usuario-novo": "usuarios/novo", "P62-criar-senha": "senha|senha"}
 PAINEL_PC = {"PD01-login": "entrar", "PD02-cadastro-loja": "cadastro/2",
              "PD10-pedidos": "painel", "PD11-pedido-detalhe": "painel/1051",
              "PD20-cardapio": "cardapio", "PD21-editar-item": "cardapio/item/classico",
              "PD22-grupo-opcoes": "cardapio/item/classico/grupo/1", "PD23-nova-categoria": "cardapio/categoria/nova",
              "PD30-entregas": "entregas", "PD31-bairro": "entregas/bairro/novo", "PD32-ponto-saida": "entregas/ponto",
-             "PD40-configuracoes": "configuracoes"}
+             "PD40-configuracoes": "configuracoes",
+             "PD60-usuarios": "usuarios", "PD61-usuario-novo": "usuarios/novo", "PD62-criar-senha": "senha|senha"}
 args = [a for a in sys.argv[1:] if not a.startswith("--")]
 no_pc = "--pc" in sys.argv
 painel = "--painel" in sys.argv
@@ -47,7 +49,7 @@ for nome, rota in telas.items():
         continue
     estado, _, rota = rota.rpartition("|")
     png = saida / f"{nome}.png"
-    app = f"http://localhost:{porta}/{'painel' if painel else 'index'}.html?exemplo={'painel' if rota.startswith(('painel', 'cardapio', 'entregas', 'configuracoes')) else (estado or '1')}#{rota}"
+    app = f"http://localhost:{porta}/{'painel' if painel else 'index'}.html?exemplo={'painel' if rota.startswith(('painel', 'cardapio', 'entregas', 'configuracoes', 'usuarios')) else (estado or '1')}#{rota}"
     if no_pc:
         cmd = ["--window-size=1440,900", f"--screenshot={png}", app]
     else:

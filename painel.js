@@ -4,14 +4,16 @@
   Cadastro do dono pelo próprio app (crença 38): cria a conta no Firebase
   Auth, a loja em lojas/{link} (o link é o id, então dois restaurantes não
   pegam o mesmo) e os dados privados em donos/{uid}.
+  Usuários do painel (usuarios.js): quem não é dono acha a loja por
+  acessos/{email}; quem entrou com a senha provisória cria a própria (P62).
 */
 
 import { db, auth } from "./firebase-init.js?v=3";
 import {
-  onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword,
+  onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword, updatePassword,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
 import {
-  doc, getDoc, setDoc, collection, query, where, limit, getDocs, serverTimestamp,
+  doc, getDoc, setDoc, updateDoc, onSnapshot, collection, query, where, limit, getDocs, serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
@@ -20,13 +22,16 @@ import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from 
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=4";
 import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=3";
 import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=3";
+import { iniciarUsuarios, pararUsuarios, mostrarUsuarios, fecharUsuarios } from "./usuarios.js?v=1";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 
 import { linkPublico } from "./links-cardapio.js?v=1";
 const $ = (id) => document.getElementById(id);
 const valor = (id) => $(id).value.trim();
-const STATE = { user: null, loja: null, passo: 1, ocupado: false, entrando: false };
+const STATE = { user: null, loja: null, passo: 1, ocupado: false, entrando: false, trocarSenha: false, pararAcesso: null };
+const emailDe = (user) => (user?.email || "").toLowerCase();
 const EXEMPLO_PAINEL = new URLSearchParams(location.search).get("exemplo") === "painel"; // pedidos das imagens, sem login e sem Firestore
+const EXEMPLO_SENHA = new URLSearchParams(location.search).get("exemplo") === "senha"; // a P62 / PD62, para conferir a tela
 
 /* ===== mensagens do Firebase em português ===== */
 function mensagemErro(err) {
@@ -36,6 +41,7 @@ function mensagemErro(err) {
   if (c === "auth/too-many-requests") return "Muitas tentativas. Espere alguns minutos e tente de novo.";
   if (c === "auth/email-already-in-use") return "Já existe uma conta com esse e-mail. Use Entrar.";
   if (c === "auth/network-request-failed") return "Sem conexão. Confira a internet e tente de novo.";
+  if (c === "auth/weak-password") return "Essa senha é fraca. Use pelo menos 8 caracteres.";
   if (c === "permission-denied") return "Esse link do cardápio já está em uso. Escolha outro.";
   return "Não deu certo. Tente de novo.";
 }
@@ -45,8 +51,11 @@ function irParaHash() {
   const partes = (location.hash.slice(1) || "entrar").split("/");
   let [tela, passo] = partes;
   let vista = "pedidos";
-  if (STATE.user || EXEMPLO_PAINEL) {
-    if (["cardapio", "entregas", "cupons", "configuracoes"].includes(tela)) vista = tela;
+  if (STATE.trocarSenha || EXEMPLO_SENHA) {
+    if (tela !== "senha") history.replaceState(null, "", "#senha");
+    tela = "senha";
+  } else if (STATE.user || EXEMPLO_PAINEL) {
+    if (["cardapio", "entregas", "cupons", "configuracoes", "usuarios"].includes(tela)) vista = tela;
     else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
   }
@@ -68,14 +77,18 @@ function irParaHash() {
   $("vista-entregas").hidden = vista !== "entregas";
   $("vista-configuracoes").hidden = vista !== "configuracoes";
   $("vista-cupons").hidden = vista !== "cupons";
-  document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista === vista));
+  $("vista-usuarios").hidden = vista !== "usuarios";
+  // no celular, Usuários abre pelos Ajustes e o item Ajustes fica marcado
+  document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista.split(" ").includes(vista)));
   if (vista !== "cardapio") fecharCardapio();
   if (vista !== "entregas") fecharEntregas();
   if (vista !== "cupons") fecharCupons();
+  if (vista !== "usuarios") fecharUsuarios();
   if (vista === "cardapio") mostrarCardapio(partes);
   else if (vista === "entregas") mostrarEntregas(partes);
   else if (vista === "configuracoes") mostrarConfiguracoes();
   else if (vista === "cupons") mostrarCupons(partes);
+  else if (vista === "usuarios") mostrarUsuarios(partes);
   else if (passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
@@ -199,27 +212,90 @@ $("tela-cadastro").addEventListener("submit", async (e) => {
 });
 
 /* ===== depois do login: tela de pedidos ===== */
+// O dono acha a loja pelo donoId; quem foi adicionado em Usuários, por acessos/{email}.
 async function abrirPainel(user) {
   const achadas = await getDocs(query(collection(db, "lojas"), where("donoId", "==", user.uid), limit(1)));
   STATE.loja = achadas.empty ? null : { id: achadas.docs[0].id, ...achadas.docs[0].data() };
+  let acesso = null;
+  try { const a = await getDoc(doc(db, "acessos", emailDe(user))); if (a.exists()) acesso = a.data(); }
+  catch { /* sem acesso gravado: segue como dono, ou sai abaixo */ }
+  if (!STATE.loja && acesso) {
+    const l = await getDoc(doc(db, "lojas", acesso.lojaId));
+    if (l.exists()) STATE.loja = { id: l.id, ...l.data() };
+  }
   if (!STATE.loja) { toast("Esta conta não tem restaurante ligado.", "erro", 5000); await signOut(auth); return; }
+  const dono = STATE.loja.donoId === user.uid;
+  document.querySelectorAll(".nome-loja").forEach((el) => (el.textContent = STATE.loja.nome || ""));
+  $("papel").textContent = dono ? "Você está como dono" : "Você está como equipe";
+  // o dono entra na lista de Usuários na primeira vez que abre o painel. Em try/catch
+  // separado: se falhar, o painel abre do mesmo jeito (antecipacao.md A9)
+  if (dono && !acesso) garantirAcessoDoDono(user).catch(() => {});
+  if (!dono) {
+    vigiarAcesso(user);
+    if (acesso.trocarSenha) { STATE.trocarSenha = true; irParaHash(); return; }
+  }
   iniciarPedidos(STATE.loja);
   iniciarCardapio(STATE.loja);
   iniciarEntregas(STATE.loja);
   iniciarConfiguracoes(STATE.loja);
   iniciarCupons(STATE.loja);
-  if (!/^#(painel|cardapio|entregas|cupons|configuracoes)/.test(location.hash)) location.hash = "#painel";
+  iniciarUsuarios(STATE.loja, { eu: emailDe(user) });
+  if (!/^#(painel|cardapio|entregas|cupons|configuracoes|usuarios)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
-document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", async () => {
-  pararPedidos();
-  pararCardapio();
-  pararEntregas();
-  pararConfiguracoes();
-  pararCupons();
+
+async function garantirAcessoDoDono(user) {
+  let nome = "";
+  try { nome = (await getDoc(doc(db, "donos", user.uid))).data()?.nome || ""; } catch { /* usa o e-mail */ }
+  await setDoc(doc(db, "acessos", emailDe(user)), {
+    lojaId: STATE.loja.id, nome: nome || emailDe(user).split("@")[0], email: emailDe(user),
+    dono: true, trocarSenha: false, criadoEm: serverTimestamp(),
+  });
+}
+
+// quem tirou o acesso desta pessoa em Usuários: o painel fecha na hora, mesmo aberto
+function vigiarAcesso(user) {
+  STATE.pararAcesso?.();
+  STATE.pararAcesso = onSnapshot(doc(db, "acessos", emailDe(user)), (snap) => {
+    if (!snap.exists() || snap.data().lojaId !== STATE.loja?.id) sair("Seu acesso a este restaurante foi retirado.");
+  }, () => {});
+}
+
+function pararTudo() {
+  STATE.pararAcesso?.();
+  STATE.pararAcesso = null;
+  pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); pararCupons(); pararUsuarios();
+}
+async function sair(aviso) {
+  pararTudo();
+  STATE.trocarSenha = false;
   await signOut(auth);
   location.hash = "#entrar";
-}));
+  if (aviso) toast(aviso, "erro", 6000);
+}
+document.querySelectorAll("[data-sair]").forEach((b) => b.addEventListener("click", () => sair()));
+
+/* ===== P62 / PD62 criar a senha no primeiro acesso ===== */
+$("tela-senha").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if ($("btn-senha").classList.contains("desligado")) return;
+  const senha = $("s-senha").value;
+  if (senha.length < 8) { toast("A senha precisa de pelo menos 8 caracteres.", "erro", 3500); return; }
+  if (senha !== $("s-senha2").value) { toast("As duas senhas não são iguais.", "erro", 3500); return; }
+  $("btn-senha").classList.add("desligado");
+  try {
+    await updatePassword(auth.currentUser, senha);
+    await updateDoc(doc(db, "acessos", emailDe(auth.currentUser)), { trocarSenha: false });
+    STATE.trocarSenha = false;
+    $("s-senha").value = $("s-senha2").value = "";
+    toast("Senha criada. Bem-vindo ao painel.", "sucesso", 4000);
+    await abrirPainel(auth.currentUser);
+  } catch (err) {
+    // sessão aberta há muito tempo: o Firebase pede para entrar de novo antes de trocar a senha
+    if (err?.code === "auth/requires-recent-login") await sair("Por segurança, entre de novo com a senha provisória.");
+    else toast(mensagemErro(err), "erro", 4500);
+  } finally { $("btn-senha").classList.remove("desligado"); }
+});
 
 // se o Firebase demorar a responder (rede lenta), mostra a entrada em vez de tela vazia
 setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash(); }, 1500);
@@ -228,6 +304,14 @@ if (EXEMPLO_PAINEL) {
   iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
   iniciarCardapio({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CATEGORIAS });
   iniciarCupons({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CUPONS_EXEMPLO });
+  // pessoas das imagens PD60 e P60 (fictícias, o repositório é público)
+  const dia = (d) => new Date(2026, 9, d, 10);
+  iniciarUsuarios({ id: "exemplo", nome: "Nome do Restaurante" }, { eu: "dono@restaurante.com", exemplo: [
+    { email: "dono@restaurante.com", nome: "Nome Sobrenome", dono: true, trocarSenha: false, criadoEm: dia(15) },
+    { email: "ana@restaurante.com", nome: "Ana Souza", dono: false, trocarSenha: false, criadoEm: dia(16) },
+    { email: "bruno@restaurante.com", nome: "Bruno Lima", dono: false, trocarSenha: false, criadoEm: dia(18) },
+    { email: "carla@restaurante.com", nome: "Carla Dias", dono: false, trocarSenha: true, criadoEm: dia(20) },
+  ] });
   iniciarEntregas({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: {
     loja: { bairro: LOJA_EXEMPLO.bairro, cidade: LOJA_EXEMPLO.cidade, local: LOJA_EXEMPLO.local, entrega: LOJA_EXEMPLO.entrega, endereco: "Rua do Exemplo, 100" },
     bairros: BAIRROS_EXEMPLO } });
@@ -242,9 +326,11 @@ if (EXEMPLO_PAINEL) {
   onAuthStateChanged(auth, async (user) => {
     STATE.user = user;
     if (user && !STATE.ocupado) await abrirPainel(user);
-    else { pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); pararCupons(); irParaHash(); }
+    else { pararTudo(); STATE.trocarSenha = false; irParaHash(); }
   });
 }
+
+if (EXEMPLO_SENHA) document.querySelectorAll(".nome-loja").forEach((el) => (el.textContent = "Nome do Restaurante"));
 
 // ?exemplo=1 preenche os campos como nas imagens validadas (para conferir a tela)
 if (new URLSearchParams(location.search).has("exemplo")) {
