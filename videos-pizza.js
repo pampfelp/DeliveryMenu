@@ -1,22 +1,22 @@
-// Mídias publicadas da Casa Jambu, vinculadas aos ids conferidos no Firestore.
-const SABORES = new Set([
-  "mussarela", "frango", "mista", "calabresa", "portuguesa-especial",
-  "palmito-especial", "suprema", "camarao-cremoso", "jambu-amazonico", "marajoara",
-]);
-
-export function videoDaPizza(lojaId, itemId) {
-  return lojaId === "casa-jambu-delivery" && SABORES.has(itemId)
-    ? `./midias/casa-jambu/${itemId}.mp4?v=1` : "";
-}
+import { carregarVideo } from "./midias-video.js?v=2";
 
 const reduzirMovimento = matchMedia("(prefers-reduced-motion: reduce)");
 let observados = new Set();
+let visiveis = new WeakSet();
 const automatico = () => !reduzirMovimento.matches && !navigator.connection?.saveData && !document.hidden;
 const ativo = (video) => video.closest(".tela")?.classList.contains("ativa");
+async function preparar(video) {
+  if (video.dataset.src && !video.getAttribute("src")) {
+    const src = await carregarVideo(video.dataset.src, video.hasAttribute("data-video-remoto"));
+    if (video.isConnected) video.src = src;
+  }
+}
 const observador = new IntersectionObserver((entradas) => {
-  entradas.forEach(({ target: video, isIntersecting }) => {
+  entradas.forEach(async ({ target: video, isIntersecting }) => {
+    if (isIntersecting) visiveis.add(video); else visiveis.delete(video);
     if (!isIntersecting || !ativo(video) || !automatico() || video.dataset.pausado === "true") { video.pause(); return; }
-    if (video.dataset.src && !video.getAttribute("src")) video.src = video.dataset.src;
+    try { await preparar(video); } catch { if (video.isConnected) video.dispatchEvent(new Event("error")); return; }
+    if (!video.isConnected || !visiveis.has(video) || !ativo(video) || !automatico() || video.dataset.pausado === "true") return;
     if (video.ended) video.currentTime = 0;
     video.play().catch(() => { /* autoplay bloqueado: a foto continua visível */ });
   });
@@ -24,6 +24,7 @@ const observador = new IntersectionObserver((entradas) => {
 
 export function sincronizarVideos() {
   observador.disconnect();
+  visiveis = new WeakSet();
   const atuais = new Set(document.querySelectorAll("video[data-video-pizza]"));
   observados.forEach((video) => {
     if (!atuais.has(video)) {
@@ -40,6 +41,8 @@ export function sincronizarVideos() {
         video.parentElement.classList.remove("video-pronto");
         video.hidden = true;
       });
+      // Abrir o produto permite carregar seu arquivo também para reprodução manual.
+      if (video.hasAttribute("data-video-detalhe")) preparar(video).catch(() => video.dispatchEvent(new Event("error")));
     }
     if (!video.hidden) observador.observe(video);
   });
@@ -47,4 +50,5 @@ export function sincronizarVideos() {
 }
 
 document.addEventListener("visibilitychange", sincronizarVideos);
-reduzirMovimento.addEventListener("change", sincronizarVideos);
+if (reduzirMovimento.addEventListener) reduzirMovimento.addEventListener("change", sincronizarVideos);
+else reduzirMovimento.addListener(sincronizarVideos);

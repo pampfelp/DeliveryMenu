@@ -12,7 +12,7 @@
   Endereços: #entregas, #entregas/bairro/<id|novo>, #entregas/ponto, #entregas/regra (celular).
 */
 
-import { db } from "./firebase-init.js?v=2";
+import { db } from "./firebase-init.js?v=3";
 import { collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";

@@ -7,27 +7,27 @@
   feitos ficam no aparelho (localStorage); a sacola é separada por loja.
 */
 
-import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
+import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=5";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=7";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 import { chavePedido } from "./ficha-cliente.js?v=1";
-import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=3";
+import { sincronizarVideos } from "./videos-pizza.js?v=5";
+import { videoDoItem } from "./midias-video.js?v=2";
 
+async function iniciarCardapio() {
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const EXEMPLO = new URLSearchParams(location.search).has("exemplo");
 const semAcento = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
 
-let DADOS;
-try { DADOS = await carregarLoja(); } catch { DADOS = undefined; }
+const DADOS = await carregarLoja();
 if (!DADOS) {
-  document.getElementById("app").innerHTML = `<p class="nao-achou">${DADOS === null
-    ? "Não encontramos este cardápio. Confira o link com o restaurante."
-    : "Não deu para abrir o cardápio. Confira a internet e tente de novo."}</p>`;
-  await new Promise(() => {}); // para aqui sem erro: não há loja para montar
+  const erro = new Error("Cardápio não encontrado.");
+  erro.code = "cardapio-nao-encontrado";
+  throw erro;
 }
 const { LOJA, CATEGORIAS, SUGESTOES } = DADOS;
 // o bairro do próprio restaurante sempre está na lista de entrega
@@ -45,9 +45,9 @@ const foto = (url, classe = "foto") =>
   url ? `<img class="${classe}" src="${esc(url)}" alt="" loading="lazy" />` : `<div class="${classe}"><i data-ic="foto"></i></div>`;
 
 function midiaPizza(i, detalhe = false) {
-  const url = videoDaPizza(LOJA.id, i.id);
+  const { url, remoto } = videoDoItem(LOJA.id, i);
   if (!url) return detalhe ? (i.fotoUrl ? `<img src="${esc(i.fotoUrl)}" alt="" />` : `<i data-ic="foto"></i>`) : foto(i.fotoUrl);
-  const video = `<video data-video-pizza ${detalhe ? `src="${esc(url)}" controls aria-label="Vídeo de ${esc(i.nome)}"` : `data-src="${esc(url)}" aria-hidden="true" tabindex="-1"`}
+  const video = `<video data-video-pizza ${remoto ? "data-video-remoto" : ""} data-src="${esc(url)}" ${detalhe ? `data-video-detalhe controls aria-label="Vídeo de ${esc(i.nome)}"` : `aria-hidden="true" tabindex="-1"`}
     muted loop playsinline preload="none" poster="${esc(i.fotoUrl)}"></video>`;
   return `<div class="${detalhe ? "midia-hero" : "foto midia-pizza"}">${foto(i.fotoUrl, "")}${video}</div>`;
 }
@@ -191,7 +191,8 @@ function irParaHash() {
   sincronizarVideos();
 }
 window.addEventListener("hashchange", irParaHash);
-pc.addEventListener("change", irParaHash);
+if (pc.addEventListener) pc.addEventListener("change", irParaHash);
+else pc.addListener(irParaHash);
 
 /* ===== S01 início ===== */
 function renderInicio() {
@@ -350,7 +351,7 @@ function abrirProduto(id, uid) {
     item: i,
     uid: linha ? uid : null,
     qtd: linha ? linha.qtd : 1,
-    escolhas: linha ? structuredClone(linha.escolhas) : {},
+    escolhas: linha ? JSON.parse(JSON.stringify(linha.escolhas)) : {},
     obs: linha ? linha.obs : "",
   };
   // editando pela sacola do celular, fechar volta para a sacola
@@ -439,7 +440,7 @@ document.getElementById("btn-adicionar").addEventListener("click", () => {
   const { item: i, escolhas, qtd, obs, uid } = STATE.produto;
   const faltando = i.grupos.find((g) => Object.values(escolhas[g.id] || {}).reduce((s, n) => s + n, 0) < g.min);
   if (faltando) { toast(`Escolha ${faltando.nome.toLowerCase()} para continuar.`, "erro", 3500); return; }
-  const linha = { uid: uid || crypto.randomUUID(), itemId: i.id, qtd, escolhas, obs };
+  const linha = { uid: uid || gerarId(), itemId: i.id, qtd, escolhas, obs };
   const pos = STATE.sacola.findIndex((l) => l.uid === uid);
   if (pos >= 0) STATE.sacola[pos] = linha; else STATE.sacola.push(linha);
   STATE.produto.salvo = true;
@@ -886,7 +887,7 @@ async function enviarPedido() {
   STATE.enviando = true;
   marcarEnviar();
   try {
-    const { db } = await import("./firebase-init.js?v=2");
+    const { db } = await import("./firebase-init.js?v=3");
     const { collection, addDoc, serverTimestamp } = await import(FIRESTORE);
     const ref = await addDoc(collection(db, "lojas", LOJA.id, "pedidosEntrada"), { ...pedido, criadoEm: serverTimestamp() });
     try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([ref.id, ...meusPedidos()].slice(0, 20))); } catch { /* sem armazenamento */ }
@@ -916,7 +917,7 @@ async function acompanhar(id) {
     if (p) renderAcompanhar(p); else location.replace("#inicio");
     return;
   }
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, onSnapshot } = await import(FIRESTORE);
   const vivo = { entrada: undefined, aceito: undefined, viu: false };
   const mostrar = () => {
@@ -1083,7 +1084,7 @@ function pedidosExemplo() {
 // ficha do cliente pelo número (ficha-cliente.js): o nome e o resumo dos pedidos, sem endereço
 async function lerFicha(telefone) {
   if (!SLUG || !/^\d{10,11}$/.test(telefone || "")) return null;
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, getDoc } = await import(FIRESTORE);
   const snap = await getDoc(doc(db, "lojas", LOJA.id, "clientes", telefone));
   return snap.exists() ? snap.data() : null;
@@ -1092,7 +1093,7 @@ async function lerFicha(telefone) {
 async function lerPedidos() {
   if (!SLUG) return EXEMPLO ? pedidosExemplo() : STATE.exemploPedido ? [STATE.exemploPedido] : [];
   const ids = meusPedidos();
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, getDoc } = await import(FIRESTORE);
   const [lidos, ficha] = await Promise.all([
     Promise.all(ids.map(async (id) => {
@@ -1179,7 +1180,7 @@ function htmlCupom() {
 }
 async function buscarCupom(codigo) {
   if (!SLUG) return CUPONS_EXEMPLO.find((c) => c.codigo === codigo) || null;
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, getDoc } = await import(FIRESTORE);
   const snap = await getDoc(doc(db, "lojas", LOJA.id, "cupons", codigo));
   return snap.exists() ? { codigo, ...snap.data() } : null;
@@ -1261,7 +1262,7 @@ setInterval(atualizarAberta, 60000); // o horário vira sozinho, sem recarregar
 /* loja real: abrir e fechar no painel chega aqui na hora */
 async function vigiarLoja() {
   if (!SLUG) return;
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, onSnapshot } = await import(FIRESTORE);
   onSnapshot(doc(db, "lojas", SLUG), (snap) => {
     if (!snap.exists()) return;
@@ -1278,10 +1279,13 @@ if (EXEMPLO) [["f-cep", "66000-000"], ["f-rua", "Travessa das Flores"], ["f-num"
   .forEach(([id, v]) => (document.getElementById(id).value = v));
 preencherEnderecoGuardado();
 STATE.cupom = lerCupomGuardado();
-vigiarLoja();
+vigiarLoja().catch(() => { /* mantém os dados já carregados se a conexão cair */ });
 recalcularAberta();
 renderInicio();
 renderEntrega();
 renderTipo();
 irParaHash();
 document.getElementById("carregando").remove();
+}
+
+export const pronto = iniciarCardapio();

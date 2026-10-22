@@ -1,8 +1,8 @@
 /*
   Inicialização do Firestore — padrão consolidado (ver padroes/arquitetura.md).
-  SDK modular via CDN gstatic, sem npm/bundler. Persistência offline ligada
-  por padrão (persistentLocalCache) — se o projeto não precisar funcionar
-  sem sinal, isso não atrapalha, só não é usado.
+  SDK modular via CDN gstatic, sem npm/bundler. O painel mantém cache
+  persistente; o cardápio público usa memória para abrir também quando
+  o navegador restringe o IndexedDB.
 
   A config abaixo (apiKey, projectId, etc.) NÃO é segredo — é a config
   pública do Firebase Web SDK, pode ir pro repositório/GitHub Pages sem
@@ -12,6 +12,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-app.js";
 import {
   initializeFirestore,
+  memoryLocalCache,
   persistentLocalCache,
   persistentSingleTabManager,
   connectFirestoreEmulator,
@@ -31,7 +32,9 @@ export const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 
 export const db = initializeFirestore(app, {
-  localCache: persistentLocalCache({ tabManager: persistentSingleTabManager() }),
+  localCache: /\/painel\.html$/.test(location.pathname)
+    ? persistentLocalCache({ tabManager: persistentSingleTabManager() })
+    : memoryLocalCache(),
 });
 
 // auth só é usado de fato se o projeto precisar de Firebase Auth real (ver

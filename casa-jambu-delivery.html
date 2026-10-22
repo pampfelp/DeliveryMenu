@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-loja="casa-jambu-delivery">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Casa Jambu | Cardápio</title>
+<meta name="description" content="Veja os sabores e faça seu pedido na Casa Jambu." />
+<link rel="canonical" href="https://pampfelp.github.io/DeliveryMenu/casa-jambu-delivery.html" />
+<meta property="og:type" content="website" />
+<meta property="og:locale" content="pt_BR" />
+<meta property="og:site_name" content="Casa Jambu" />
+<meta property="og:title" content="Casa Jambu | Cardápio" />
+<meta property="og:description" content="Veja os sabores e faça seu pedido na Casa Jambu." />
+<meta property="og:url" content="https://pampfelp.github.io/DeliveryMenu/casa-jambu-delivery.html" />
+<meta property="og:image" content="https://pampfelp.github.io/DeliveryMenu/midias/casa-jambu/logo-compartilhar.jpg?v=1" />
+<meta property="og:image:type" content="image/jpeg" />
+<meta property="og:image:width" content="600" />
+<meta property="og:image:height" content="600" />
+<meta property="og:image:alt" content="Logo da Pizzaria Casa Jambu" />
+<meta name="twitter:card" content="summary" />
+<meta name="twitter:title" content="Casa Jambu | Cardápio" />
+<meta name="twitter:image" content="https://pampfelp.github.io/DeliveryMenu/midias/casa-jambu/logo-compartilhar.jpg?v=1" />
+
+<link rel="manifest" href="./manifest.json" />
+<meta name="theme-color" content="#991b1b" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
+<link rel="stylesheet" href="./tokens.css?v=1" />
+<link rel="stylesheet" href="./loja.css?v=26" />
+</head>
+<body>
+<div id="app">
+  <p class="carregando" id="carregando">Abrindo o cardápio...</p>
+
+  <!-- S01 / D01 Início -->
+  <section class="tela" id="tela-inicio">
+    <div class="banner-loja" id="banner-loja" hidden></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <header class="cabeca">
+          <div class="faixa"></div>
+          <div class="logo foto" id="loja-logo"></div>
+          <div class="cabeca-txt">
+            <h1 class="loja-nome"></h1>
+            <div class="meta">
+              <div class="linha-info"><i data-ic="pino"></i><span id="loja-cidade"></span><span class="ponto">•</span><button type="button" data-info>Mais informações</button></div>
+              <div class="situacao" id="loja-situacao"></div>
+            </div>
+          </div>
+        </header>
+        <div class="aviso-fechada" hidden><i data-ic="relogio"></i><span><b>Não estamos recebendo pedidos agora</b>Você pode olhar o cardápio e montar a sacola. O envio volta quando o restaurante abrir.</span></div>
+        <div class="vazio-cardapio" id="vazio-cardapio" hidden>O cardápio deste restaurante ainda está sendo montado.</div>
+        <button class="linha-taxa so-cel" data-calcular></button>
+        <div class="filtros">
+          <label class="sel"><span>Categorias</span><i data-ic="baixo"></i><select id="cat-sel" aria-label="Ir para a categoria"></select></label>
+          <label class="lupa" aria-label="Buscar"><i data-ic="busca"></i><input id="busca" type="search" placeholder="Buscar no cardápio" /></label>
+        </div>
+        <div id="resultado-busca"></div>
+        <div id="cardapio">
+          <h2 class="secao">Destaques</h2>
+          <div class="faixa-h" id="destaques"></div>
+          <div id="categorias"></div>
+        </div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+    <a class="barra-sacola" href="#sacola"><span class="qtd"><i data-ic="sacola"></i><span id="barra-qtd"></span></span><span class="rotulo">Ver sacola</span><strong id="barra-total"></strong></a>
+  </section>
+
+  <!-- S04 / D04 Produto -->
+  <section class="tela" id="tela-produto">
+    <div class="hero-col"><div class="hero foto" id="produto-foto"><i data-ic="foto"></i></div></div>
+    <a class="x" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a>
+    <div class="produto-det">
+      <div class="cab-det so-pc"><h2>Detalhes do produto</h2></div>
+      <div class="rolagem">
+        <div class="info" id="produto-info"></div>
+        <div id="produto-grupos"></div>
+        <div class="obs"><label for="obs">Alguma observação?</label><textarea id="obs" placeholder="Ex.: sem cebola, molho à parte"></textarea></div>
+      </div>
+      <div class="rodape">
+        <div class="qtd"><button class="menos" id="qtd-menos" aria-label="Menos"><i data-ic="menos"></i></button><b id="qtd-valor">1</b><button id="qtd-mais" aria-label="Mais"><i data-ic="mais"></i></button></div>
+        <button class="btn" id="btn-adicionar"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- S08 Sacola (no computador, a sacola é a coluna do início) -->
+  <section class="tela" id="tela-sacola">
+    <div class="topo"><h1 class="loja-nome"></h1><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
+    <button class="linha-taxa" data-calcular></button>
+    <div class="cab"><h2>Sua sacola</h2><button data-limpar>LIMPAR</button></div>
+    <div id="sacola-itens"></div>
+    <a class="mais-itens" href="#inicio">ADICIONAR MAIS ITENS</a>
+    <div id="sacola-sugestoes">
+      <h3 class="sug-t">Peça também</h3>
+      <div class="sug" id="sugestoes"></div>
+    </div>
+    <div class="totais">
+      <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
+      <div class="tl desc" data-desc-linha hidden><span data-desc-nome></span><span data-desc></span></div>
+      <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
+      <div class="tl total"><span>Total</span><span data-total></span></div>
+      <div data-cupom-linha></div>
+      <a class="btn" href="#entrega" data-continuar>Continuar pedido</a>
+    </div>
+  </section>
+
+  <!-- S09 / D09 Seus dados (pula quando já estão guardados no aparelho) -->
+  <section class="tela checkout" id="tela-dados">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Seus dados</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <h2>Para o restaurante falar com você</h2>
+          <p class="sub">Só usamos para avisar sobre este pedido.</p>
+          <div class="dados-grade">
+            <div class="campo"><label for="c-nome">Nome <i class="obrig">*</i></label><div class="in"><i data-ic="user"></i><input id="c-nome" maxlength="80" autocomplete="name" /></div></div>
+            <div class="campo"><label for="c-fone">WhatsApp <i class="obrig">*</i></label><div class="in"><i data-ic="fone"></i><input id="c-fone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div>
+              <p class="ajuda">Com DDD. O restaurante chama aqui se precisar.</p></div>
+          </div>
+        </div>
+        <div class="guardar"><i data-ic="info"></i><span>Fica guardado neste aparelho. No próximo pedido você não precisa digitar de novo.</span></div>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Continuar" data-destino="#entrega"></aside>
+    </div>
+    <div class="rodape so-cel"><a class="btn" href="#entrega">Continuar</a></div>
+  </section>
+
+  <!-- S12 / D12 Entrega -->
+  <section class="tela checkout" id="tela-entrega">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#sacola" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Como receber</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <h2>Como você quer receber o pedido?</h2>
+          <div class="tipos" id="tipos">
+            <button data-tipo="entrega"><i data-ic="entrega"></i>Entrega</button>
+            <button data-tipo="retirada"><i data-ic="loja"></i>Retirada</button>
+            <button data-tipo="local"><i data-ic="mesa"></i>No local</button>
+          </div>
+        </div>
+        <div class="bloco so-entrega">
+          <h2>Endereço de entrega</h2>
+          <div class="end-grade">
+            <div class="campo a-cep"><label for="f-cep">CEP</label><div class="cep"><input id="f-cep" inputmode="numeric" placeholder="00000-000" /><button class="so-cel" data-cep>Buscar CEP</button></div></div>
+            <div class="campo a-rua"><label for="f-rua">Rua <i class="obrig">*</i></label><input id="f-rua" maxlength="120" autocomplete="address-line1" /></div>
+            <div class="campo a-num"><label for="f-num">Número <i class="obrig">*</i></label><input id="f-num" maxlength="10" /></div>
+            <div class="campo a-bairro"><label for="f-bairro">Bairro <i class="obrig">*</i></label><div class="combo"><input id="f-bairro" maxlength="60" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="lista-bairros" /><i data-ic="baixo" class="combo-seta"></i><ul id="lista-bairros" class="combo-lista" role="listbox" hidden></ul></div></div>
+            <div class="campo a-compl"><label for="f-compl"><span class="so-cel">Compl.</span><span class="so-pc">Complemento</span></label><input id="f-compl" maxlength="60" placeholder="Apto" /></div>
+            <div class="campo a-ref"><label for="f-ref">Ponto de referência <i class="obrig">*</i></label><input id="f-ref" maxlength="120" /></div>
+            <div class="a-loc acoes-end"><button class="loc" data-localizacao><i data-ic="alvo"></i>Usar minha localização</button><button class="loc so-pc" data-cep>Buscar pelo CEP</button></div>
+          </div>
+        </div>
+        <div class="resultado so-entrega"></div>
+        <button class="agendar"><i data-ic="agenda"></i><span>Agendar pedido<small>Receber agora ou escolher um horário</small></span><i data-ic="direita" class="seta"></i></button>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Continuar" data-destino="#pagamento"></aside>
+    </div>
+    <div class="rodape so-cel"><a class="btn" href="#pagamento">Continuar</a></div>
+  </section>
+
+  <!-- S14 / D14 Pagamento -->
+  <section class="tela checkout" id="tela-pagamento">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#entrega" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Pagamento</h1></div>
+    <div class="check-grade">
+      <div class="check-main">
+        <div class="bloco">
+          <h2 id="titulo-na-entrega" hidden>Pagar na entrega</h2>
+          <div class="abas" id="abas-pagamento"><button data-aba="online">Pagar online</button><button data-aba="entrega">Pagar na entrega</button></div>
+          <div class="formas" id="formas"></div>
+        </div>
+        <div class="bloco resumo so-cel">
+          <div class="tl"><span>Subtotal</span><span data-subtotal></span></div>
+          <div class="tl desc" data-desc-linha hidden><span data-desc-nome></span><span data-desc></span></div>
+          <div class="tl"><span>Taxa de entrega</span><span data-taxa></span></div>
+          <div class="tl total"><span>Total</span><span data-total></span></div>
+        </div>
+        <div class="entrega-resumo so-pc" id="entrega-resumo"></div>
+      </div>
+      <aside class="resumo-lateral so-pc" data-resumo="Revisar pedido" data-destino="#revisar"></aside>
+    </div>
+    <div class="rodape so-cel"><a class="btn" href="#revisar">Revisar pedido</a></div>
+  </section>
+
+  <!-- S15 / D15 Revisar e enviar -->
+  <section class="tela checkout" id="tela-revisar">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo"><a href="#pagamento" aria-label="Voltar"><i data-ic="esquerda"></i></a><h1>Revisar pedido</h1></div>
+    <div class="check-grade">
+      <div class="check-main" id="revisar-main"></div>
+      <aside class="resumo-lateral revisar-lado so-pc" id="revisar-lado"></aside>
+    </div>
+    <div class="rodape so-cel"><button class="btn enviar" data-enviar></button></div>
+  </section>
+
+  <!-- S16 a S18 / D16 a D18 Acompanhar o pedido: #pedido/<id> -->
+  <section class="tela" id="tela-pedido">
+    <div class="faixa-fina so-pc"><div class="dentro"><span class="mini foto"></span><span class="loja-nome"></span></div></div>
+    <div class="topo-x so-cel"><a class="fechar" href="#inicio" aria-label="Fechar"><i data-ic="x"></i></a></div>
+    <div class="cartao-ok" id="acompanhar"></div>
+  </section>
+
+  <!-- S21 / D21 Promoções -->
+  <section class="tela pagina" id="tela-promocoes">
+    <div class="topo so-cel"><h1>Promoções</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Promoções</h1>
+        <p class="pag-s">Itens com preço de oferta agora.</p>
+        <div id="promocoes"></div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+  </section>
+
+  <!-- S22 / D22 Pedidos feitos neste aparelho -->
+  <section class="tela pagina" id="tela-pedidos">
+    <div class="topo so-cel"><h1>Pedidos</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Pedidos</h1>
+        <p class="pag-s">Os pedidos feitos com o seu número.</p>
+        <div id="lista-pedidos"></div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+  </section>
+
+  <!-- S23 / D23 Perfil: os dados guardados no aparelho -->
+  <section class="tela pagina" id="tela-perfil">
+    <div class="topo so-cel"><h1>Perfil</h1></div>
+    <div class="inicio-grade">
+      <div class="inicio-main">
+        <h1 class="pag-t so-pc">Perfil</h1>
+        <p class="pag-s so-pc">Não há conta nem senha: estes dados ficam só neste computador.</p>
+        <div class="perfil-grade">
+          <div class="cartao-p">
+            <h2>Seus dados</h2>
+            <p class="sub">Vão junto com o pedido, para o restaurante falar com você.</p>
+            <div class="campo"><label for="p-nome">Nome</label><div class="in"><i data-ic="user"></i><input id="p-nome" maxlength="80" autocomplete="name" /></div></div>
+            <div class="campo"><label for="p-fone">WhatsApp</label><div class="in"><i data-ic="fone"></i><input id="p-fone" type="tel" inputmode="numeric" autocomplete="tel" placeholder="(00) 00000-0000" /></div></div>
+            <button type="button" class="btn so-pc" data-salvar-perfil>Salvar</button>
+          </div>
+          <div class="cartao-p">
+            <h2>Endereço de entrega</h2>
+            <p class="sub">O último que você usou. Vem preenchido no próximo pedido.</p>
+            <div id="perfil-endereco"></div>
+          </div>
+        </div>
+        <div class="perfil-pe">
+          <p class="guardar-p"><i data-ic="info"></i><span class="so-cel">Não há conta nem senha: estes dados ficam só neste aparelho.</span><span class="so-pc">Para pedir em outro aparelho, digite os dados de novo lá.</span></p>
+          <button type="button" class="apagar" data-apagar-dados>Apagar meus dados deste <span class="so-cel">aparelho</span><span class="so-pc">computador</span></button>
+        </div>
+      </div>
+      <aside class="sacola-lateral so-pc"></aside>
+    </div>
+    <div class="salvar-perfil so-cel"><button type="button" class="btn" data-salvar-perfil>Salvar</button></div>
+  </section>
+
+  <!-- S20 / D20 Mais informações: folha no celular, janela no computador -->
+  <div class="info-loja" id="info-loja" hidden>
+    <div class="escuro" data-fechar-info></div>
+    <div class="janela-info" role="dialog" aria-modal="true" aria-labelledby="info-titulo">
+      <div class="alca so-cel"></div>
+      <div class="cab-j"><h2 id="info-titulo" class="loja-nome"></h2><button type="button" class="fechar" data-fechar-info aria-label="Fechar"><i data-ic="x"></i></button></div>
+      <div class="corpo-j" id="info-corpo"></div>
+      <div class="rodape-j" id="info-rodape"></div>
+    </div>
+  </div>
+
+  <!-- S24 / D24 Cupom: folha no celular, janela no computador -->
+  <div class="info-loja" id="cupom-janela" hidden>
+    <div class="escuro" data-fechar-cupom></div>
+    <div class="janela-info janela-cupom" role="dialog" aria-modal="true" aria-labelledby="cupom-titulo">
+      <div class="alca so-cel"></div>
+      <div class="cab-j"><h2 id="cupom-titulo">Cupom de desconto</h2><button type="button" class="fechar" data-fechar-cupom aria-label="Fechar"><i data-ic="x"></i></button></div>
+      <div class="corpo-j">
+        <label class="rot-i" for="cupom-codigo">Código do cupom</label>
+        <div class="fila-cupom"><input id="cupom-codigo" maxlength="20" autocomplete="off" autocapitalize="characters" spellcheck="false" /><button type="button" class="btn" data-aplicar-cupom>Aplicar</button></div>
+        <p class="ajuda-cupom">O desconto vale sobre os itens, não sobre a taxa de entrega.</p>
+        <div class="erro-cupom" id="cupom-erro" hidden></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="nav">
+    <a href="#inicio" data-aba="inicio" class="on"><i data-ic="home"></i>Início</a><a href="#promocoes" data-aba="promocoes"><i data-ic="promo"></i>Promoções</a><a href="#pedidos" data-aba="pedidos"><i data-ic="sacola"></i>Pedidos</a><a href="#perfil" data-aba="perfil"><i data-ic="user"></i>Perfil</a>
+  </nav>
+</div>
+
+<script defer src="./abrir-cardapio.js?v=1"></script>
+</body>
+</html>

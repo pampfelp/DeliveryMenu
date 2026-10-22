@@ -8,14 +8,21 @@
   Formato no Firestore (o editor de cardápio do painel vai gravar assim):
     categorias/{id}  nome, ordem
     itens/{id}       categoriaId, nome, descricao, preco, precoPromo, selo,
-                     destaque, esgotado, fotoUrl, grupos[], ordem
+                     destaque, esgotado, fotoUrl, videoUrl, videoArquivo, grupos[], ordem
     bairros/{id}     nome, lat, lng
 */
 
 import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=7";
 import { regraDe } from "./conta-entrega.js?v=1";
 
-export const SLUG = new URLSearchParams(location.search).get("loja");
+export const SLUG = document.documentElement.dataset.loja || new URLSearchParams(location.search).get("loja");
+if (SLUG === "casa-jambu-delivery" && !document.documentElement.dataset.loja) {
+  const entrada = new URL("./casa-jambu-delivery.html", location.href);
+  entrada.search = location.search;
+  entrada.searchParams.delete("loja");
+  entrada.hash = location.hash;
+  history.replaceState(null, "", entrada);
+}
 
 export async function carregarLoja() {
   // loja de exemplo; ?exemplo=fechada e ?exemplo=na-entrega mostram os estados das imagens S01b e S14b
@@ -31,7 +38,7 @@ export async function carregarLoja() {
     },
   };
 
-  const { db } = await import("./firebase-init.js?v=2");
+  const { db } = await import("./firebase-init.js?v=3");
   const { doc, getDoc, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
   const lojaSnap = await getDoc(doc(db, "lojas", SLUG));
   if (!lojaSnap.exists()) return null;

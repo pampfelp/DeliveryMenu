@@ -6,7 +6,7 @@
   pegam o mesmo) e os dados privados em donos/{uid}.
 */
 
-import { db, auth } from "./firebase-init.js?v=2";
+import { db, auth } from "./firebase-init.js?v=3";
 import {
   onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, createUserWithEmailAndPassword,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
@@ -15,14 +15,14 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=7";
-import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=2";
-import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=3";
-import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=1";
-import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=2";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=8";
+import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=4";
+import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=4";
+import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=3";
+import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=3";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 
-const BASE_LOJA = "pampfelp.github.io/DeliveryMenu/?loja=";
+import { linkPublico } from "./links-cardapio.js?v=1";
 const $ = (id) => document.getElementById(id);
 const valor = (id) => $(id).value.trim();
 const STATE = { user: null, loja: null, passo: 1, ocupado: false, entrando: false };
@@ -128,7 +128,7 @@ const virarLink = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLo
 let linkEditado = false;
 $("c-loja").addEventListener("input", () => { if (!linkEditado) $("c-slug").value = virarLink(valor("c-loja")); mostrarLink(); });
 $("c-slug").addEventListener("input", (e) => { linkEditado = true; e.target.value = virarLink(e.target.value) + (e.target.value.endsWith("-") ? "-" : ""); mostrarLink(); });
-const mostrarLink = () => ($("c-link").textContent = BASE_LOJA + (valor("c-slug") || "nome-do-restaurante"));
+const mostrarLink = () => ($("c-link").textContent = linkPublico(valor("c-slug") || "nome-do-restaurante").replace("https://", ""));
 
 const emailValido = (t) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(t);
 function passo1Valido(avisar = true) {

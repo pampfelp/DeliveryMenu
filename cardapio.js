@@ -4,21 +4,26 @@
   Grava no formato que a loja lê (loja-dados.js):
     lojas/{loja}/categorias/{id}  nome, ordem
     lojas/{loja}/itens/{id}       categoriaId, nome, descricao, preco, precoPromo, selo,
-                                  destaque, esgotado, fotoUrl, grupos[], ordem
+                                  destaque, esgotado, fotoUrl, videoUrl, videoArquivo, grupos[], ordem
   Dinheiro em centavos. A foto é reduzida no navegador e vai no próprio item
   (o PLANO proíbe Firebase Storage). No modo exemplo (?exemplo=painel) tudo
   muda só na tela e nada é gravado.
+  Vídeos escolhidos no aparelho vão ao Drive pelo serviço autenticado;
+  o item guarda só a referência, nunca o vídeo em base64 no Firestore.
 
   Endereços: #cardapio, #cardapio/item/<id|novo>, #cardapio/item/<id>/grupo/<n|novo>,
   #cardapio/categorias (celular), #cardapio/categoria/<id|nova>.
 */
 
-import { db } from "./firebase-init.js?v=2";
+import { db } from "./firebase-init.js?v=3";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, writeBatch,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
+import { linkCardapio } from "./links-cardapio.js?v=1";
+import { videoDoItem, carregarVideo } from "./midias-video.js?v=2";
+import { validarVideo, enviarVideo } from "./midias-upload.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const reais = (c) => fmtMoeda((c || 0) / 100);
@@ -29,6 +34,12 @@ const REGRAS = { soma: "A soma", maior: "O maior preço", media: "A média", men
 const REGRA_TEXTO = { soma: "soma os preços", maior: "cobra o maior preço", media: "cobra a média", menor: "cobra o menor" };
 
 const C = { loja: null, exemplo: false, carregou: false, cats: [], itens: [], cat: null, busca: "", rascunho: null, grupo: null, janela: null, parar: [], avisou: false };
+let videoPendente = null, videoPrevia = "", salvandoItem = false;
+const previasExemplo = new Set();
+function limparVideoPendente() {
+  if (videoPrevia && !previasExemplo.has(videoPrevia)) URL.revokeObjectURL(videoPrevia);
+  videoPendente = null; videoPrevia = "";
+}
 
 /* ===== dinheiro digitado: "27", "27,5", "1.027,50" viram centavos; vazio vira null ===== */
 function lerCentavos(t) {
@@ -213,6 +224,8 @@ function salvarOrdem(colecao, ids) {
 /* ===== janela: item, grupo de opções, categoria ===== */
 function abrirJanela() { $("c-modal").hidden = false; document.body.classList.add("com-janela"); }
 function fecharJanela() {
+  if (salvandoItem) return;
+  limparVideoPendente();
   C.rascunho = null; C.grupo = null; C.janela = null;
   $("c-modal").hidden = true;
   document.body.classList.remove("com-janela");
@@ -221,7 +234,7 @@ const voltarLista = () => { location.hash = "#cardapio"; };
 
 function itemNovo() {
   return { id: null, categoriaId: C.cat || catsOrdenadas()[0]?.id || "", nome: "", descricao: "", preco: null, precoPromo: null,
-    selo: "", destaque: false, esgotado: false, fotoUrl: "", grupos: [] };
+    selo: "", destaque: false, esgotado: false, fotoUrl: "", videoUrl: "", videoArquivo: null, grupos: [] };
 }
 const grupoNovo = () => ({ id: gerarId().slice(0, 8), nome: "", tipo: "somavel", min: 0, max: 1, regraPreco: "soma", opcoes: [{ id: gerarId().slice(0, 8), nome: "", preco: 0 }] });
 const copia = (o) => JSON.parse(JSON.stringify(o));
@@ -252,10 +265,10 @@ function renderItem(cab, corpo, pe) {
   const desc = r.descricao || "";
   corpo.innerHTML = `
     <div class="sec topo-item">
-      <button type="button" class="foto-env${r.fotoUrl ? " com-foto" : ""}" data-foto>
-        ${r.fotoUrl ? `<img src="${esc(r.fotoUrl)}" alt="" /><span class="trocar">Trocar foto</span>` : `<i data-ic="foto"></i><b>Enviar foto</b><span class="so-pc">JPG ou PNG. Quadrada fica melhor no cardápio.</span><span class="so-cel">Quadrada fica melhor no cardápio</span>`}
+      <button type="button" class="foto-env${r.fotoUrl ? " com-foto" : ""}" data-foto aria-label="${r.fotoUrl ? "Trocar imagem" : "Adicionar imagem"}">
+        ${r.fotoUrl ? `<img src="${esc(r.fotoUrl)}" alt="" /><span class="trocar">Trocar imagem</span>` : `<i data-ic="foto"></i><b>Adicionar imagem</b><span class="so-pc">JPG ou PNG. Quadrada fica melhor no cardápio.</span><span class="so-cel">Quadrada fica melhor no cardápio</span>`}
       </button>
-      ${r.fotoUrl ? `<button type="button" class="tirar-foto" data-tirar-foto>Tirar foto</button>` : ""}
+      ${r.fotoUrl ? `<button type="button" class="tirar-foto" data-tirar-foto>Remover imagem</button>` : ""}
       <div class="campos">
         <div class="campo"><label for="i-nome">Nome <i class="obrig">*</i></label><input id="i-nome" maxlength="80" value="${esc(r.nome)}" /></div>
         <div class="campo"><label for="i-cat">Categoria</label><select id="i-cat">${catsOrdenadas().map((c) => `<option value="${esc(c.id)}"${c.id === r.categoriaId ? " selected" : ""}>${esc(c.nome)}</option>`).join("")}</select></div>
@@ -263,6 +276,14 @@ function renderItem(cab, corpo, pe) {
         <div class="campo"><label for="i-preco">Preço <i class="obrig">*</i></label><div class="in"><small>R$</small><input id="i-preco" inputmode="decimal" placeholder="0,00" value="${mostrarCentavos(r.preco)}" /></div></div>
         <div class="campo"><label for="i-promo"><span class="so-pc">Preço promocional</span><span class="so-cel">Promocional</span></label><div class="in"><small>R$</small><input id="i-promo" inputmode="decimal" placeholder="${pc.matches ? "Sem promoção" : "Nenhum"}" value="${mostrarCentavos(r.precoPromo)}" /></div></div>
       </div>
+    </div>
+    <div class="sec midias-item">
+      <h3>Vídeo do produto</h3>
+      <p class="ajuda">A imagem aparece enquanto o vídeo carrega. Você pode usar os dois ou só a imagem.</p>
+      <div class="midias-acoes"><button type="button" class="btn fantasma" data-video>${videoPendente || videoDoItem(C.loja.id, r).url ? "Trocar vídeo" : "Adicionar vídeo"}</button>
+        ${videoPendente || videoDoItem(C.loja.id, r).url ? `<button type="button" class="tirar-foto" data-tirar-video>Remover vídeo</button>` : ""}</div>
+      <p class="ajuda">Vídeo MP4 ou WebM, até 10 MB. A prévia abaixo permite conferir antes de salvar.</p>
+      <div id="i-video-previa"></div>
     </div>
     <div class="sec como">
       <div class="sec-t so-cel">Como aparece</div>
@@ -288,6 +309,15 @@ function renderItem(cab, corpo, pe) {
     ${r.id ? `<button type="button" class="excluir so-pc" data-excluir-item><i data-ic="lixo"></i>Excluir item</button>` : ""}
     <a class="btn fantasma so-pc" href="#cardapio">Cancelar</a>
     <button type="button" class="btn" data-salvar-item>Salvar</button>`;
+  const midia = videoDoItem(C.loja.id, r), caixa = $("i-video-previa");
+  if (videoPrevia || midia.url) {
+    caixa.innerHTML = `<video controls playsinline muted preload="metadata" poster="${esc(r.fotoUrl)}" aria-label="Prévia do vídeo"></video>`;
+    const elemento = caixa.querySelector("video");
+    if (videoPrevia) elemento.src = videoPrevia;
+    else carregarVideo(midia.url, midia.remoto).then((url) => { if (elemento.isConnected) elemento.src = url; }).catch(() => {
+      if (caixa.isConnected) caixa.textContent = "Não deu para carregar a prévia. Você pode trocar ou remover o vídeo.";
+    });
+  }
 }
 // o que está digitado na janela do item vai para o rascunho (antes de abrir um grupo ou salvar)
 function lerItem() {
@@ -301,8 +331,10 @@ function lerItem() {
   r.destaque = $("i-dest").checked;
 }
 async function salvarItem() {
+  if (salvandoItem) return;
   lerItem();
   const r = C.rascunho;
+  const lojaId = C.loja.id;
   const opcoesPagas = r.grupos.some((g) => g.min > 0 && g.opcoes.some((o) => o.preco > 0));
   if (r.nome.length < 2) return toast("Informe o nome do item.", "erro", 3500);
   if (!r.categoriaId) return toast("Escolha a categoria.", "erro", 3500);
@@ -318,10 +350,33 @@ async function salvarItem() {
     categoriaId: r.categoriaId, nome: r.nome, descricao: r.descricao, preco: r.preco || 0, precoPromo: r.precoPromo ?? null,
     selo: r.selo || null, destaque: !!r.destaque, esgotado: !!r.esgotado, fotoUrl: r.fotoUrl || "", grupos: r.grupos, ordem,
   };
+  dados.videoUrl = r.videoUrl ?? videoDoItem(C.loja.id, r).url;
+  dados.videoArquivo = r.videoArquivo || null;
   const botao = document.querySelector("[data-salvar-item]");
+  salvandoItem = true;
+  document.querySelectorAll("#c-modal button, #c-modal input, #c-modal textarea, #c-modal select").forEach((el) => (el.disabled = true));
   botao.classList.add("desligado");
-  const ok = await gravar([{ op: "set", colecao: "itens", id, dados }]);
-  botao.classList.remove("desligado");
+  let ok = false;
+  try {
+    if (videoPendente) {
+      botao.textContent = "Enviando vídeo...";
+      if (C.exemplo) { dados.videoUrl = videoPrevia; dados.videoArquivo = null; previasExemplo.add(videoPrevia); }
+      else {
+        r.videoArquivo = await enviarVideo(videoPendente, lojaId);
+        r.videoUrl = "";
+        dados.videoArquivo = r.videoArquivo; dados.videoUrl = "";
+        limparVideoPendente();
+      }
+    }
+    botao.textContent = "Salvando...";
+    if (C.loja.id !== lojaId || C.rascunho !== r) throw new Error("A loja mudou durante o envio. Abra o item novamente.");
+    ok = await gravar([{ op: "set", colecao: "itens", id, dados }]);
+  } catch (erro) { toast(erro.message || "Não deu para enviar o vídeo. Tente novamente.", "erro", 5000); }
+  finally {
+    salvandoItem = false;
+    document.querySelectorAll("#c-modal button, #c-modal input, #c-modal textarea, #c-modal select").forEach((el) => (el.disabled = false));
+    botao.classList.remove("desligado"); botao.textContent = "Salvar";
+  }
   if (!ok) return;
   if (!C.exemplo) toast(novo ? "Item criado." : "Item salvo.", "sucesso", 2500);
   C.cat = r.categoriaId;
@@ -471,6 +526,7 @@ async function prepararFoto(arquivo) {
 
 /* ===== cliques e digitação ===== */
 function aoClicar(e) {
+  if (salvandoItem && e.target.closest("#c-modal")) { e.preventDefault(); return; }
   if ($("vista-cardapio").hidden && $("c-modal").hidden) return;
   const alvo = (sel) => e.target.closest(sel);
   let el;
@@ -488,6 +544,10 @@ function aoClicar(e) {
   if (!C.janela) return;
   // janela do item
   if (alvo("[data-foto]")) { $("c-foto").click(); return; }
+  if (alvo("[data-video]")) { $("c-video").click(); return; }
+  if (alvo("[data-tirar-video]")) {
+    lerItem(); limparVideoPendente(); C.rascunho.videoUrl = ""; C.rascunho.videoArquivo = null; renderJanela(); return;
+  }
   if (alvo("[data-tirar-foto]")) { lerItem(); C.rascunho.fotoUrl = ""; renderJanela(); return; }
   if ((el = alvo("[data-selo]"))) { lerItem(); C.rascunho.selo = el.dataset.selo; renderJanela(); return; }
   if (alvo("[data-disp-rasc]")) { lerItem(); C.rascunho.esgotado = !C.rascunho.esgotado; renderJanela(); return; }
@@ -514,6 +574,7 @@ function aoDigitar(e) {
   if (e.target.id === "i-desc") $("i-desc-n").textContent = `${e.target.value.length} de 200 letras`;
 }
 function aoTeclar(e) {
+  if (salvandoItem) return;
   if (e.key === "Escape" && C.janela) { e.preventDefault(); location.hash = C.janela.tipo === "grupo" ? `#cardapio/item/${C.rascunho.id || "novo"}` : "#cardapio"; }
   if (e.key === "Enter" && e.target.id === "k-nome") salvarCategoria();
 }
@@ -526,6 +587,7 @@ export function mostrarCardapio(partes) {
   if (tipo === "item") {
     const novo = id === "novo";
     if (!C.rascunho || (C.rascunho.id || "novo") !== id) {
+      limparVideoPendente();
       const base = novo ? itemNovo() : item(id);
       if (!base) { if (!C.exemplo && !C.carregou) return; voltarLista(); return; } // ainda carregando, ou item apagado
       C.rascunho = { selo: "", grupos: [], ...copia(base), selo: base.selo || "" };
@@ -557,7 +619,7 @@ export function fecharCardapio() { if (C.janela) fecharJanela(); }
 export function iniciarCardapio(loja, { exemplo = null } = {}) {
   pararCardapio();
   C.loja = loja;
-  $("ver-cliente").href = exemplo ? "./?exemplo=1" : `./?loja=${encodeURIComponent(loja.id)}`;
+  $("ver-cliente").href = exemplo ? "./?exemplo=1" : linkCardapio(loja.id);
   document.addEventListener("click", aoClicar);
   document.addEventListener("input", aoDigitar);
   document.addEventListener("keydown", aoTeclar);
@@ -566,8 +628,18 @@ export function iniciarCardapio(loja, { exemplo = null } = {}) {
     e.target.value = "";
     if (!arquivo || !C.rascunho) return;
     lerItem();
+    const rascunho = C.rascunho;
     const url = await prepararFoto(arquivo);
-    if (url) { C.rascunho.fotoUrl = url; renderJanela(); }
+    if (url && C.rascunho === rascunho) { C.rascunho.fotoUrl = url; renderJanela(); }
+  };
+  $("c-video").onchange = (e) => {
+    const arquivo = e.target.files?.[0];
+    e.target.value = "";
+    if (!arquivo || !C.rascunho || salvandoItem) return;
+    try { validarVideo(arquivo); } catch (erro) { toast(erro.message, "erro", 4000); return; }
+    lerItem(); limparVideoPendente();
+    videoPendente = arquivo; videoPrevia = URL.createObjectURL(arquivo);
+    renderJanela();
   };
   if (exemplo) {
     C.exemplo = true;
@@ -591,6 +663,9 @@ export function iniciarCardapio(loja, { exemplo = null } = {}) {
   C.parar.push(ouvir("categorias"), ouvir("itens"));
 }
 export function pararCardapio() {
+  if (!salvandoItem) limparVideoPendente();
+  previasExemplo.forEach((url) => URL.revokeObjectURL(url));
+  previasExemplo.clear();
   C.parar.forEach((f) => f());
   C.parar = [];
   document.removeEventListener("click", aoClicar);

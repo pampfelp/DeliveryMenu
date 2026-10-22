@@ -1,88 +1,81 @@
-/**
- * Este arquivo NÃO é o banco de dados deste sistema. Só existe para:
- * 1) Subir arquivo/foto pro Google Drive (Firestore/Storage não fazem
- *    isso de graça — Firebase Storage exige plano pago mesmo dentro da
- *    cota gratuita).
- * 2) Guardar segredo de API de terceiro que não pode ir pro frontend
- *    público (proxy de client secret).
- * Não adicione lógica de negócio aqui. O banco de dados é o Firestore,
- * gerenciado direto pelo app.js via SDK modular.
- *
- * Ver padroes/arquitetura.md.
- */
+// DeliveryMenu: somente armazenamento/entrega de mídia pelo Drive.
+// O banco e as regras do restaurante continuam no Firestore.
+var PROJETO_FIREBASE = "cardapio-delivery-ae048";
+var CHAVE_PUBLICA_FIREBASE = "AIzaSyCsY34ZT38ZjAkdNidqG45Nz4qPCVTamEs";
+var MAX_VIDEO_BYTES = 10 * 1024 * 1024;
+var TIPOS_VIDEO = ["video/mp4", "video/webm"];
 
 function doPost(e) {
-  var body = JSON.parse(e.postData.contents);
-  var action = body.action;
-
   try {
-    switch (action) {
-      case "uploadPhoto":
-        return jsonOutput_({ ok: true, url: uploadPhoto_(body.base64, body.filename, body.mimeType) });
-
-      // Exemplo de proxy de segredo — troque pela API de terceiro que o
-      // projeto precisar (ex.: Pluggy, Autentique). Nunca devolva o
-      // segredo em si pro frontend, só o resultado da chamada.
-      // case "minhaAcaoComSegredo":
-      //   return jsonOutput_({ ok: true, resultado: chamarApiComSegredo_(body) });
-
-      default:
-        return jsonOutput_({ ok: false, erro: "Ação desconhecida: " + action });
-    }
-  } catch (err) {
-    return jsonOutput_({ ok: false, erro: String(err) });
-  }
+    if (!e || !e.postData || e.postData.contents.length > Math.ceil(MAX_VIDEO_BYTES * 4 / 3) + 20000) throw new Error("Arquivo maior que 10 MB.");
+    var body = JSON.parse(e.postData.contents);
+    if (body.action !== "uploadVideo") throw new Error("Ação desconhecida.");
+    conferirDono_(body.lojaId, body.token);
+    if (TIPOS_VIDEO.indexOf(body.tipo) === -1) throw new Error("Use MP4 ou WebM.");
+    if (typeof body.base64 !== "string" || !body.base64.length || body.base64.length > Math.ceil(MAX_VIDEO_BYTES * 4 / 3)) throw new Error("Vídeo vazio ou maior que 10 MB.");
+    var bytes = Utilities.base64Decode(body.base64);
+    if (!bytes.length || bytes.length > MAX_VIDEO_BYTES || !assinaturaVideo_(bytes, body.tipo)) throw new Error("Esse arquivo não é um vídeo válido.");
+    var pasta = pastaDaLoja_(body.lojaId, true);
+    var nome = String(body.nome || "video.mp4").replace(/[^a-zA-Z0-9._ -]/g, "_").slice(0, 100);
+    var arquivo = Drive.Files.create({ name: nome, mimeType: body.tipo, parents: [pasta] }, Utilities.newBlob(bytes, body.tipo, nome), { fields: "id" });
+    // Arquivo privado no Drive. O GET só entrega mídia desta pasta.
+    return json_({ ok: true, id: arquivo.id });
+  } catch (erro) { return json_({ ok: false, erro: erro.message || "Não deu para enviar o vídeo." }); }
 }
 
-// Tipos aceitos e tamanho máximo do upload — validados aqui, não só no
-// front-end: defesa em profundidade contra alguém chamando a API direto
-// (DevTools/curl), pulando a compressão/checagem que o app.js normalmente
-// faz antes de enviar. Ajuste a lista conforme o projeto precisar.
-var TIPOS_ACEITOS_UPLOAD = ["image/jpeg", "image/png", "image/webp"];
-var TAMANHO_MAXIMO_BASE64 = 8 * 1024 * 1024; // ~8MB de texto base64 (~6MB de arquivo real)
-
-function uploadPhoto_(base64, filename, mimeType) {
-  if (TIPOS_ACEITOS_UPLOAD.indexOf(mimeType) === -1) {
-    throw new Error("Tipo de arquivo não permitido: " + mimeType);
-  }
-  if (!base64 || base64.length > TAMANHO_MAXIMO_BASE64) {
-    throw new Error("Arquivo muito grande ou vazio.");
-  }
-
-  var folder = getUploadsFolder_();
-  var bytes = Utilities.base64Decode(base64.split(",").pop());
-  var blob = Utilities.newBlob(bytes, mimeType, filename || "foto.jpg");
-  var file = folder.createFile(blob);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
-  return "https://drive.google.com/thumbnail?id=" + file.getId() + "&sz=w1000";
+function doGet(e) {
+  try {
+    var p = e && e.parameter || {};
+    if (!p.action) return json_({ ok: true, servico: "DeliveryMenu midias", versao: 1 });
+    if (p.action !== "video" || !/^[\w-]{10,100}$/.test(p.id || "")) throw new Error("Vídeo não encontrado.");
+    var pasta = pastaDaLoja_(p.lojaId, false);
+    if (!pasta) throw new Error("Vídeo não encontrado.");
+    var arquivo = Drive.Files.get(p.id, { fields: "id,parents,trashed,mimeType,size" });
+    if ((arquivo.parents || []).indexOf(pasta) === -1 || arquivo.trashed || TIPOS_VIDEO.indexOf(arquivo.mimeType) === -1 || Number(arquivo.size) > MAX_VIDEO_BYTES) throw new Error("Vídeo não encontrado.");
+    var resposta = UrlFetchApp.fetch("https://www.googleapis.com/drive/v3/files/" + p.id + "?alt=media", { headers: { Authorization: "Bearer " + ScriptApp.getOAuthToken() } });
+    return json_({ ok: true, tipo: arquivo.mimeType, base64: Utilities.base64Encode(resposta.getBlob().getBytes()) });
+  } catch (erro) { return json_({ ok: false, erro: "Vídeo não encontrado." }); }
 }
 
-// Cache do ID da pasta via PropertiesService — evita busca repetida e um
-// bug conhecido de escopo do Apps Script sob doPost (lição do App Legendarios).
-function getUploadsFolder_() {
-  var props = PropertiesService.getScriptProperties();
-  var folderId = props.getProperty("UPLOADS_FOLDER_ID");
-  if (folderId) {
-    try {
-      return DriveApp.getFolderById(folderId);
-    } catch (e) {
-      // pasta foi apagada/movida — recria abaixo
-    }
-  }
-  var folder = DriveApp.getRootFolder().createFolder("Uploads - " + ScriptApp.getScriptId());
-  props.setProperty("UPLOADS_FOLDER_ID", folder.getId());
-  return folder;
+function conferirDono_(lojaId, token) {
+  conferirLoja_(lojaId);
+  if (typeof token !== "string" || !token || token.length > 10000) throw new Error("Entre no painel para enviar vídeos.");
+  var conta = UrlFetchApp.fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + CHAVE_PUBLICA_FIREBASE, {
+    method: "post", contentType: "application/json", payload: JSON.stringify({ idToken: token }), muteHttpExceptions: true,
+  });
+  if (conta.getResponseCode() !== 200) throw new Error("Sua sessão expirou. Entre novamente.");
+  var usuario = JSON.parse(conta.getContentText()).users[0];
+  if (!usuario || usuario.disabled) throw new Error("Entre novamente.");
+  var loja = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + PROJETO_FIREBASE + "/databases/(default)/documents/lojas/" + lojaId + "?mask.fieldPaths=donoId", { muteHttpExceptions: true });
+  if (loja.getResponseCode() !== 200 || JSON.parse(loja.getContentText()).fields.donoId.stringValue !== usuario.localId) throw new Error("Só o dono desta loja pode enviar vídeos.");
 }
 
-// Exemplo de como buscar um segredo guardado em Script Properties —
-// nunca hardcode aqui, sempre configure manualmente em
-// Extensões > Apps Script > Configurações do projeto > Propriedades do script.
-function obterSegredo_(chave) {
-  var valor = PropertiesService.getScriptProperties().getProperty(chave);
-  if (!valor) throw new Error("Segredo não configurado: " + chave);
-  return valor;
+function conferirLoja_(lojaId) {
+  if (typeof lojaId !== "string" || !/^[a-z0-9-]{3,40}$/.test(lojaId)) throw new Error("Loja inválida.");
 }
 
-function jsonOutput_(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
+function pastaDaLoja_(lojaId, criar) {
+  conferirLoja_(lojaId);
+  var props = PropertiesService.getScriptProperties(), chave = "PASTA_" + lojaId, id = props.getProperty(chave);
+  if (id) return id;
+  if (!criar) return null;
+  var trava = LockService.getScriptLock();
+  trava.waitLock(10000);
+  try {
+    id = props.getProperty(chave);
+    if (id) return id;
+    var pasta = Drive.Files.create({ name: "DeliveryMenu - Midias - " + lojaId, mimeType: "application/vnd.google-apps.folder" }, null, { fields: "id" });
+    props.setProperty(chave, pasta.id);
+    return pasta.id;
+  } finally { trava.releaseLock(); }
+}
+
+function assinaturaVideo_(bytes, tipo) {
+  var b = bytes.slice(0, 16).map(function (v) { return v & 255; });
+  if (tipo === "video/webm") return b.length > 4 && b[0] === 0x1a && b[1] === 0x45 && b[2] === 0xdf && b[3] === 0xa3;
+  return b.length > 12 && b[4] === 102 && b[5] === 116 && b[6] === 121 && b[7] === 112;
+}
+
+function json_(dados) {
+  return ContentService.createTextOutput(JSON.stringify(dados)).setMimeType(ContentService.MimeType.JSON);
 }

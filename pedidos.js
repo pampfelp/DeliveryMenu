@@ -10,7 +10,7 @@
   O número do pedido (#1051) nasce no aceite, a partir do contador da loja.
 */
 
-import { db } from "./firebase-init.js?v=2";
+import { db } from "./firebase-init.js?v=3";
 import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp, getDocs,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";

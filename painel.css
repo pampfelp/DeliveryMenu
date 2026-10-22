@@ -787,3 +787,10 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .u-janela .c-pe .fantasma { margin-left: 0; }
   .u-seg button { height: 42px; }
 }
+
+/* Mídias do item: foto e vídeo independentes, com prévia antes de salvar. */
+.midias-item h3 { font-size: 15px; line-height: 22px; font-weight: 500; }
+.midias-item .ajuda { margin-top: 6px; }
+.midias-acoes { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-top: 12px; }
+.midias-acoes .btn { width: auto; min-height: 40px; padding: 0 14px; border: 1px solid var(--border); border-radius: var(--r-sm); font-size: 14px; }
+#i-video-previa video { display: block; width: 100%; max-width: 320px; max-height: 240px; margin-top: 12px; border-radius: var(--r-md); background: #111; object-fit: contain; }

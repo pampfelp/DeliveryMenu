@@ -7,15 +7,15 @@
   de uma vez em "Salvar alterações". No modo exemplo nada é gravado.
 */
 
-import { db } from "./firebase-init.js?v=2";
+import { db } from "./firebase-init.js?v=3";
 import { doc, onSnapshot, updateDoc } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe } from "./conta-entrega.js?v=1";
 import { ORDEM, NOMES, situacao, horaValida } from "./horario.js?v=1";
+import { linkCardapio, linkPublico } from "./links-cardapio.js?v=1";
 
 const $ = (id) => document.getElementById(id);
-const BASE = "https://pampfelp.github.io/DeliveryMenu/?loja=";
 const CORES = ["#991b1b", "#c2410c", "#15803d", "#1d4ed8", "#6d28d9", "#1f2937"];
 const soDigitos = (t) => String(t || "").replace(/\D/g, "");
 const fmtFone = (d) => (d.length > 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d.slice(7, 11)}`
@@ -62,13 +62,13 @@ function htmlDias(r) {
 function render() {
   if (!C.loja) return;
   const r = C.rasc, base = ORDEM.find((d) => r.horario[d]?.aberto);
-  $("cf-ver").href = C.exemplo ? "./?exemplo=1" : `./?loja=${encodeURIComponent(C.loja.id)}`;
+  $("cf-ver").href = C.exemplo ? "./?exemplo=1" : linkCardapio(C.loja.id);
   $("cf-grade").innerHTML = `
     <div class="cf-col">
       <section class="cf-cartao"><div class="cf-cab"><h2>Dados do restaurante</h2></div><div class="cf-corpo">
         <div class="campo"><label for="cf-nome">Nome do restaurante <i class="obrig">*</i></label><input id="cf-nome" maxlength="120" value="${esc(r.nome)}" /></div>
-        <div class="campo"><label>Link do cardápio</label><div class="in fixo"><i data-ic="link"></i><span class="t">${esc((BASE + C.loja.id).replace("https://", ""))}</span><button type="button" class="copiar" data-cf-copiar>Copiar</button></div>
-          <p class="ajuda">O link não muda: é ele que os clientes já têm.</p></div>
+        <div class="campo"><label>Link do cardápio</label><div class="in fixo"><i data-ic="link"></i><span class="t">${esc(linkPublico(C.loja.id).replace("https://", ""))}</span><button type="button" class="copiar" data-cf-copiar>Copiar</button></div>
+          <p class="ajuda">Compartilhe este link com seus clientes. Os links anteriores continuam funcionando.</p></div>
         <div class="dupla">
           <div class="campo"><label for="cf-cidade">Cidade <i class="obrig">*</i></label><input id="cf-cidade" maxlength="60" value="${esc(r.cidade)}" /></div>
           <div class="campo"><label for="cf-bairro">Bairro do restaurante <i class="obrig">*</i></label><input id="cf-bairro" maxlength="60" value="${esc(r.bairro)}" /></div>
@@ -166,7 +166,7 @@ function aoClicar(e) {
   let el;
   if (alvo("[data-cf-salvar]")) { salvar(); return; }
   if (alvo("[data-cf-copiar]")) {
-    navigator.clipboard?.writeText(BASE + C.loja.id).then(() => toast("Link copiado.", "sucesso", 2000), () => toast("Não deu para copiar. Selecione o link e copie.", "erro", 3500));
+    navigator.clipboard?.writeText(linkPublico(C.loja.id)).then(() => toast("Link copiado.", "sucesso", 2000), () => toast("Não deu para copiar. Selecione o link e copie.", "erro", 3500));
     return;
   }
   if ((el = alvo("[data-cf-dia]"))) { lerCampos(); const h = C.rasc.horario[el.dataset.cfDia]; h.aberto = !h.aberto; if (h.aberto && !h.abre) Object.assign(h, { abre: "18:00", fecha: "23:00" }); C.sujo = true; render(); return; }

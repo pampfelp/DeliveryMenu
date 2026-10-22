@@ -7,7 +7,7 @@
   Endereços: #cupons, #cupons/novo, #cupons/<CODIGO>. No modo exemplo nada é gravado.
 */
 
-import { db } from "./firebase-init.js?v=2";
+import { db } from "./firebase-init.js?v=3";
 import {
   collection, doc, onSnapshot, setDoc, updateDoc, deleteDoc, getDoc, getDocs, query, where, Timestamp,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
