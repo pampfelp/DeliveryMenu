@@ -4,17 +4,19 @@
     const aviso = document.getElementById("carregando");
     if (!aviso) return;
     aviso.setAttribute("role", "alert");
+    aviso.classList.add("falhou");
     aviso.textContent = naoEncontrado
       ? "Não encontramos este cardápio. Confira o link com o restaurante. "
       : "Não deu para abrir o cardápio. Confira a internet e tente novamente. ";
     const tentar = document.createElement("button");
     tentar.type = "button";
+    tentar.className = "tentar-cardapio";
     tentar.textContent = "Tentar novamente";
     tentar.addEventListener("click", function () { location.reload(); });
     aviso.appendChild(tentar);
   }
   const espera = setTimeout(function () { mostrarFalha(false); }, 20000);
-  import("./app.js?v=26").then(function (app) {
+  import("./app.js?v=27").then(function (app) {
     return app.pronto;
   }).then(function () {
     clearTimeout(espera);

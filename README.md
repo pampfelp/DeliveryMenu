@@ -83,3 +83,15 @@ IndexedDB do aparelho. O painel conserva a persistência. Mídias e sacola
 também têm alternativas para APIs ausentes em versões antigas do Safari.
 Essa compatibilidade precisa ser confirmada no iPhone que apresentou a
 falha; teste responsivo em Chromium não equivale a Safari real.
+
+A primeira leitura do cardápio usa a API REST pública do Firestore: loja,
+categorias, itens e bairros em paralelo, com paginação de 100 documentos.
+Não espera bibliotecas de Auth/banco. O SDK permanece no painel, pedidos
+e atualização em tempo real; esta começa depois de montar a tela. Os
+dados são buscados no servidor em cada abertura, sem cache de preços.
+O carregamento tem oito bolinhas em círculo e Rubik; respeita redução
+de movimento e desaparece assim que o cardápio estiver pronto.
+
+A página pública serve a mesma Rubik (pesos 300 a 600) de
+`fontes/rubik-latin.woff2`, sem esperar CSS do Google Fonts. Arquivo obtido
+da distribuição oficial do Google Fonts; licença em `fontes/Rubik-OFL.txt`.

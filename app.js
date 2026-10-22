@@ -10,7 +10,7 @@
 import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=7";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=8";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
@@ -1279,13 +1279,15 @@ if (EXEMPLO) [["f-cep", "66000-000"], ["f-rua", "Travessa das Flores"], ["f-num"
   .forEach(([id, v]) => (document.getElementById(id).value = v));
 preencherEnderecoGuardado();
 STATE.cupom = lerCupomGuardado();
-vigiarLoja().catch(() => { /* mantém os dados já carregados se a conexão cair */ });
 recalcularAberta();
 renderInicio();
 renderEntrega();
 renderTipo();
 irParaHash();
 document.getElementById("carregando").remove();
+requestAnimationFrame(() => {
+  vigiarLoja().catch(() => { /* mantém os dados já carregados se a conexão cair */ });
+});
 }
 
 export const pronto = iniciarCardapio();

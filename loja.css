@@ -6,6 +6,12 @@
   é trocada pelo app.js a partir dos dados da loja.
 */
 
+/* Rubik original, servida localmente; licença em fontes/Rubik-OFL.txt. */
+@font-face {
+  font-family: "Rubik"; font-style: normal; font-weight: 300 600; font-display: swap;
+  src: url("./fontes/rubik-latin.woff2?v=1") format("woff2");
+}
+
 /* os tokens (:root) moram em tokens.css */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -651,7 +657,16 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
 .filtros .sel { position: relative; cursor: pointer; }
 .filtros .sel select { position: absolute; inset: 0; width: 100%; height: 100%; opacity: 0; cursor: pointer; font-size: 16px; }
 .loc:disabled { opacity: .5; }
-.carregando { margin: 96px 24px; text-align: center; font-size: 15px; line-height: 22px; color: var(--text-muted); }
+.carregando { min-height: 100vh; min-height: 100svh; padding: 32px 24px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; color: var(--text-strong); }
+.carregando strong { font-size: 22px; line-height: 30px; font-weight: 500; letter-spacing: -.5px; }
+.carregando-legenda { color: var(--text-muted); font-size: 14px; line-height: 22px; }
+.carregando-bolinhas { position: relative; width: 64px; height: 64px; margin-bottom: 12px; animation: girar-bolinhas 1.3s linear infinite; }
+.carregando-bolinhas i { position: absolute; top: 28px; left: 28px; width: 8px; height: 8px; border-radius: 50%; background: var(--accent); opacity: calc(.2 + var(--n) * .1); transform: rotate(calc(var(--n) * 45deg)) translateY(-27px); }
+@keyframes girar-bolinhas { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .carregando-bolinhas { animation: none; } }
+.carregando.falhou { font-size: 15px; line-height: 24px; color: var(--text-muted); }
+.tentar-cardapio { margin-top: 8px; padding: 12px 20px; border-radius: var(--r-md); background: var(--accent); color: var(--on-accent); font-weight: 500; }
+.tentar-cardapio:focus-visible { outline: 3px solid var(--text-strong); outline-offset: 3px; }
 #tela-produto .rodape .btn.escolher { justify-content: center; }
 
 /* ===== funções novas da barra: S20 a S23 e D20 a D23 ===== */

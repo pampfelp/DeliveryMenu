@@ -24,6 +24,38 @@ if (SLUG === "casa-jambu-delivery" && !document.documentElement.dataset.loja) {
   history.replaceState(null, "", entrada);
 }
 
+// A primeira leitura é pública: não precisa baixar Auth/Firestore para desenhar.
+// O SDK continua responsável por pedidos e atualizações em tempo real no app.
+function camposPublicos(campos = {}) {
+  return Object.fromEntries(Object.entries(campos).map(([nome, valor]) => [nome, valorPublico(valor)]));
+}
+function valorPublico(valor) {
+  if (valor.mapValue) return camposPublicos(valor.mapValue.fields);
+  if (valor.arrayValue) return (valor.arrayValue.values || []).map(valorPublico);
+  if ("integerValue" in valor) return Number(valor.integerValue);
+  return valor.stringValue ?? valor.booleanValue ?? valor.doubleValue ?? valor.timestampValue ?? valor.geoPointValue ?? null;
+}
+const documentoPublico = (d) => ({ id: d.name.split("/").pop(), ...camposPublicos(d.fields) });
+async function lerPublico(url) {
+  const resposta = await fetch(url, { credentials: "omit", cache: "no-store" });
+  if (resposta.status === 404) return null;
+  if (!resposta.ok) throw new Error("Não deu para ler o cardápio.");
+  return resposta.json();
+}
+async function listarPublico(base, colecao) {
+  const documentos = [];
+  let proxima = "";
+  do {
+    const params = new URLSearchParams({ pageSize: "100" });
+    if (proxima) params.set("pageToken", proxima);
+    const pagina = await lerPublico(`${base}/${colecao}?${params}`);
+    if (!pagina) throw new Error("Não deu para ler o cardápio.");
+    documentos.push(...(pagina.documents || []).map(documentoPublico));
+    proxima = pagina.nextPageToken || "";
+  } while (proxima);
+  return documentos;
+}
+
 export async function carregarLoja() {
   // loja de exemplo; ?exemplo=fechada e ?exemplo=na-entrega mostram os estados das imagens S01b e S14b
   const ex = new URLSearchParams(location.search).get("exemplo");
@@ -38,16 +70,17 @@ export async function carregarLoja() {
     },
   };
 
-  const { db } = await import("./firebase-init.js?v=3");
-  const { doc, getDoc, collection, getDocs } = await import("https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js");
-  const lojaSnap = await getDoc(doc(db, "lojas", SLUG));
-  if (!lojaSnap.exists()) return null;
-  const d = lojaSnap.data();
-  const [cats, itens, bairros] = await Promise.all(
-    ["categorias", "itens", "bairros"].map((c) => getDocs(collection(db, "lojas", SLUG, c)))
-  );
+  if (!/^[a-z0-9-]{3,40}$/.test(SLUG)) return null;
+  const servidor = new URLSearchParams(location.search).get("emulator") === "1"
+    ? "http://localhost:8080" : "https://firestore.googleapis.com";
+  const base = `${servidor}/v1/projects/cardapio-delivery-ae048/databases/(default)/documents/lojas/${SLUG}`;
+  const [loja, cats, itens, bairros] = await Promise.all([
+    lerPublico(base), ...["categorias", "itens", "bairros"].map((c) => listarPublico(base, c)),
+  ]);
+  if (!loja) return null;
+  const d = camposPublicos(loja.fields);
   const porOrdem = (a, b) => (a.ordem ?? 0) - (b.ordem ?? 0) || String(a.nome).localeCompare(String(b.nome));
-  const todosItens = itens.docs.map((x) => ({ id: x.id, descricao: "", fotoUrl: "", grupos: [], ...x.data() })).sort(porOrdem);
+  const todosItens = itens.map((x) => ({ descricao: "", fotoUrl: "", grupos: [], ...x })).sort(porOrdem);
   return {
     real: true,
     LOJA: {
@@ -69,8 +102,8 @@ export async function carregarLoja() {
       // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
       pagamentoOnline: false,
     },
-    BAIRROS: bairros.docs.map((x) => x.data()).filter((b) => b.nome),
-    CATEGORIAS: cats.docs.map((x) => ({ id: x.id, ...x.data() })).sort(porOrdem)
+    BAIRROS: bairros.filter((b) => b.nome),
+    CATEGORIAS: cats.sort(porOrdem)
       .map((c) => ({ ...c, itens: todosItens.filter((i) => i.categoriaId === c.id) }))
       .filter((c) => c.itens.length),
     SUGESTOES: d.sugestoes || [],

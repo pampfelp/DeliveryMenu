@@ -21,20 +21,24 @@
 <meta name="twitter:title" content="Casa Jambu | Cardápio" />
 <meta name="twitter:image" content="https://pampfelp.github.io/DeliveryMenu/midias/casa-jambu/logo-compartilhar.jpg?v=1" />
 
+<link rel="modulepreload" href="./app.js?v=27" />
+<link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#991b1b" />
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="mobile-web-app-capable" content="yes" />
 
-<link rel="preconnect" href="https://fonts.googleapis.com" />
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
+<link rel="preload" href="./fontes/rubik-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=26" />
+<link rel="stylesheet" href="./loja.css?v=27" />
 </head>
 <body>
 <div id="app">
-  <p class="carregando" id="carregando">Abrindo o cardápio...</p>
+  <div class="carregando" id="carregando" role="status" aria-live="polite">
+    <span class="carregando-bolinhas" aria-hidden="true"><i style="--n:0"></i><i style="--n:1"></i><i style="--n:2"></i><i style="--n:3"></i><i style="--n:4"></i><i style="--n:5"></i><i style="--n:6"></i><i style="--n:7"></i></span>
+    <strong>Carregando</strong>
+    <span class="carregando-legenda">Já vamos abrir o cardápio.</span>
+  </div>
 
   <!-- S01 / D01 Início -->
   <section class="tela" id="tela-inicio">
@@ -296,6 +300,6 @@
   </nav>
 </div>
 
-<script defer src="./abrir-cardapio.js?v=1"></script>
+<script defer src="./abrir-cardapio.js?v=2"></script>
 </body>
 </html>
