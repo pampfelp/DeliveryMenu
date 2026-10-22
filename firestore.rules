@@ -34,7 +34,25 @@ service cloud.firestore {
 
     // cupom do pedido (cupom.js): o desconto tem de ser exatamente o que o cupom dá,
     // só sobre os itens, com o cupom ligado, no prazo, dentro do limite e do mínimo
-    function cupomConfere(lojaId, d) {
+    function linhaDaOferta(a, b) {
+      return a.itemId == b.itemId && a.qtd == b.qtd && a.nome == b.nome
+        && a.escolhas == b.escolhas && a.resumo == b.resumo && a.total == b.total;
+    }
+    function cestaDaOferta(a, b) {
+      return a.size() == b.size() && b.size() >= 1 && b.size() <= 3
+        && linhaDaOferta(a[0], b[0])
+        && (b.size() < 2 || linhaDaOferta(a[1], b[1]))
+        && (b.size() < 3 || linhaDaOferta(a[2], b[2]));
+    }
+    function ofertaConfere(lojaId, d, id, c) {
+      let vinculo = get(/databases/$(database)/documents/lojas/$(lojaId)/ofertasClientes/$(d.cupom)).data;
+      let reserva = /databases/$(database)/documents/lojas/$(lojaId)/reservasCupons/$(d.cupom);
+      return d.cliente.telefone == vinculo.telefone && c.limite == 1 && c.usos == 0
+        && d.subtotal == c.subtotalOferta && cestaDaOferta(d.itens, c.oferta)
+        && !exists(reserva) && getAfter(reserva).data.pedidoId == id
+        && getAfter(reserva).data.criadoEm == request.time;
+    }
+    function cupomConfere(lojaId, d, id) {
       let c = get(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(d.cupom)).data;
       return d.cupom is string && d.cupom.matches("^[A-Z0-9]{3,20}$")
         && exists(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(d.cupom))
@@ -43,7 +61,8 @@ service cloud.firestore {
         && (c.get("limite", null) == null || c.get("usos", 0) < c.limite)
         && d.subtotal >= c.get("minimo", 0)
         && d.desconto == (c.tipo == "pct" ? math.round(d.subtotal * c.valor / 100.0) : (c.valor < d.subtotal ? c.valor : d.subtotal))
-        && d.total == d.subtotal + d.taxa - d.desconto;
+        && d.total == d.subtotal + d.taxa - d.desconto
+        && (!c.get("individual", false) || ofertaConfere(lojaId, d, id, c));
     }
 
     match /lojas/{lojaId} {
@@ -86,7 +105,7 @@ service cloud.firestore {
           && centavos(request.resource.data.subtotal)
           && centavos(request.resource.data.taxa)
           && (("cupom" in request.resource.data || "desconto" in request.resource.data)
-            ? cupomConfere(lojaId, request.resource.data)
+            ? cupomConfere(lojaId, request.resource.data, id)
             : request.resource.data.total == request.resource.data.subtotal + request.resource.data.taxa)
           && texto(request.resource.data.cliente.nome, 80)
           && texto(request.resource.data.cliente.telefone, 20)
@@ -111,15 +130,41 @@ service cloud.firestore {
           && (request.resource.data.tipo == "valor" || request.resource.data.valor <= 100)
           && centavos(request.resource.data.minimo)
           && request.resource.data.ativo is bool
-          && request.resource.data.usos is int && request.resource.data.usos >= 0;
+          && request.resource.data.usos is int && request.resource.data.usos >= 0
+          && (!request.resource.data.get("individual", false)
+            || (request.resource.data.limite == 1 && request.resource.data.usos <= 1
+              && request.resource.data.oferta is list && request.resource.data.oferta.size() >= 1 && request.resource.data.oferta.size() <= 3
+              && centavos(request.resource.data.subtotalOferta)
+              && request.resource.data.minimo == request.resource.data.subtotalOferta
+              && request.resource.data.destinatarioHash.matches("^[a-f0-9]{64}$")
+              && getAfter(/databases/$(database)/documents/lojas/$(lojaId)/ofertasClientes/$(codigo)).data.telefone.matches("^[0-9]{10,11}$")));
+      }
+
+      // Telefone do destinatário e id do pedido ficam privados. Nunca na ficha pública.
+      match /ofertasClientes/{codigo} {
+        allow read: if membroDa(lojaId);
+        allow create: if membroDa(lojaId)
+          && request.resource.data.keys().hasOnly(["telefone", "nome", "criadoEm"])
+          && request.resource.data.telefone.matches("^[0-9]{10,11}$")
+          && texto(request.resource.data.nome, 80) && request.resource.data.criadoEm == request.time;
+        allow update, delete: if false;
+      }
+      match /reservasCupons/{codigo} {
+        allow read, delete: if membroDa(lojaId);
+        allow create: if request.resource.data.keys().hasOnly(["pedidoId", "criadoEm"])
+          && texto(request.resource.data.pedidoId, 100) && request.resource.data.criadoEm == request.time
+          && !exists(/databases/$(database)/documents/lojas/$(lojaId)/pedidosEntrada/$(request.resource.data.pedidoId))
+          && getAfter(/databases/$(database)/documents/lojas/$(lojaId)/pedidosEntrada/$(request.resource.data.pedidoId)).data.cupom == codigo
+          && get(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(codigo)).data.individual == true;
+        allow update: if false;
       }
 
       // ficha do cliente pelo número (decisão dele, 2026-10-17): quem sabe o número lê
       // o nome e o resumo dos pedidos, sem endereço e sem o id do pedido. Ninguém lista
-      // as fichas; só o painel do dono escreve, ao aceitar, recusar ou mudar o pedido.
+      // as fichas fora do painel; a equipe lista o CRM somente da própria loja.
       match /clientes/{telefone} {
         allow get: if true;
-        allow list: if false;
+        allow list: if membroDa(lojaId);
         allow write: if membroDa(lojaId) && telefone.matches("^[0-9]{10,11}$");
       }
     }

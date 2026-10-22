@@ -34,6 +34,12 @@ const REGRAS = { soma: "A soma", maior: "O maior preço", media: "A média", men
 const REGRA_TEXTO = { soma: "soma os preços", maior: "cobra o maior preço", media: "cobra a média", menor: "cobra o menor" };
 
 const C = { loja: null, exemplo: false, carregou: false, cats: [], itens: [], cat: null, busca: "", rascunho: null, grupo: null, janela: null, parar: [], avisou: false };
+const leitoresCatalogo = new Set();
+export function observarCatalogo(fn) {
+  leitoresCatalogo.add(fn);
+  if (C.carregou) fn({lojaId:C.loja?.id,cats:C.cats,itens:C.itens});
+  return () => leitoresCatalogo.delete(fn);
+}
 let videoPendente = null, videoPrevia = "", salvandoItem = false;
 const previasExemplo = new Set();
 function limparVideoPendente() {
@@ -141,6 +147,7 @@ function linhaCel(i) {
 }
 
 function render() {
+  if (C.carregou) leitoresCatalogo.forEach((fn) => fn({lojaId:C.loja?.id,cats:C.cats,itens:C.itens}));
   if (!C.loja) return;
   const cats = catsOrdenadas();
   if (!cats.some((c) => c.id === C.cat)) C.cat = cats[0]?.id || null;

@@ -14,7 +14,7 @@ import { db } from "./firebase-init.js?v=3";
 import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp, getDocs,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { camposFicha, telefoneDe } from "./ficha-cliente.js?v=1";
+import { camposFicha, telefoneDe } from "./ficha-cliente.js?v=2";
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
@@ -189,45 +189,66 @@ function fecharDetalhe() {
 /* ===== escritas no Firestore ===== */
 async function aceitar(p) {
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
-  const lojaRef = doc(db, "lojas", P.loja.id);
+  const lojaId=P.loja.id, lojaRef=doc(db,"lojas",lojaId), entradaRef=doc(db,"lojas",lojaId,"pedidosEntrada",p.id);
   try {
-    await runTransaction(db, async (tx) => {
-      const loja = await tx.get(lojaRef);
-      // pedido com cupom: o uso conta no aceite (cupom.js)
-      const refC = p.cupom ? doc(db, "lojas", P.loja.id, "cupons", p.cupom) : null;
-      const cupom = refC ? await tx.get(refC) : null;
-      const n = (loja.data().contador || 1000) + 1;
-      const { id, ...dados } = p;
-      const ficha = await camposFicha(p, { status: "preparo", numero: n }, serverTimestamp());
-      tx.update(lojaRef, { contador: n });
-      if (cupom?.exists()) tx.update(refC, { usos: (cupom.data().usos || 0) + 1 });
-      tx.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "preparo", numero: n, aceitoEm: serverTimestamp() });
-      tx.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
-      if (temFicha(p)) tx.set(refFicha(p), ficha, { merge: true });
+    const feito = await runTransaction(db,async (tx) => {
+      const entrada=await tx.get(entradaRef);
+      if (!entrada.exists()) return false; // outra aba já aceitou/recusou
+      const atual={id:entrada.id,...entrada.data()}, loja=await tx.get(lojaRef);
+      const refC=atual.cupom ? doc(db,"lojas",lojaId,"cupons",atual.cupom) : null;
+      const cupom=refC ? await tx.get(refC) : null;
+      if (cupom?.data()?.individual) {
+        const reserva=await tx.get(doc(db,"lojas",lojaId,"reservasCupons",atual.cupom));
+        if (!reserva.exists() || reserva.data().pedidoId!==p.id || cupom.data().usos!==0) throw new Error("reserva");
+      }
+      const n=(loja.data().contador || 1000)+1, {id,...dados}=atual;
+      const ficha=await camposFicha(atual,{status:"preparo",numero:n},serverTimestamp());
+      tx.update(lojaRef,{contador:n});
+      if (cupom?.exists()) tx.update(refC,{usos:(cupom.data().usos || 0)+1});
+      tx.set(doc(db,"lojas",lojaId,"pedidos",id),{...dados,status:"preparo",numero:n,aceitoEm:serverTimestamp()});
+      tx.delete(entradaRef);
+      if (temFicha(atual)) tx.set(doc(db,"lojas",lojaId,"clientes",telefoneDe(atual)),ficha,{merge:true});
+      return true;
     });
-    toast("Pedido aceito.", "sucesso", 2500);
-  } catch { toast("Não deu para aceitar. Tente de novo.", "erro", 4000); }
+    fecharDetalhe(); toast(feito ? "Pedido aceito." : "Este pedido já foi tratado em outra aba.",feito ? "sucesso" : "info",3500);
+  } catch { toast("Não deu para aceitar. Confira a conexão e o cupom do pedido.","erro",4500); }
 }
 async function mudarStatus(p, status) {
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
-  const campo = status === "saiu" ? { saiuEm: serverTimestamp() } : { concluidoEm: serverTimestamp() };
+  const lojaId=P.loja.id, pedidoRef=doc(db,"lojas",lojaId,"pedidos",p.id);
   try {
-    const batch = writeBatch(db);
-    batch.update(doc(db, "lojas", P.loja.id, "pedidos", p.id), { status, ...campo });
-    if (temFicha(p)) batch.set(refFicha(p), await camposFicha(p, { status }, serverTimestamp()), { merge: true });
-    await batch.commit();
-  } catch { toast("Não deu para atualizar. Tente de novo.", "erro", 4000); }
+    const feito=await runTransaction(db,async (tx) => {
+      const snap=await tx.get(pedidoRef); if (!snap.exists()) return false;
+      const atual={id:snap.id,...snap.data()};
+      if (atual.status!==p.status || !["preparo","saiu"].includes(atual.status)) return false;
+      const campo=status==="saiu" ? {saiuEm:serverTimestamp()} : {concluidoEm:serverTimestamp()};
+      const ficha=await camposFicha(atual,{status},serverTimestamp());
+      tx.update(pedidoRef,{status,...campo});
+      if (temFicha(atual)) tx.set(doc(db,"lojas",lojaId,"clientes",telefoneDe(atual)),ficha,{merge:true});
+      return true;
+    });
+    if (!feito) toast("A situação deste pedido já mudou em outra aba.","info",3500);
+  } catch { toast("Não deu para atualizar. Tente de novo.","erro",4000); }
 }
 async function recusar(p) {
   if (!(await confirmar("Recusar este pedido? O cliente vê na tela do pedido que ele não foi aceito.", { textoConfirmar: "Recusar" }))) return;
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
-  const batch = writeBatch(db);
-  const { id, ...dados } = p;
-  batch.set(doc(db, "lojas", P.loja.id, "pedidos", id), { ...dados, status: "cancelado", concluidoEm: serverTimestamp() });
-  batch.delete(doc(db, "lojas", P.loja.id, "pedidosEntrada", id));
-  if (temFicha(p)) batch.set(refFicha(p), await camposFicha(p, { status: "cancelado" }, serverTimestamp()), { merge: true });
-  try { await batch.commit(); fecharDetalhe(); toast("Pedido recusado.", "info", 2500); }
-  catch { toast("Não deu para recusar. Tente de novo.", "erro", 4000); }
+  const lojaId=P.loja.id, entradaRef=doc(db,"lojas",lojaId,"pedidosEntrada",p.id);
+  try {
+    const feito=await runTransaction(db,async (tx) => {
+      const entrada=await tx.get(entradaRef); if (!entrada.exists()) return false;
+      const atual={id:entrada.id,...entrada.data()}, {id,...dados}=atual;
+      const reservaRef=atual.cupom ? doc(db,"lojas",lojaId,"reservasCupons",atual.cupom) : null;
+      const reserva=reservaRef ? await tx.get(reservaRef) : null;
+      const ficha=await camposFicha(atual,{status:"cancelado"},serverTimestamp());
+      tx.set(doc(db,"lojas",lojaId,"pedidos",id),{...dados,status:"cancelado",concluidoEm:serverTimestamp()});
+      tx.delete(entradaRef);
+      if (reserva?.exists() && reserva.data().pedidoId===id) tx.delete(reservaRef);
+      if (temFicha(atual)) tx.set(doc(db,"lojas",lojaId,"clientes",telefoneDe(atual)),ficha,{merge:true});
+      return true;
+    });
+    fecharDetalhe(); toast(feito ? "Pedido recusado." : "Este pedido já foi tratado em outra aba.","info",3500);
+  } catch { toast("Não deu para recusar. Tente de novo.","erro",4000); }
 }
 const refFicha = (p) => doc(db, "lojas", P.loja.id, "clientes", telefoneDe(p));
 const temFicha = (p) => /^\d{10,11}$/.test(telefoneDe(p)); // a regra só aceita ficha com 10 ou 11 dígitos
@@ -240,7 +261,7 @@ async function fichasDosAntigos() {
     const lista = snap.docs.map((d) => ({ id: d.id, ...d.data() })).filter((p) => /^\d{10,11}$/.test(telefoneDe(p)));
     for (let i = 0; i < lista.length; i += 400) {
       const batch = writeBatch(db);
-      for (const p of lista.slice(i, i + 400)) batch.set(refFicha(p), await camposFicha(p), { merge: true });
+      for (const p of lista.slice(i, i + 400)) batch.set(refFicha(p), await camposFicha(p, {}, serverTimestamp()), { merge: true });
       await batch.commit();
     }
     await updateDoc(doc(db, "lojas", P.loja.id), { fichasV1: true });

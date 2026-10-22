@@ -26,7 +26,7 @@ const vencido = (c) => { const d = comoData(c.validoAte); return !!d && new Date
 const esgotado = (c) => c.limite != null && (c.usos || 0) >= c.limite;
 const valeAgora = (c) => c.ativo && !vencido(c) && !esgotado(c);
 const textoValor = (c) => (c.tipo === "pct" ? `${c.valor}%` : reais(c.valor));
-const textoMinimo = (c) => (c.minimo ? `A partir de ${reais(c.minimo)}` : "Sem mínimo");
+const textoMinimo = (c) => c.individual ? "Pedido favorito · uso exclusivo" : (c.minimo ? `A partir de ${reais(c.minimo)}` : "Sem mínimo");
 const textoUsos = (c) => (c.limite != null ? `${c.usos || 0} de ${c.limite}` : `${c.usos || 0}`);
 function textoValidade(c) {
   const d = comoData(c.validoAte);
@@ -155,10 +155,16 @@ function abrirCupom(codigo) {
     ${c ? `<button type="button" class="excluir so-pc" data-excluir-cupom="${esc(c.codigo)}"><i data-ic="lixo"></i>Excluir</button>` : ""}
     <a class="btn fantasma so-pc" href="#cupons">Cancelar</a>
     <button type="button" class="btn" data-salvar-cupom>Salvar cupom</button>`;
+  if (r.individual) {
+    ["u-valor","u-minimo","u-limite"].forEach((id) => $(id).disabled=true);
+    $("u-modal").querySelectorAll("[data-tipo-cupom]").forEach((b) => b.disabled=true);
+    $("u-corpo").insertAdjacentHTML("afterbegin",`<p class="ajuda">Oferta individual: um uso para o cliente e o pedido favorito. Os itens e o desconto emitidos não mudam. Para outra oferta, use Clientes.</p>`);
+  }
   pintarIcones($("u-modal"));
 }
 async function salvarCupom() {
   const r = lerForm();
+  if (r.individual) { r.limite=1; r.minimo=r.subtotalOferta; }
   if (!codigoValido(r.codigo)) return toast("O código precisa de 3 a 20 letras ou números.", "erro", 3500);
   if (!r.editando && U.cupons.some((c) => c.codigo === r.codigo)) return toast("Já existe um cupom com esse código.", "erro", 3500);
   if (!Number.isFinite(r.valor) || r.valor <= 0) return toast("Digite o valor do desconto.", "erro", 3000);

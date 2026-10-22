@@ -6,7 +6,7 @@
     pedidos: { <chave>: { numero, criadoEm, itens: [{ qtd, nome }], total, status, tipo } }
   }
 
-  Quem sabe o número lê a ficha (get, nunca a lista): o nome e o resumo dos
+  Quem sabe o número lê a ficha (get; a equipe lista no CRM): o nome e o resumo dos
   pedidos, sem endereço. A chave de cada pedido é um resumo SHA-256 do id, para
   a ficha não entregar o id, que abre o pedido inteiro com o endereço.
   Só o painel do dono escreve a ficha (aceitar, recusar, mudar a situação).
@@ -23,7 +23,7 @@ export function resumoPedido(p, mudou = {}) {
   return {
     numero: q.numero ?? null,
     criadoEm: q.criadoEm ?? null,
-    itens: (q.itens || []).slice(0, 50).map((i) => ({ qtd: i.qtd, nome: i.nome })),
+    itens: (q.itens || []).slice(0, 50).map((i) => ({ qtd: i.qtd, nome: i.nome, ...(i.itemId ? {itemId:i.itemId} : {}), ...(i.resumo ? {resumo:i.resumo} : {}) })),
     total: q.total || 0,
     status: q.status,
     tipo: q.tipo || "entrega",

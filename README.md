@@ -50,7 +50,7 @@ preservando a marca na proporção larga da capa.
 No painel, cada item tem imagem e vídeo independentes. Imagens são
 reduzidas no navegador e guardadas no item. Vídeos MP4/WebM de até 10 MB
 são enviados apenas ao salvar, para o serviço Apps Script indicado em
-`midias-config.js`. `Code.gs` confere o login Firebase e o dono da loja;
+`midias-config.js`. `Code.gs` confere o login Firebase e o acesso à loja;
 `appsscript.json` usa Drive v3 com escopo `drive.file`, limitado aos
 arquivos criados pelo serviço. O Firestore guarda só a referência em
 `videoArquivo`; o cardápio carrega o arquivo quando ele fica visível.
@@ -95,3 +95,34 @@ de movimento e desaparece assim que o cardápio estiver pronto.
 A página pública serve a mesma Rubik (pesos 300 a 600) de
 `fontes/rubik-latin.woff2`, sem esperar CSS do Google Fonts. Arquivo obtido
 da distribuição oficial do Google Fonts; licença em `fontes/Rubik-OFL.txt`.
+
+## Clientes e ofertas individuais
+
+No painel, **Clientes** lista as fichas da própria loja, com filtro de mês,
+busca e paginação. O total inclui os clientes registrados nas fichas; pedidos
+cancelados não contam como compras do mês. Favoritos, média e último total
+usam os pedidos entregues. O total do pedido já contém entrega e desconto.
+
+**Fazer oferta** consulta o histórico completo apenas daquele cliente e usa
+os preços atuais do catálogo. O favorito é definido pela quantidade comprada;
+as opções mais frequentes e a quantidade habitual compõem a oferta. Um
+histórico sem tamanho identificável ou item indisponível exige conferência,
+sem substituir opções automaticamente. A entrega exibida é uma estimativa
+para o último bairro; o checkout confirma a taxa do novo pedido.
+
+O desconto pode ser em reais ou porcentagem, somente sobre os produtos.
+Confirmar cria um cupom individual de um uso e abre a mensagem no WhatsApp,
+para o operador enviar. Também aparece um link caso o navegador bloqueie a
+janela. A vinculação usa o número informado no cardápio, sem verificação por
+SMS, conforme a identificação de cliente já adotada pelo projeto.
+
+As regras do Firestore exigem o telefone e a cesta da oferta (produtos,
+opções, quantidades e valores). A criação do pedido e a reserva são atômicas:
+dois envios não conseguem reservar o mesmo cupom. Recusar libera a reserva;
+aceitar consome o uso uma vez. Telefone do destinatário e id do pedido ficam
+nas coleções privadas `ofertasClientes` e `reservasCupons`; o cupom público
+contém apenas o hash do vínculo e a cesta permitida.
+
+Prévia fictícia: `painel.html?exemplo=painel#clientes`. Verificações locais
+de cálculo e regras: `node rea/verificar-crm.mjs`, com o emulador Firestore
+em `127.0.0.1:8080`. O script não aceita endereço de produção.

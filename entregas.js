@@ -26,6 +26,15 @@ const pc = window.matchMedia("(min-width: 1024px)");
 const LEAFLET = "https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js";
 
 const E = { loja: null, exemplo: false, bairros: [], janela: null, rasc: null, mapa: null, mini: null, parar: [], avisou: false };
+// A oferta usa a regra e os bairros já ouvidos por esta tela, sem nova escuta.
+export function taxaParaCliente(p) {
+  if (p?.tipo !== "entrega") return 0;
+  const mesmo = semAcento(p.endereco?.bairro) === semAcento(E.loja?.bairro);
+  const bairro = E.bairros.find((b) => semAcento(b.nome) === semAcento(p.endereco?.bairro));
+  if (!mesmo && (!bairro || !E.loja?.local || bairro.lat == null)) return null;
+  const km = mesmo ? 0 : distanciaKm(E.loja.local,bairro), e = regraDe(E.loja);
+  return km > e.raioMaxKm ? null : taxaKm(km,mesmo,e);
+}
 
 /* ===== conta de cada bairro (a mesma da loja) ===== */
 function linhas() {

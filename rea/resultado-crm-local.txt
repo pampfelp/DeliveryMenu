@@ -1,0 +1,55 @@
+OK sabores amazônicos da categoria real
+OK 42 clientes fictícios distintos
+OK média e último já incluem entrega
+OK cancelados não entram no mês nem nas finanças
+OK virada do mês em Belém
+OK favorito com pizza, acompanhamento e bebida a preços atuais
+OK cesta independe da ordem das linhas
+OK junção de linhas repetidas
+OK histórico ambíguo não escolhe outro tamanho
+OK arredondamento do percentual
+OK desconto fixo não supera os produtos
+OK preço por grupo: soma
+OK preço por grupo: media
+OK preço por grupo: menor
+OK preço por grupo: maior
+OK preço promocional compartilhado
+OK opção indisponível não vira oferta
+OK tamanho obrigatório ausente não vira oferta
+OK histórico anterior com nome e tamanho exatos
+OK preparar loja isolada
+OK dono lista clientes
+OK equipe lista clientes da própria loja
+OK anônimo não lista clientes
+OK outra loja não lista clientes
+OK anônimo não lê vínculo do cupom
+OK emissão atômica de cupom e vínculo pelo dono
+OK código público pode ser consultado
+OK vínculo privado de outra loja
+OK anônimo não cria cupom
+OK limite individual não pode ser ampliado
+OK cupom sem reserva
+OK reserva sem pedido
+OK telefone diferente
+OK sabor diferente
+OK tamanho diferente
+OK quantidade diferente
+OK retirar bebida
+OK acrescentar produto
+OK alterar subtotal
+OK alterar desconto
+OK dois envios concorrentes: exatamente um passa
+OK resgate repetido reservado
+OK anônimo não lê reserva com id do pedido
+OK anônimo não libera reserva
+OK equipe pode consultar reserva
+OK liberar reserva recusada
+OK novo envio após recusa
+OK consumir uso no aceite
+OK liberar reserva para testar cupom consumido
+OK cupom consumido não serve de novo
+OK cupom comum preservado
+OK pedido com cupom comum sem reserva
+OK pedido sem cupom preservado
+OK catálogo de teste
+54 verificações passaram. Emulador: teste-crm-mvk6zecj.

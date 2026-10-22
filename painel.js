@@ -17,11 +17,13 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=8";
-import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=4";
-import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=4";
+import { iniciarPedidos, pararPedidos, abrirPedido } from "./pedidos.js?v=9";
+import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from "./cardapio.js?v=5";
+import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=5";
+import { iniciarClientes, pararClientes, mostrarClientes, fecharClientes } from "./clientes.js?v=1";
+import { CRM_EXEMPLO } from "./crm-exemplo.js?v=1";
 import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=3";
-import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=3";
+import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=4";
 import { iniciarUsuarios, pararUsuarios, mostrarUsuarios, fecharUsuarios } from "./usuarios.js?v=1";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 
@@ -55,7 +57,7 @@ function irParaHash() {
     if (tela !== "senha") history.replaceState(null, "", "#senha");
     tela = "senha";
   } else if (STATE.user || EXEMPLO_PAINEL) {
-    if (["cardapio", "entregas", "cupons", "configuracoes", "usuarios"].includes(tela)) vista = tela;
+    if (["cardapio", "clientes", "entregas", "cupons", "configuracoes", "usuarios"].includes(tela)) vista = tela;
     else if (tela !== "painel") history.replaceState(null, "", "#painel"); // logado, o endereço acompanha
     tela = "painel";
   }
@@ -78,17 +80,20 @@ function irParaHash() {
   $("vista-configuracoes").hidden = vista !== "configuracoes";
   $("vista-cupons").hidden = vista !== "cupons";
   $("vista-usuarios").hidden = vista !== "usuarios";
+  $("vista-clientes").hidden = vista !== "clientes";
   // no celular, Usuários abre pelos Ajustes e o item Ajustes fica marcado
   document.querySelectorAll("[data-vista]").forEach((a) => a.classList.toggle("on", a.dataset.vista.split(" ").includes(vista)));
   if (vista !== "cardapio") fecharCardapio();
   if (vista !== "entregas") fecharEntregas();
   if (vista !== "cupons") fecharCupons();
   if (vista !== "usuarios") fecharUsuarios();
+  if (vista !== "clientes") fecharClientes();
   if (vista === "cardapio") mostrarCardapio(partes);
   else if (vista === "entregas") mostrarEntregas(partes);
   else if (vista === "configuracoes") mostrarConfiguracoes();
   else if (vista === "cupons") mostrarCupons(partes);
   else if (vista === "usuarios") mostrarUsuarios(partes);
+  else if (vista === "clientes") mostrarClientes();
   else if (passo) abrirPedido(passo); // #painel/<id> abre o detalhe
 }
 window.addEventListener("hashchange", irParaHash);
@@ -240,7 +245,8 @@ async function abrirPainel(user) {
   iniciarConfiguracoes(STATE.loja);
   iniciarCupons(STATE.loja);
   iniciarUsuarios(STATE.loja, { eu: emailDe(user) });
-  if (!/^#(painel|cardapio|entregas|cupons|configuracoes|usuarios)/.test(location.hash)) location.hash = "#painel";
+  iniciarClientes(STATE.loja);
+  if (!/^#(painel|cardapio|clientes|entregas|cupons|configuracoes|usuarios)/.test(location.hash)) location.hash = "#painel";
   irParaHash();
 }
 
@@ -264,7 +270,7 @@ function vigiarAcesso(user) {
 function pararTudo() {
   STATE.pararAcesso?.();
   STATE.pararAcesso = null;
-  pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); pararCupons(); pararUsuarios();
+  pararClientes(); pararPedidos(); pararCardapio(); pararEntregas(); pararConfiguracoes(); pararCupons(); pararUsuarios();
 }
 async function sair(aviso) {
   pararTudo();
@@ -303,6 +309,7 @@ setTimeout(() => { if (document.body.dataset.tela === "carregando") irParaHash()
 if (EXEMPLO_PAINEL) {
   iniciarPedidos({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: PEDIDOS_EXEMPLO });
   iniciarCardapio({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CATEGORIAS });
+  iniciarClientes({id:"exemplo",nome:"Casa Jambu"},{exemplo:CRM_EXEMPLO});
   iniciarCupons({ id: "exemplo", nome: "Nome do Restaurante" }, { exemplo: CUPONS_EXEMPLO });
   // pessoas das imagens PD60 e P60 (fictícias, o repositório é público)
   const dia = (d) => new Date(2026, 9, d, 10);

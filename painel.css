@@ -208,7 +208,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .coluna { display: none; gap: 10px; }
   .coluna.ativa { display: grid; }
   .coluna h2 { display: none; }
-  .nav-p { position: fixed; left: 0; right: 0; bottom: 0; height: 64px; display: grid; grid-template-columns: repeat(5, 1fr); background: var(--surface); box-shadow: var(--shadow-bar); z-index: 10; }
+  .nav-p { position: fixed; left: 0; right: 0; bottom: 0; height: 64px; display: grid; grid-template-columns: repeat(6, 1fr); background: var(--surface); box-shadow: var(--shadow-bar); z-index: 10; }
   .nav-p > * { position: relative; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; font-weight: 500; font-size: 10px; line-height: 12px; color: var(--text-muted); }
   .nav-p .on { color: var(--accent); }
   .nav-p svg.ic { width: 22px; height: 22px; }

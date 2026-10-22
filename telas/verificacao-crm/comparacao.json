@@ -1,0 +1,373 @@
+[
+  {
+    "mode": "layout",
+    "original": {
+      "width": 1586,
+      "height": 992
+    },
+    "clone": {
+      "width": 1440,
+      "height": 887
+    },
+    "compared_at": {
+      "width": 480,
+      "height": 296
+    },
+    "height_delta_pct": -1.3,
+    "score": 66.2,
+    "verdict": "partly",
+    "regions": [
+      {
+        "x": 793,
+        "y": 132,
+        "w": 396,
+        "h": 396,
+        "cells": 6,
+        "where": "top centre"
+      },
+      {
+        "x": 793,
+        "y": 528,
+        "w": 264,
+        "h": 396,
+        "cells": 4,
+        "where": "bottom centre"
+      },
+      {
+        "x": 0,
+        "y": 793,
+        "w": 396,
+        "h": 199,
+        "cells": 4,
+        "where": "bottom left"
+      },
+      {
+        "x": 1321,
+        "y": 528,
+        "w": 264,
+        "h": 264,
+        "cells": 3,
+        "where": "middle right"
+      },
+      {
+        "x": 264,
+        "y": 264,
+        "w": 132,
+        "h": 132,
+        "cells": 1,
+        "where": "top left"
+      },
+      {
+        "x": 528,
+        "y": 264,
+        "w": 132,
+        "h": 132,
+        "cells": 1,
+        "where": "top centre"
+      },
+      {
+        "x": 1189,
+        "y": 264,
+        "w": 132,
+        "h": 132,
+        "cells": 1,
+        "where": "top right"
+      },
+      {
+        "x": 0,
+        "y": 396,
+        "w": 132,
+        "h": 132,
+        "cells": 1,
+        "where": "middle left"
+      },
+      {
+        "x": 396,
+        "y": 396,
+        "w": 132,
+        "h": 132,
+        "cells": 1,
+        "where": "middle left"
+      }
+    ],
+    "files": {
+      "original": "telas/PD70-clientes-crm.png",
+      "clone": "telas/verificacao-crm/clientes-pc.png"
+    },
+    "diff_image": "telas/verificacao-crm/diff-clientes-pc.png"
+  },
+  {
+    "mode": "layout",
+    "original": {
+      "width": 804,
+      "height": 1957
+    },
+    "clone": {
+      "width": 375,
+      "height": 811
+    },
+    "compared_at": {
+      "width": 375,
+      "height": 811
+    },
+    "height_delta_pct": -11.2,
+    "score": 48.0,
+    "verdict": "different",
+    "regions": [
+      {
+        "x": 66,
+        "y": 1329,
+        "w": 731,
+        "h": 465,
+        "cells": 34,
+        "where": "bottom centre"
+      },
+      {
+        "x": 0,
+        "y": 132,
+        "w": 598,
+        "h": 531,
+        "cells": 33,
+        "where": "top centre"
+      },
+      {
+        "x": 465,
+        "y": 265,
+        "w": 332,
+        "h": 930,
+        "cells": 19,
+        "where": "middle right"
+      },
+      {
+        "x": 664,
+        "y": 0,
+        "w": 132,
+        "h": 199,
+        "cells": 4,
+        "where": "top right"
+      },
+      {
+        "x": 199,
+        "y": 930,
+        "w": 199,
+        "h": 132,
+        "cells": 4,
+        "where": "middle centre"
+      },
+      {
+        "x": 265,
+        "y": 797,
+        "w": 132,
+        "h": 132,
+        "cells": 3,
+        "where": "middle centre"
+      },
+      {
+        "x": 398,
+        "y": 66,
+        "w": 132,
+        "h": 66,
+        "cells": 2,
+        "where": "top centre"
+      },
+      {
+        "x": 531,
+        "y": 265,
+        "w": 132,
+        "h": 66,
+        "cells": 2,
+        "where": "top right"
+      },
+      {
+        "x": 132,
+        "y": 731,
+        "w": 132,
+        "h": 66,
+        "cells": 2,
+        "where": "middle left"
+      },
+      {
+        "x": 0,
+        "y": 797,
+        "w": 66,
+        "h": 132,
+        "cells": 2,
+        "where": "middle left"
+      },
+      {
+        "x": 465,
+        "y": 996,
+        "w": 132,
+        "h": 66,
+        "cells": 2,
+        "where": "middle right"
+      },
+      {
+        "x": 0,
+        "y": 1595,
+        "w": 66,
+        "h": 132,
+        "cells": 2,
+        "where": "bottom left"
+      },
+      {
+        "x": 465,
+        "y": 199,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "top centre"
+      },
+      {
+        "x": 0,
+        "y": 664,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle left"
+      },
+      {
+        "x": 398,
+        "y": 930,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle centre"
+      },
+      {
+        "x": 0,
+        "y": 1063,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle left"
+      },
+      {
+        "x": 132,
+        "y": 1063,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle left"
+      },
+      {
+        "x": 398,
+        "y": 1063,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle centre"
+      },
+      {
+        "x": 465,
+        "y": 1129,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "middle centre"
+      },
+      {
+        "x": 0,
+        "y": 1329,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "bottom left"
+      },
+      {
+        "x": 0,
+        "y": 1462,
+        "w": 66,
+        "h": 66,
+        "cells": 1,
+        "where": "bottom left"
+      }
+    ],
+    "files": {
+      "original": "telas/P70-clientes-crm.png",
+      "clone": "telas/verificacao-crm/clientes-mobile.png"
+    },
+    "diff_image": "telas/verificacao-crm/diff-clientes-mobile.png"
+  },
+  {
+    "mode": "layout",
+    "original": {
+      "width": 1505,
+      "height": 1045
+    },
+    "clone": {
+      "width": 1440,
+      "height": 887
+    },
+    "compared_at": {
+      "width": 480,
+      "height": 296
+    },
+    "height_delta_pct": -11.1,
+    "score": 61.5,
+    "verdict": "partly",
+    "regions": [
+      {
+        "x": 0,
+        "y": 125,
+        "w": 376,
+        "h": 877,
+        "cells": 10,
+        "where": "middle left"
+      },
+      {
+        "x": 501,
+        "y": 501,
+        "w": 501,
+        "h": 501,
+        "cells": 9,
+        "where": "bottom centre"
+      },
+      {
+        "x": 1254,
+        "y": 376,
+        "w": 250,
+        "h": 376,
+        "cells": 5,
+        "where": "middle right"
+      },
+      {
+        "x": 627,
+        "y": 0,
+        "w": 376,
+        "h": 125,
+        "cells": 3,
+        "where": "top centre"
+      },
+      {
+        "x": 877,
+        "y": 752,
+        "w": 250,
+        "h": 250,
+        "cells": 3,
+        "where": "bottom right"
+      },
+      {
+        "x": 1003,
+        "y": 376,
+        "w": 125,
+        "h": 250,
+        "cells": 2,
+        "where": "middle right"
+      },
+      {
+        "x": 501,
+        "y": 125,
+        "w": 125,
+        "h": 125,
+        "cells": 1,
+        "where": "top centre"
+      }
+    ],
+    "files": {
+      "original": "telas/PD71-oferta-cliente.png",
+      "clone": "telas/verificacao-crm/oferta-pc.png"
+    },
+    "diff_image": "telas/verificacao-crm/diff-oferta-pc.png"
+  }
+]

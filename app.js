@@ -7,14 +7,16 @@
   feitos ficam no aparelho (localStorage); a sacola é separada por loja.
 */
 
+import { valorGrupo, precoBase, precoUnitario, resumoOpcoes } from "./preco-item.js?v=1";
 import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
+import { cestaCanonica, mesmaCesta, hashDestinatario } from "./oferta-cupom.js?v=1";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
 import { carregarLoja, SLUG } from "./loja-dados.js?v=8";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
-import { chavePedido } from "./ficha-cliente.js?v=1";
+import { chavePedido } from "./ficha-cliente.js?v=2";
 import { sincronizarVideos } from "./videos-pizza.js?v=5";
 import { videoDoItem } from "./midias-video.js?v=2";
 
@@ -85,23 +87,20 @@ function salvarSacola() {
     toast(`O cupom ${STATE.cupom.codigo} saiu: ele vale a partir de ${reais(STATE.cupom.minimo)} em itens.`, "info", 4500);
     tirarCupom(false);
   }
+  if (STATE.cupom?.individual && !mesmaCesta(linhasDoPedido(),STATE.cupom.oferta)) {
+    toast("O cupom individual saiu: ele vale somente para os itens, opções e quantidades da oferta.","info",5000); tirarCupom(false);
+  }
   renderSacolas();
+}
+const linhasDoPedido = () => STATE.sacola.map((l) => ({itemId:l.itemId,escolhas:l.escolhas,qtd:l.qtd,nome:item(l.itemId).nome,total:totalLinha(l),resumo:resumoLinha(l,false),obs:l.obs || ""}));
+async function motivoIndividual(c,linhas,telefone) {
+  if (!c?.individual) return "";
+  if (!mesmaCesta(linhas,c.oferta)) return "Este cupom vale somente para os itens, opções e quantidades do pedido favorito da oferta.";
+  if (telefone && await hashDestinatario(c.codigo,telefone) !== c.destinatarioHash) return "Este cupom é exclusivo para o WhatsApp que recebeu a oferta.";
+  return "";
 }
 
 /* ===== preço: regra de cada grupo de adicionais (ver rea/ACHADOS.md, P2) ===== */
-function valorGrupo(grupo, escolhaDoGrupo = {}) {
-  const precos = [];
-  grupo.opcoes.forEach((o) => { for (let n = 0; n < (escolhaDoGrupo[o.id] || 0); n++) precos.push(o.preco); });
-  if (!precos.length) return 0;
-  const soma = precos.reduce((s, p) => s + p, 0);
-  switch (grupo.regraPreco) {
-    case "media": return Math.round(soma / precos.length);
-    case "menor": return Math.min(...precos);
-    case "maior": return Math.max(...precos);
-    default: return soma;
-  }
-}
-const precoBase = (i) => i.precoPromo ?? i.preco;
 // item sem preço próprio (pizza meio a meio): mostra o menor valor possível pelas opções obrigatórias.
 // Num grupo somável a mesma opção pode ser repetida, então o mínimo é a mais barata repetida.
 const precoMinimo = (i) => i.grupos.filter((g) => g.min > 0).reduce((s, g) => {
@@ -112,7 +111,7 @@ function precoVitrine(i) {
   if (i.preco) return reais(precoBase(i));
   return `A partir de ${reais(precoMinimo(i))}`;
 }
-const precoUnitario = (i, escolhas) => precoBase(i) + i.grupos.reduce((s, g) => s + valorGrupo(g, escolhas[g.id]), 0);
+
 const totalLinha = (l) => precoUnitario(item(l.itemId), l.escolhas) * l.qtd;
 const subtotal = () => STATE.sacola.reduce((s, l) => s + totalLinha(l), 0);
 const taxa = () => (STATE.tipo === "entrega" && STATE.entrega.status === "ok" ? STATE.entrega.valor : 0);
@@ -139,11 +138,7 @@ const qtdItens = () => STATE.sacola.reduce((s, l) => s + l.qtd, 0);
 
 function resumoLinha(l, comObs = true) {
   const i = item(l.itemId);
-  const partes = [];
-  i.grupos.forEach((g) => g.opcoes.forEach((o) => {
-    const n = (l.escolhas[g.id] || {})[o.id] || 0;
-    if (n) partes.push(g.tipo === "unica" ? o.nome : `${n} ${o.nome.toLowerCase()}`);
-  }));
+  const partes = [resumoOpcoes(i,l.escolhas)].filter(Boolean);
   if (l.obs && comObs) partes.push(l.obs);
   return partes.join(", ");
 }
@@ -868,7 +863,7 @@ async function enviarPedido() {
     endereco: STATE.tipo === "entrega"
       ? { rua: campo("f-rua"), numero: campo("f-num"), bairro: STATE.entrega.bairro, complemento: campo("f-compl"), referencia: campo("f-ref"), cep: campo("f-cep"), km: Math.round(km * 10) / 10 }
       : null,
-    itens: STATE.sacola.map((l) => ({ qtd: l.qtd, nome: item(l.itemId).nome, total: totalLinha(l), resumo: resumoLinha(l, false), obs: l.obs || "" })),
+    itens: STATE.cupom?.individual ? cestaCanonica(linhasDoPedido()) : linhasDoPedido(),
     subtotal: subtotal(),
     taxa: taxa(),
     total: totalPedido(),
@@ -888,8 +883,17 @@ async function enviarPedido() {
   marcarEnviar();
   try {
     const { db } = await import("./firebase-init.js?v=3");
-    const { collection, addDoc, serverTimestamp } = await import(FIRESTORE);
-    const ref = await addDoc(collection(db, "lojas", LOJA.id, "pedidosEntrada"), { ...pedido, criadoEm: serverTimestamp() });
+    const { collection, doc, writeBatch, serverTimestamp } = await import(FIRESTORE);
+    let cupom = null;
+    if (pedido.cupom) {
+      cupom = await buscarCupom(pedido.cupom);
+      const motivo = motivoRecusa(cupom,pedido.subtotal,reais) || await motivoIndividual(cupom,pedido.itens,pedido.cliente.telefone);
+      if (motivo || descontoDe(cupom,pedido.subtotal)!==pedido.desconto) throw { cupomMotivo:motivo || "O valor do cupom mudou. Confira o total antes de enviar." };
+    }
+    const ref = doc(collection(db,"lojas",LOJA.id,"pedidosEntrada")), lote = writeBatch(db);
+    lote.set(ref,{...pedido,criadoEm:serverTimestamp()});
+    if (cupom?.individual) lote.set(doc(db,"lojas",LOJA.id,"reservasCupons",pedido.cupom),{pedidoId:ref.id,criadoEm:serverTimestamp()});
+    await lote.commit();
     try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([ref.id, ...meusPedidos()].slice(0, 20))); } catch { /* sem armazenamento */ }
     if (pedido.endereco) guardarEndereco(pedido.endereco);
     tirarCupom(false);
@@ -898,7 +902,7 @@ async function enviarPedido() {
     location.hash = `#pedido/${ref.id}`;
   } catch (err) {
     // o cupom pode ter vencido ou esgotado entre a sacola e o envio
-    const motivo = err?.code === "permission-denied" && STATE.cupom ? await cupomAindaServe() : "";
+    const motivo = err.cupomMotivo || (err?.code === "permission-denied" && STATE.cupom ? await cupomAindaServe() : "");
     if (motivo) { tirarCupom(false); toast(`${motivo} O cupom saiu do pedido; confira o total e envie de novo.`, "erro", 6000); renderRevisar(); return; }
     toast(err?.code === "permission-denied" ? "O restaurante não está recebendo pedidos agora." : "Não deu para enviar. Confira a internet e tente de novo.", "erro", 5000);
   } finally {
@@ -1186,7 +1190,7 @@ async function buscarCupom(codigo) {
   return snap.exists() ? { codigo, ...snap.data() } : null;
 }
 const guardavel = (c) => ({ codigo: c.codigo, tipo: c.tipo, valor: c.valor, minimo: c.minimo || 0,
-  validoAte: c.validoAte ? (c.validoAte.toDate ? c.validoAte.toDate() : new Date(c.validoAte)).toISOString() : null });
+  validoAte: c.validoAte ? (c.validoAte.toDate ? c.validoAte.toDate() : new Date(c.validoAte)).toISOString() : null, ativo:c.ativo,limite:c.limite ?? null,usos:c.usos || 0, ...(c.individual ? {individual:true,oferta:c.oferta,destinatarioHash:c.destinatarioHash} : {}) });
 function abrirCupom() {
   document.getElementById("cupom-erro").hidden = true;
   document.getElementById("cupom-codigo").value = "";
@@ -1212,7 +1216,7 @@ async function aplicarCupom() {
   botao.classList.add("desligado");
   try {
     const c = await buscarCupom(codigo);
-    const motivo = motivoRecusa(c, subtotal(), reais);
+    const motivo = motivoRecusa(c, subtotal(), reais) || await motivoIndividual(c,linhasDoPedido(),STATE.cliente?.telefone);
     if (motivo) { erroCupom(motivo); return; }
     STATE.cupom = guardavel(c);
     if (!EXEMPLO) try { localStorage.setItem(CHAVE_CUPOM, JSON.stringify(STATE.cupom)); } catch { /* vale só nesta visita */ }
@@ -1230,7 +1234,11 @@ function tirarCupom(redesenhar = true) {
 }
 // antes do envio recusado: o cupom ainda serve? devolve o motivo quando não serve
 async function cupomAindaServe() {
-  try { return motivoRecusa(await buscarCupom(STATE.cupom.codigo), subtotal(), reais); } catch { return ""; }
+  try {
+    const c=await buscarCupom(STATE.cupom.codigo);
+    return motivoRecusa(c,subtotal(),reais) || await motivoIndividual(c,linhasDoPedido(),STATE.cliente?.telefone)
+      || (c?.individual ? "Este cupom individual já está reservado em outro pedido ou precisa ser conferido pelo restaurante." : "");
+  } catch { return ""; }
 }
 function lerCupomGuardado() {
   if (EXEMPLO) return null;
