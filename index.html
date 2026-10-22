@@ -14,7 +14,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=24" />
+<link rel="stylesheet" href="./loja.css?v=25" />
 </head>
 <body>
 <div id="app">
@@ -38,6 +38,7 @@
         <div class="aviso-fechada" hidden><i data-ic="relogio"></i><span><b>Não estamos recebendo pedidos agora</b>Você pode olhar o cardápio e montar a sacola. O envio volta quando o restaurante abrir.</span></div>
         <div class="vazio-cardapio" id="vazio-cardapio" hidden>O cardápio deste restaurante ainda está sendo montado.</div>
         <button class="linha-taxa so-cel" data-calcular></button>
+        <div class="banner-loja" id="banner-loja" hidden></div>
         <div class="filtros">
           <label class="sel"><span>Categorias</span><i data-ic="baixo"></i><select id="cat-sel" aria-label="Ir para a categoria"></select></label>
           <label class="lupa" aria-label="Buscar"><i data-ic="busca"></i><input id="busca" type="search" placeholder="Buscar no cardápio" /></label>
@@ -279,6 +280,6 @@
   </nav>
 </div>
 
-<script type="module" src="./app.js?v=22"></script>
+<script type="module" src="./app.js?v=23"></script>
 </body>
 </html>

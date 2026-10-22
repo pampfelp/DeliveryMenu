@@ -16,7 +16,7 @@ const ativo = (video) => video.closest(".tela")?.classList.contains("ativa");
 const observador = new IntersectionObserver((entradas) => {
   entradas.forEach(({ target: video, isIntersecting }) => {
     if (!isIntersecting || !ativo(video) || !automatico()) { video.pause(); return; }
-    if (!video.getAttribute("src")) video.src = video.dataset.src;
+    if (video.dataset.src && !video.getAttribute("src")) video.src = video.dataset.src;
     if (video.ended) video.currentTime = 0;
     video.play().catch(() => { /* autoplay bloqueado: a foto continua visível */ });
   });

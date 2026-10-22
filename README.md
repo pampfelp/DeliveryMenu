@@ -36,7 +36,11 @@ Os dez sabores da loja `casa-jambu-delivery` usam os MP4 de
 Os arquivos foram gerados a partir das fotos e descrições da própria loja.
 Outras lojas continuam usando as fotos cadastradas.
 
-Nos cards, o clipe toca sem som uma vez quando fica visível. Ao abrir a
+Nos cards, o clipe toca sem som em loop quando fica visível. Ao abrir a
 pizza, o vídeo tem controles e repetição. A reprodução automática respeita
 redução de movimento e economia de dados; a foto permanece como alternativa
 se houver falha. Nenhuma geração de IA acontece ao navegar no cardápio.
+
+O banner animado da mesma loja aparece antes das categorias, com arquivos
+próprios para computador e celular, reprodução silenciosa em loop e
+controles para pausar. O enquadramento preserva a marca completa.

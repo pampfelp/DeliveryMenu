@@ -15,7 +15,7 @@ import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 import { chavePedido } from "./ficha-cliente.js?v=1";
-import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=1";
+import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=2";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const EXEMPLO = new URLSearchParams(location.search).has("exemplo");
@@ -47,8 +47,8 @@ const foto = (url, classe = "foto") =>
 function midiaPizza(i, detalhe = false) {
   const url = videoDaPizza(LOJA.id, i.id);
   if (!url) return detalhe ? (i.fotoUrl ? `<img src="${esc(i.fotoUrl)}" alt="" />` : `<i data-ic="foto"></i>`) : foto(i.fotoUrl);
-  const video = `<video data-video-pizza ${detalhe ? `src="${esc(url)}" controls loop aria-label="Vídeo de ${esc(i.nome)}"` : `data-src="${esc(url)}" aria-hidden="true" tabindex="-1"`}
-    muted playsinline preload="none" poster="${esc(i.fotoUrl)}"></video>`;
+  const video = `<video data-video-pizza ${detalhe ? `src="${esc(url)}" controls aria-label="Vídeo de ${esc(i.nome)}"` : `data-src="${esc(url)}" aria-hidden="true" tabindex="-1"`}
+    muted loop playsinline preload="none" poster="${esc(i.fotoUrl)}"></video>`;
   return `<div class="${detalhe ? "midia-hero" : "foto midia-pizza"}">${foto(i.fotoUrl, "")}${video}</div>`;
 }
 
@@ -209,6 +209,15 @@ function renderInicio() {
   document.querySelectorAll(".mini").forEach((el) => (el.innerHTML = LOJA.logoUrl ? `<img src="${esc(LOJA.logoUrl)}" alt="" />` : ""));
   document.querySelectorAll("#loja-logo img, .mini img").forEach(logoInteiro);
   document.title = `${LOJA.nome} | Cardápio Delivery`;
+
+  const banner = document.getElementById("banner-loja");
+  banner.hidden = LOJA.id !== "casa-jambu-delivery";
+  if (!banner.hidden) banner.innerHTML = `<img src="./midias/casa-jambu/banner-poster.jpg?v=1" alt="" />
+    <video data-video-pizza controls loop muted playsinline preload="none"
+    poster="./midias/casa-jambu/banner-poster.jpg?v=1" aria-label="Apresentação da Casa Jambu">
+    <source src="./midias/casa-jambu/banner-desktop.mp4?v=1" media="(min-width: 1024px)" type="video/mp4" />
+    <source src="./midias/casa-jambu/banner-celular.mp4?v=1" type="video/mp4" />
+  </video>`;
 
   document.getElementById("destaques").innerHTML = ITENS.filter((i) => i.destaque).map((i) => `
     <a class="dest" href="#produto/${esc(i.id)}">
