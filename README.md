@@ -28,3 +28,15 @@ analisado) fica fora deste repositório, em `C:\rea-alvos\` e
 
 HTML, CSS e JavaScript puros, sem build step, Firebase/Firestore e GitHub
 Pages, a partir do `boilerplate/` do segundo cérebro.
+
+## Vídeos das pizzas Casa Jambu
+
+Os dez sabores da loja `casa-jambu-delivery` usam os MP4 de
+`midias/casa-jambu/`, associados aos ids dos produtos em `videos-pizza.js`.
+Os arquivos foram gerados a partir das fotos e descrições da própria loja.
+Outras lojas continuam usando as fotos cadastradas.
+
+Nos cards, o clipe toca sem som uma vez quando fica visível. Ao abrir a
+pizza, o vídeo tem controles e repetição. A reprodução automática respeita
+redução de movimento e economia de dados; a foto permanece como alternativa
+se houver falha. Nenhuma geração de IA acontece ao navegar no cardápio.

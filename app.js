@@ -15,6 +15,7 @@ import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 import { chavePedido } from "./ficha-cliente.js?v=1";
+import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=1";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const EXEMPLO = new URLSearchParams(location.search).has("exemplo");
@@ -42,6 +43,14 @@ const pc = window.matchMedia("(min-width: 1024px)");
 // foto enviada pela loja, ou o espaço reservado com o ícone de imagem
 const foto = (url, classe = "foto") =>
   url ? `<img class="${classe}" src="${esc(url)}" alt="" loading="lazy" />` : `<div class="${classe}"><i data-ic="foto"></i></div>`;
+
+function midiaPizza(i, detalhe = false) {
+  const url = videoDaPizza(LOJA.id, i.id);
+  if (!url) return detalhe ? (i.fotoUrl ? `<img src="${esc(i.fotoUrl)}" alt="" />` : `<i data-ic="foto"></i>`) : foto(i.fotoUrl);
+  const video = `<video data-video-pizza ${detalhe ? `src="${esc(url)}" controls loop aria-label="Vídeo de ${esc(i.nome)}"` : `data-src="${esc(url)}" aria-hidden="true" tabindex="-1"`}
+    muted playsinline preload="none" poster="${esc(i.fotoUrl)}"></video>`;
+  return `<div class="${detalhe ? "midia-hero" : "foto midia-pizza"}">${foto(i.fotoUrl, "")}${video}</div>`;
+}
 
 /* ===== sacola (no aparelho) ===== */
 const CHAVE = `deliverymenu:sacola:${LOJA.id}`;
@@ -179,6 +188,7 @@ function irParaHash() {
   if (tela === "pedido") acompanhar(param);
   if (tela !== "produto") window.scrollTo(0, 0);
   pintarIcones();
+  sincronizarVideos();
 }
 window.addEventListener("hashchange", irParaHash);
 pc.addEventListener("change", irParaHash);
@@ -202,7 +212,7 @@ function renderInicio() {
 
   document.getElementById("destaques").innerHTML = ITENS.filter((i) => i.destaque).map((i) => `
     <a class="dest" href="#produto/${esc(i.id)}">
-      ${foto(i.fotoUrl)}
+      ${midiaPizza(i)}
       <div class="corpo">
         ${i.selo ? `<span class="selo selo-${esc(i.selo)}">${SELOS[i.selo]}</span>` : ""}
         <h3>${esc(i.nome)}</h3><p>${esc(i.descricao)}</p>
@@ -279,7 +289,7 @@ function cardItem(i) {
   return `
     <a class="item${i.esgotado ? " esgotado" : ""}"${destino}>
       <div class="txt"><h3>${esc(i.nome)}</h3><p>${esc(i.descricao)}</p><div class="valores">${valores}</div></div>
-      ${foto(i.fotoUrl)}
+      ${midiaPizza(i)}
     </a>`;
 }
 
@@ -289,12 +299,13 @@ campoBusca.addEventListener("input", () => {
   const termo = semAcento(campoBusca.value.trim());
   const caixa = document.getElementById("resultado-busca");
   document.getElementById("cardapio").hidden = !!termo;
-  if (!termo) { caixa.innerHTML = ""; return; }
+  if (!termo) { caixa.innerHTML = ""; sincronizarVideos(); return; }
   const achados = ITENS.filter((i) => semAcento(`${i.nome} ${i.descricao}`).includes(termo));
   caixa.innerHTML = achados.length
     ? `<h2 class="secao">Resultados</h2><div class="lista-itens">${achados.map(cardItem).join("")}</div>`
     : `<p class="vazio-busca">Nenhum produto encontrado</p>`;
   pintarIcones(caixa);
+  sincronizarVideos();
 });
 document.querySelector(".lupa").addEventListener("click", () => {
   if (pc.matches) return;
@@ -319,7 +330,7 @@ function abrirProduto(id, uid) {
   };
   // editando pela sacola do celular, fechar volta para a sacola
   document.querySelector("#tela-produto .x").setAttribute("href", linha && !pc.matches ? "#sacola" : "#inicio");
-  document.getElementById("produto-foto").innerHTML = i.fotoUrl ? `<img src="${esc(i.fotoUrl)}" alt="" />` : `<i data-ic="foto"></i>`;
+  document.getElementById("produto-foto").innerHTML = midiaPizza(i, true);
   document.getElementById("produto-info").innerHTML = `
     <h1>${esc(i.nome)}</h1><p>${esc(i.descricao)}</p><div class="preco${i.precoPromo ? " promo" : ""}">${precoVitrine(i)}</div>`;
   document.getElementById("obs").value = STATE.produto.obs;

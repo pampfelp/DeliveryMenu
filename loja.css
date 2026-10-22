@@ -616,6 +616,14 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
 /* a foto do produto ocupa o quadro, sem estourar a largura da tela */
 .hero { position: relative; overflow: hidden; }
 .hero > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.midia-pizza { position: relative; overflow: hidden; }
+.dest .midia-pizza { width: 100%; }
+.midia-hero { position: absolute; inset: 0; }
+.midia-pizza > img, .midia-hero > img,
+.midia-pizza > video, .midia-hero > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.midia-pizza > video { opacity: 0; }
+.midia-pizza.video-pronto > video { opacity: 1; }
+.midia-hero > video { display: block; }
 #tela-produto .x { z-index: 2; }
 /* logo que não é quadrado aparece inteiro (a cor de fundo vem do canto da imagem, em app.js) */
 .cabeca .logo img.inteira, .mini img.inteira { object-fit: contain; padding: 10%; }
