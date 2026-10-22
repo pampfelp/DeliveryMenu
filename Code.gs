@@ -10,7 +10,7 @@ function doPost(e) {
     if (!e || !e.postData || e.postData.contents.length > Math.ceil(MAX_VIDEO_BYTES * 4 / 3) + 20000) throw new Error("Arquivo maior que 10 MB.");
     var body = JSON.parse(e.postData.contents);
     if (body.action !== "uploadVideo") throw new Error("Ação desconhecida.");
-    conferirDono_(body.lojaId, body.token);
+    conferirMembro_(body.lojaId, body.token);
     if (TIPOS_VIDEO.indexOf(body.tipo) === -1) throw new Error("Use MP4 ou WebM.");
     if (typeof body.base64 !== "string" || !body.base64.length || body.base64.length > Math.ceil(MAX_VIDEO_BYTES * 4 / 3)) throw new Error("Vídeo vazio ou maior que 10 MB.");
     var bytes = Utilities.base64Decode(body.base64);
@@ -37,7 +37,8 @@ function doGet(e) {
   } catch (erro) { return json_({ ok: false, erro: "Vídeo não encontrado." }); }
 }
 
-function conferirDono_(lojaId, token) {
+// o dono da loja, ou quem foi adicionado em Usuários no painel (acessos/{email})
+function conferirMembro_(lojaId, token) {
   conferirLoja_(lojaId);
   if (typeof token !== "string" || !token || token.length > 10000) throw new Error("Entre no painel para enviar vídeos.");
   var conta = UrlFetchApp.fetch("https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=" + CHAVE_PUBLICA_FIREBASE, {
@@ -46,8 +47,17 @@ function conferirDono_(lojaId, token) {
   if (conta.getResponseCode() !== 200) throw new Error("Sua sessão expirou. Entre novamente.");
   var usuario = JSON.parse(conta.getContentText()).users[0];
   if (!usuario || usuario.disabled) throw new Error("Entre novamente.");
-  var loja = UrlFetchApp.fetch("https://firestore.googleapis.com/v1/projects/" + PROJETO_FIREBASE + "/databases/(default)/documents/lojas/" + lojaId + "?mask.fieldPaths=donoId", { muteHttpExceptions: true });
-  if (loja.getResponseCode() !== 200 || JSON.parse(loja.getContentText()).fields.donoId.stringValue !== usuario.localId) throw new Error("Só o dono desta loja pode enviar vídeos.");
+  var docs = "https://firestore.googleapis.com/v1/projects/" + PROJETO_FIREBASE + "/databases/(default)/documents/";
+  var loja = UrlFetchApp.fetch(docs + "lojas/" + lojaId + "?mask.fieldPaths=donoId", { muteHttpExceptions: true });
+  if (loja.getResponseCode() !== 200) throw new Error("Loja não encontrada.");
+  if (JSON.parse(loja.getContentText()).fields.donoId.stringValue === usuario.localId) return;
+  // o acesso só a própria pessoa lê (firestore.rules), então a consulta vai com o token dela
+  var email = String(usuario.email || "").toLowerCase();
+  var acesso = email && UrlFetchApp.fetch(docs + "acessos/" + encodeURIComponent(email) + "?mask.fieldPaths=lojaId", {
+    headers: { Authorization: "Bearer " + token }, muteHttpExceptions: true,
+  });
+  var campos = acesso && acesso.getResponseCode() === 200 ? JSON.parse(acesso.getContentText()).fields || {} : {};
+  if (!campos.lojaId || campos.lojaId.stringValue !== lojaId) throw new Error("Só quem tem acesso a esta loja pode enviar vídeos.");
 }
 
 function conferirLoja_(lojaId) {
