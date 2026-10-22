@@ -41,6 +41,8 @@ pizza, o vídeo tem controles e repetição. A reprodução automática respeita
 redução de movimento e economia de dados; a foto permanece como alternativa
 se houver falha. Nenhuma geração de IA acontece ao navegar no cardápio.
 
-O banner animado da mesma loja aparece antes das categorias, com arquivos
-próprios para computador e celular, reprodução silenciosa em loop e
-controles para pausar. O enquadramento preserva a marca completa.
+O banner animado da mesma loja funciona como capa no topo, com a logo de
+perfil sobreposta à borda inferior. Usa arquivos próprios para computador
+e celular, reprodução silenciosa em loop e botão para pausar. O vídeo
+inteiro fica centralizado sobre um fundo desfocado da própria animação,
+preservando a marca na proporção larga da capa.

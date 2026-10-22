@@ -15,7 +15,7 @@ import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
 import { chavePedido } from "./ficha-cliente.js?v=1";
-import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=2";
+import { videoDaPizza, sincronizarVideos } from "./videos-pizza.js?v=3";
 
 const FIRESTORE = "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 const EXEMPLO = new URLSearchParams(location.search).has("exemplo");
@@ -212,12 +212,28 @@ function renderInicio() {
 
   const banner = document.getElementById("banner-loja");
   banner.hidden = LOJA.id !== "casa-jambu-delivery";
-  if (!banner.hidden) banner.innerHTML = `<img src="./midias/casa-jambu/banner-poster.jpg?v=1" alt="" />
-    <video data-video-pizza controls loop muted playsinline preload="none"
-    poster="./midias/casa-jambu/banner-poster.jpg?v=1" aria-label="Apresentação da Casa Jambu">
-    <source src="./midias/casa-jambu/banner-desktop.mp4?v=1" media="(min-width: 1024px)" type="video/mp4" />
-    <source src="./midias/casa-jambu/banner-celular.mp4?v=1" type="video/mp4" />
-  </video>`;
+  document.body.classList.toggle("com-capa", !banner.hidden);
+  if (!banner.hidden) {
+    const fontes = `<source src="./midias/casa-jambu/banner-desktop.mp4?v=1" media="(min-width: 1024px)" type="video/mp4" />
+      <source src="./midias/casa-jambu/banner-celular.mp4?v=1" type="video/mp4" />`;
+    banner.innerHTML = `<img src="./midias/casa-jambu/banner-poster.jpg?v=1" alt="" />
+      <video class="capa-ambiente" muted loop playsinline preload="none" aria-hidden="true" tabindex="-1">${fontes}</video>
+      <video class="capa-video" data-video-pizza loop muted playsinline preload="none"
+        poster="./midias/casa-jambu/banner-poster.jpg?v=1" aria-label="Apresentação da Casa Jambu">${fontes}</video>
+      <button class="capa-controle" type="button">Reproduzir vídeo</button>`;
+    const video = banner.querySelector(".capa-video"), ambiente = banner.querySelector(".capa-ambiente"), controle = banner.querySelector("button");
+    video.addEventListener("playing", () => {
+      ambiente.currentTime = video.currentTime;
+      ambiente.play().catch(() => {});
+      controle.textContent = "Pausar vídeo";
+    });
+    video.addEventListener("pause", () => { ambiente.pause(); controle.textContent = "Reproduzir vídeo"; });
+    video.addEventListener("error", () => { ambiente.pause(); ambiente.hidden = true; controle.hidden = true; });
+    controle.addEventListener("click", () => {
+      video.dataset.pausado = String(!video.paused);
+      if (video.paused) video.play().catch(() => {}); else video.pause();
+    });
+  }
 
   document.getElementById("destaques").innerHTML = ITENS.filter((i) => i.destaque).map((i) => `
     <a class="dest" href="#produto/${esc(i.id)}">

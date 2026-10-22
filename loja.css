@@ -624,10 +624,24 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
 .midia-pizza > video { opacity: 0; }
 .midia-pizza.video-pronto > video { opacity: 1; }
 .midia-hero > video { display: block; }
-.banner-loja { position: relative; margin: 16px 12px 0; overflow: hidden; border-radius: var(--r-md); background: var(--accent); aspect-ratio: 9 / 5; }
-.banner-loja > img, .banner-loja > video { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
+.banner-loja { position: relative; height: 200px; overflow: hidden; background: #230b08; }
+.banner-loja > img, .banner-loja > video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
+.banner-loja > img, .banner-loja > .capa-ambiente { object-fit: cover; filter: blur(24px) brightness(.5); transform: scale(1.12); }
+.capa-controle { position: absolute; top: 12px; right: 12px; padding: 8px 12px; border-radius: var(--r-sm); background: rgba(0,0,0,.65); color: #fff; font-size: 12px; }
+.capa-controle:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+.com-capa .cabeca { margin: 0 12px; padding: 68px 16px 16px; border-radius: 0 0 var(--r-md) var(--r-md); box-shadow: none; }
+.com-capa .cabeca .faixa { display: none; }
+.com-capa .cabeca .logo { top: -56px; width: 112px; height: 112px; border-width: 5px; border-radius: 50%; }
 @media (min-width: 1024px) {
-  .banner-loja { width: 100%; margin: 28px 0 0; aspect-ratio: 16 / 9; }
+  .com-capa #tela-inicio { padding-top: 72px; }
+  .com-capa #tela-inicio::before { height: 72px; }
+  .banner-loja { width: min(1280px, calc(100% - 64px)); height: 360px; margin: 0 auto; border-radius: 0 0 var(--r-lg) var(--r-lg); }
+  .banner-loja > .capa-video { width: 640px; left: 50%; transform: translateX(-50%); mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
+  .com-capa .inicio-grade { padding-top: 0; margin-top: -80px; }
+  .com-capa .inicio-main { min-width: 0; }
+  .com-capa .cabeca { margin: 0; padding: 0; }
+  .com-capa .cabeca .logo { width: 160px; height: 160px; }
+  .com-capa .sacola-lateral { margin-top: 112px; }
 }
 #tela-produto .x { z-index: 2; }
 /* logo que não é quadrado aparece inteiro (a cor de fundo vem do canto da imagem, em app.js) */
