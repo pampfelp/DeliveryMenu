@@ -23,6 +23,7 @@ export function resumoPedido(p, mudou = {}) {
   return {
     numero: q.numero ?? null,
     criadoEm: q.criadoEm ?? null,
+    ...(q.agendadoPara ? { agendadoPara: q.agendadoPara } : {}),
     itens: (q.itens || []).slice(0, 50).map((i) => ({ qtd: i.qtd, nome: i.nome, ...(i.itemId ? {itemId:i.itemId} : {}), ...(i.resumo ? {resumo:i.resumo} : {}) })),
     total: q.total || 0,
     status: q.status,

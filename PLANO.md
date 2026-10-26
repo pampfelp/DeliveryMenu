@@ -1,9 +1,29 @@
 # Plano do Cardápio Delivery
 
-Atualizado em 2026-10-15. A lista de recursos com o andamento de cada um
-está em [`replica/features.csv`](replica/features.csv) (rode
-`parity.py` para a nota). As decisões e o histórico do dia ficam no
-relatório `Relatórios Claude/DeliveryMenu - 2026-10-14.txt`.
+Atualizado em 2026-10-26. O estado vivo está em
+`Relatórios Claude/estado/DeliveryMenu.md`; `replica/features.csv` é um
+levantamento anterior e não comprova prontidão de produção.
+
+## Situação atual
+
+- Publicados anteriormente: loja com pedidos reais e acompanhamento,
+  painel, usuários, CRM e ofertas individuais.
+- Agendamento implementado em 26/10: chave por loja, horários a cada 30 min
+  até 72 horas, conferência no Firestore e data/hora visível para equipe e
+  cliente. Testes de regras e fluxo completo realizados no emulador.
+- Cadastro de equipe retestado em Auth/Firestore Emulator: preserva sessão
+  do dono, exige senha própria no primeiro acesso, impede vínculo cruzado
+  entre restaurantes e encerra a sessão ao retirar acesso.
+- Pagamento online continua desativado. Pedido atual: cada empresa conecta
+  sua própria conta Mercado Pago por OAuth. Firebase Functions exige Blaze;
+  aguarda decisão sobre faturamento; Apps Script foi indicado como opção.
+- Pendentes: homologação em iPhone real, uso por funcionários reais,
+  pagamento/estorno, instalação PWA, termos e preparação para carga.
+
+## Histórico do plano de 15/10
+
+As seções seguintes registram a sequência original; os estados antigos
+de demonstração e recursos faltantes são superados pela situação acima.
 
 ## Onde está hoje
 

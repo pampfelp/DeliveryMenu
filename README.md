@@ -126,3 +126,21 @@ contém apenas o hash do vínculo e a cesta permitida.
 Prévia fictícia: `painel.html?exemplo=painel#clientes`. Verificações locais
 de cálculo e regras: `node rea/verificar-crm.mjs`, com o emulador Firestore
 em `127.0.0.1:8080`. O script não aceita endereço de produção.
+
+## Pedidos agendados
+
+Em Configurações, a loja liga **Aceitar pedidos agendados**. A chave começa
+desligada. O cliente escolhe na etapa Como receber um horário futuro, de
+30 em 30 minutos, dentro dos próximos três dias (72 horas) e do horário de
+funcionamento em Belém. Turnos que atravessam a meia-noite são respeitados.
+A pausa geral em Pedidos também impede agendamentos.
+
+O horário acompanha a revisão, o pedido, o painel e a ficha do cliente.
+Aceitar confirma o agendamento e dá o número ao pedido; o preparo continua
+sendo conduzido pela equipe. Não há limite de pedidos por faixa nem
+antecedência mínima além de ser um horário futuro: esses valores não foram
+definidos. A validação de horário também roda nas regras do Firestore.
+
+`node rea/verificar-agendamento.mjs` verifica a conta dos horários.
+Com o Firestore Emulator em `127.0.0.1:8080`, acrescente `--regras` para
+conferir também as permissões. Esses testes nunca usam produção.

@@ -32,6 +32,33 @@ service cloud.firestore {
     function texto(v, max) { return v is string && v.size() > 0 && v.size() <= max; }
     function centavos(v) { return v is int && v >= 0 && v <= 10000000; }
 
+    function minutosDaHora(h) { return int(h[0:2]) * 60 + int(h[3:5]); }
+    function turnoAgendado(h, m, anterior) {
+      return h.get("aberto", false) == true
+        && h.get("abre", "").matches("^([01][0-9]|2[0-3]):[0-5][0-9]$")
+        && h.get("fecha", "").matches("^([01][0-9]|2[0-3]):[0-5][0-9]$")
+        && (anterior
+          ? minutosDaHora(h.fecha) <= minutosDaHora(h.abre) && m < minutosDaHora(h.fecha)
+          : m >= minutosDaHora(h.abre) && (minutosDaHora(h.fecha) <= minutosDaHora(h.abre) || m < minutosDaHora(h.fecha)));
+    }
+    function dentroDoHorario(l, data) {
+      let local = data - duration.value(3, "h");
+      let dias = ["seg", "ter", "qua", "qui", "sex", "sab", "dom"];
+      let dia = local.dayOfWeek() - 1;
+      let horario = l.get("horario", {});
+      let m = local.hours() * 60 + local.minutes();
+      return turnoAgendado(horario.get(dias[dia], {}), m, false)
+        || turnoAgendado(horario.get(dias[(dia + 6) % 7], {}), m, true);
+    }
+    function agendamentoConfere(lojaId, d) {
+      let l = get(/databases/$(database)/documents/lojas/$(lojaId)).data;
+      return !("agendadoPara" in d) || (d.agendadoPara is timestamp
+        && l.get("aceitaAgendamento", false) == true && l.get("aberta", true) != false
+        && d.agendadoPara > request.time && d.agendadoPara <= request.time + duration.value(72, "h")
+        && d.agendadoPara.minutes() % 30 == 0 && d.agendadoPara.seconds() == 0 && d.agendadoPara.nanos() == 0
+        && dentroDoHorario(l, d.agendadoPara));
+    }
+
     // cupom do pedido (cupom.js): o desconto tem de ser exatamente o que o cupom dá,
     // só sobre os itens, com o cupom ligado, no prazo, dentro do limite e do mínimo
     function linhaDaOferta(a, b) {
@@ -96,7 +123,8 @@ service cloud.firestore {
       match /pedidosEntrada/{id} {
         allow create: if exists(/databases/$(database)/documents/lojas/$(lojaId))
           && get(/databases/$(database)/documents/lojas/$(lojaId)).data.get("aberta", true) != false
-          && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm", "cupom", "desconto"])
+          && request.resource.data.keys().hasOnly(["cliente", "tipo", "endereco", "itens", "subtotal", "taxa", "total", "pagamento", "status", "criadoEm", "cupom", "desconto", "agendadoPara"])
+          && agendamentoConfere(lojaId, request.resource.data)
           && request.resource.data.status == "novo"
           && request.resource.data.criadoEm == request.time
           && request.resource.data.tipo in ["entrega", "retirada", "local"]

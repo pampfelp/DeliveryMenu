@@ -12,11 +12,13 @@ import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 import { cestaCanonica, mesmaCesta, hashDestinatario } from "./oferta-cupom.js?v=1";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=8";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=9";
+import { iniciarAgenda } from "./agenda-cliente.js?v=1";
+import { textoAgendamento } from "./agendamento.js?v=1";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
 import { situacao, agora, DIAS, NOMES, ORDEM } from "./horario.js?v=1";
 import { pintarIcones } from "./icones.js?v=2";
-import { chavePedido } from "./ficha-cliente.js?v=2";
+import { chavePedido } from "./ficha-cliente.js?v=3";
 import { sincronizarVideos } from "./videos-pizza.js?v=5";
 import { videoDoItem } from "./midias-video.js?v=2";
 
@@ -81,6 +83,10 @@ const STATE = {
   aba: LOJA.pagamentoOnline ? "online" : "entrega", forma: LOJA.pagamentoOnline ? "pix" : "dinheiro",
   cliente: lerCliente(), enviando: false, exemploPedido: null, cupom: null,
 };
+const agenda = iniciarAgenda(LOJA, {
+  previsao: () => STATE.tipo === "entrega" ? `Chega em ${STATE.entrega.min || 25}-${STATE.entrega.max || 35} min` : "Fica pronto em 20-30 min",
+  aoMudar: () => { renderEntrega(); if (document.body.dataset.tela === "revisar") renderRevisar(); },
+});
 function salvarSacola() {
   try { localStorage.setItem(CHAVE, JSON.stringify(STATE.sacola)); } catch { /* modo anônimo: a sacola vale só nesta aba */ }
   if (STATE.cupom && subtotal() < (STATE.cupom.minimo || 0)) {
@@ -173,6 +179,7 @@ function irParaHash() {
   const aba = ABAS.includes(tela) ? tela : "inicio";
   document.querySelectorAll(".nav [data-aba]").forEach((a) => a.classList.toggle("on", a.dataset.aba === aba));
   if (tela !== "inicio") fecharInfo();
+  if (tela !== "entrega") agenda.fechar();
   if (tela === "produto") abrirProduto(param, uid);
   if (tela === "promocoes") renderPromocoes();
   if (tela === "pedidos") renderPedidos();
@@ -465,7 +472,7 @@ function htmlResumoLateral(aside, sub) {
 // "Calcular taxa e tempo de entrega": depois do bairro informado, mostra a taxa e o tempo
 function htmlLinhaTaxa() {
   const e = STATE.entrega;
-  const texto = STATE.tipo === "entrega" && e.status === "ok" ? `${esc(e.bairro)}: ${reais(e.valor)} • ${e.min}-${e.max} min` : "Calcular taxa e tempo de entrega";
+  const texto = STATE.tipo === "entrega" && e.status === "ok" ? `${esc(e.bairro)}: ${reais(e.valor)} • ${agenda.valor() ? esc(textoAgendamento(agenda.valor())) : `${e.min}-${e.max} min`}` : "Calcular taxa e tempo de entrega";
   return `<i data-ic="pino"></i><span>${texto}</span><i data-ic="direita" class="seta"></i>`;
 }
 
@@ -573,7 +580,7 @@ function renderEntrega() {
   caixa.classList.toggle("fora", e.status === "fora");
   caixa.classList.toggle("neutro", e.status === "vazio");
   caixa.innerHTML = e.status === "ok"
-    ? `<i data-ic="check"></i><span>Entregamos no seu endereço</span><span>${reais(e.valor)} • ${e.min}-${e.max} min</span>`
+    ? `<i data-ic="check"></i><span>Entregamos no seu endereço</span><span>${reais(e.valor)} • ${agenda.valor() ? esc(textoAgendamento(agenda.valor())) : `${e.min}-${e.max} min`}</span>`
     : e.status === "fora"
       ? `<i data-ic="info"></i><span>Ainda não entregamos nesse bairro</span>`
       : `<i data-ic="info"></i><span>Informe o bairro para calcular a taxa</span>`;
@@ -733,8 +740,8 @@ function renderPagamento() {
     : [...formas.slice(0, pos + 1), nota, ...formas.slice(pos + 1)].join("");
   const rua = document.getElementById("f-rua").value, num = document.getElementById("f-num").value, bairro = document.getElementById("f-bairro").value;
   document.getElementById("entrega-resumo").innerHTML = STATE.tipo === "entrega"
-    ? `<i data-ic="entrega"></i><span><b>Entrega em ${esc(rua)}, ${esc(num)}</b>${esc(bairro)} • ${STATE.entrega.min}-${STATE.entrega.max} min</span><a href="#entrega">Alterar</a>`
-    : `<i data-ic="${STATE.tipo === "retirada" ? "loja" : "mesa"}"></i><span><b>${STATE.tipo === "retirada" ? "Retirada no restaurante" : "Consumo no local"}</b>Sem taxa de entrega</span><a href="#entrega">Alterar</a>`;
+    ? `<i data-ic="entrega"></i><span><b>Entrega em ${esc(rua)}, ${esc(num)}</b>${esc(bairro)} • ${agenda.valor() ? esc(textoAgendamento(agenda.valor())) : `${STATE.entrega.min}-${STATE.entrega.max} min`}</span><a href="#entrega">Alterar</a>`
+    : `<i data-ic="${STATE.tipo === "retirada" ? "loja" : "mesa"}"></i><span><b>${STATE.tipo === "retirada" ? "Retirada no restaurante" : "Consumo no local"}</b>${agenda.valor() ? `Agendado para ${esc(textoAgendamento(agenda.valor()))}` : "Sem taxa de entrega"}</span><a href="#entrega">Alterar</a>`;
   renderSacolas();
 }
 document.getElementById("abas-pagamento").addEventListener("click", (e) => {
@@ -795,7 +802,7 @@ function renderRevisar() {
   const sub = subtotal(), tx = taxa();
   const [min, max] = janela(STATE.tipo, STATE.entrega.km);
   const agora = new Date();
-  const chega = `${STATE.tipo === "entrega" ? "Chega" : "Fica pronto"} entre ${hh(somaMin(agora, min))} e ${hh(somaMin(agora, max))}`;
+  const chega = agenda.valor() ? `Agendado para ${textoAgendamento(agenda.valor())}` : `${STATE.tipo === "entrega" ? "Chega" : "Fica pronto"} entre ${hh(somaMin(agora, min))} e ${hh(somaMin(agora, max))}`;
   const receber = STATE.tipo === "entrega"
     ? `<i data-ic="entrega"></i><div><b>${esc(campo("f-rua"))}, ${esc(campo("f-num"))}</b><p>${esc(STATE.entrega.bairro)}${campo("f-compl") ? `, ${esc(campo("f-compl"))}` : ""} · Ref.: ${esc(campo("f-ref"))}</p><p class="ok">${chega}</p></div>`
     : `<i data-ic="${STATE.tipo === "retirada" ? "loja" : "mesa"}"></i><div><b>${STATE.tipo === "retirada" ? "Retirada no restaurante" : "Consumo no local"}</b><p>${esc(LOJA.nome)}</p><p class="ok">${chega}</p></div>`;
@@ -854,6 +861,7 @@ function meusPedidos() { try { return JSON.parse(localStorage.getItem(CHAVE_PEDI
 async function enviarPedido() {
   if (STATE.enviando) return; // duplo clique não manda dois pedidos
   if (!LOJA.aberta) { toast("O restaurante não está recebendo pedidos agora.", "erro", 4000); return; }
+  if (!agenda.conferir()) { location.hash = "#entrega"; return; }
   const troco = lerTroco();
   if (troco === null) return;
   const km = STATE.entrega.km || 0;
@@ -870,10 +878,12 @@ async function enviarPedido() {
     ...(desconto() ? { cupom: STATE.cupom.codigo, desconto: desconto() } : {}),
     pagamento: { forma: formaAtual().nome, online: STATE.aba === "online", ...(troco ? { troco } : {}) },
     status: "novo",
+    ...(agenda.valor() ? { agendadoPara: agenda.valor() } : {}),
   };
 
   if (!SLUG) { // loja de exemplo: mostra o acompanhamento sem mandar nada
     STATE.exemploPedido = { id: "exemplo", ...pedido, criadoEm: new Date() };
+    agenda.limpar();
     if (!EXEMPLO) { STATE.sacola = []; salvarSacola(); tirarCupom(false); }
     location.hash = "#pedido/exemplo";
     toast("Versão de demonstração: o pedido não foi enviado a nenhum restaurante.", "info", 6000);
@@ -883,7 +893,7 @@ async function enviarPedido() {
   marcarEnviar();
   try {
     const { db } = await import("./firebase-init.js?v=3");
-    const { collection, doc, writeBatch, serverTimestamp } = await import(FIRESTORE);
+    const { collection, doc, writeBatch, serverTimestamp, Timestamp } = await import(FIRESTORE);
     let cupom = null;
     if (pedido.cupom) {
       cupom = await buscarCupom(pedido.cupom);
@@ -891,17 +901,19 @@ async function enviarPedido() {
       if (motivo || descontoDe(cupom,pedido.subtotal)!==pedido.desconto) throw { cupomMotivo:motivo || "O valor do cupom mudou. Confira o total antes de enviar." };
     }
     const ref = doc(collection(db,"lojas",LOJA.id,"pedidosEntrada")), lote = writeBatch(db);
-    lote.set(ref,{...pedido,criadoEm:serverTimestamp()});
+    lote.set(ref,{...pedido,...(pedido.agendadoPara ? {agendadoPara:Timestamp.fromDate(new Date(pedido.agendadoPara))} : {}),criadoEm:serverTimestamp()});
     if (cupom?.individual) lote.set(doc(db,"lojas",LOJA.id,"reservasCupons",pedido.cupom),{pedidoId:ref.id,criadoEm:serverTimestamp()});
     await lote.commit();
     try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([ref.id, ...meusPedidos()].slice(0, 20))); } catch { /* sem armazenamento */ }
     if (pedido.endereco) guardarEndereco(pedido.endereco);
     tirarCupom(false);
     STATE.sacola = [];
+    agenda.limpar();
     salvarSacola();
     location.hash = `#pedido/${ref.id}`;
   } catch (err) {
     // o cupom pode ter vencido ou esgotado entre a sacola e o envio
+    if (err?.code === "permission-denied" && !agenda.conferir()) { location.hash = "#entrega"; return; }
     const motivo = err.cupomMotivo || (err?.code === "permission-denied" && STATE.cupom ? await cupomAindaServe() : "");
     if (motivo) { tirarCupom(false); toast(`${motivo} O cupom saiu do pedido; confira o total e envie de novo.`, "erro", 6000); renderRevisar(); return; }
     toast(err?.code === "permission-denied" ? "O restaurante não está recebendo pedidos agora." : "Não deu para enviar. Confira a internet e tente de novo.", "erro", 5000);
@@ -956,7 +968,7 @@ function renderAcompanhar(p) {
   const nomeFim = entrega ? "Entregue" : p.tipo === "retirada" ? "Retirado" : "Servido";
   const topo = {
     novo: ["relogio", "espera", "Pedido enviado!", "Assim que o restaurante aceitar, o pedido ganha número e vai para o preparo."],
-    preparo: ["check", "", "Pedido aceito!", "O restaurante já está preparando o seu pedido."],
+    preparo: ["check", "", "Pedido aceito!", p.agendadoPara ? `O restaurante confirmou o pedido para ${textoAgendamento(p.agendadoPara)}.` : "O restaurante já está preparando o seu pedido."],
     saiu: ["entrega", "", "Saiu para entrega!", "O pedido está a caminho."],
     entregue: ["check", "", `Pedido ${nomeFim.toLowerCase()}!`, "Obrigado pela preferência."],
     cancelado: ["x", "nao", "Pedido não aceito", "O restaurante não pôde aceitar este pedido agora. Nada foi cobrado."],
@@ -968,7 +980,7 @@ function renderAcompanhar(p) {
     : [
       ["Pedido enviado", hh(criado)],
       ["Aceito pelo restaurante", aceito ? hh(aceito) : "Aguardando o restaurante aceitar"],
-      ["Em preparo", aceito ? `Começou às ${hh(aceito)}` : ""],
+      [p.agendadoPara ? "Preparo agendado" : "Em preparo", aceito ? (p.agendadoPara ? textoAgendamento(p.agendadoPara) : `Começou às ${hh(aceito)}`) : ""],
       ...(entrega ? [["Saiu para entrega", saiu ? hh(saiu) : ""]] : []),
       [nomeFim, fim ? hh(fim) : ""],
     ];
@@ -984,14 +996,14 @@ function renderAcompanhar(p) {
   const numero = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${cancelado ? "Sem número" : "Aguardando aceite"}</b>`;
   // depois de entregue, a previsão dá lugar à hora em que terminou
   const terminou = p.status === "entregue";
-  const prazo = cancelado ? `<b class="espera">-</b>` : terminou ? `<b>${fim ? hh(fim) : "-"}</b>` : `<b>${hh(somaMin(criado, min))} - ${hh(somaMin(criado, max))}</b>`;
+  const prazo = cancelado ? `<b class="espera">-</b>` : terminou ? `<b>${fim ? hh(fim) : "-"}</b>` : p.agendadoPara ? `<b>${esc(textoAgendamento(p.agendadoPara))}</b>` : `<b>${hh(somaMin(criado, min))} - ${hh(somaMin(criado, max))}</b>`;
   const segue = !cancelado && p.status !== "entregue";
   const zap = LOJA.whatsapp ? `<a class="btn fantasma" href="https://wa.me/55${soDigitos(LOJA.whatsapp)}" target="_blank" rel="noopener"><i data-ic="conversa"></i>Falar com o restaurante</a>` : "";
 
   const caixa = document.getElementById("acompanhar");
   caixa.innerHTML = `
     <div class="ok"><div class="selo-ok ${topo[1]}"><i data-ic="${topo[0]}"></i></div><h1>${topo[2]}</h1><p>${topo[3]}</p></div>
-    <div class="num"><div><small>Pedido</small>${numero}</div><div><small>${terminou ? `${nomeFim} às` : rotuloPrazo}</small>${prazo}</div></div>
+    <div class="num"><div><small>Pedido</small>${numero}</div><div><small>${terminou ? `${nomeFim} às` : p.agendadoPara ? "Agendado para" : rotuloPrazo}</small>${prazo}</div></div>
     <ol class="passos">${passos}</ol>
     ${segue ? `<p class="fica"><i data-ic="info"></i><span><span class="so-cel">Pode fechar esta tela: o pedido fica em Pedidos, na barra de baixo, e a situação atualiza sozinha.</span><span class="so-pc">Pode fechar esta página: o pedido fica em Pedidos, no topo, e a situação atualiza sozinha.</span></span></p>` : ""}
     <div class="rodape duplo${zap ? "" : " um"}">${zap}<a class="btn" href="#inicio">Voltar ao cardápio</a></div>`;
@@ -1071,7 +1083,7 @@ function cartaoPedido(p) {
   const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${i.nome}`).join(", ");
   const corpo = `<div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span>${p.id ? '<i data-ic="direita"></i>' : ""}</div>
-    <p>${esc(itens)}</p><div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div>`;
+    <p>${esc(itens)}</p>${p.agendadoPara ? `<p class="ag-resumo">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</p>` : ""}<div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div>`;
   // pedido feito em outro aparelho vem só da ficha, sem o acompanhamento
   return p.id ? `<a class="ped-c" href="#pedido/${esc(p.id)}">${corpo}</a>` : `<div class="ped-c">${corpo}</div>`;
 }
@@ -1095,7 +1107,7 @@ async function lerFicha(telefone) {
 }
 // os pedidos deste aparelho (abrem o acompanhamento) e os da ficha do número, feitos em outro aparelho
 async function lerPedidos() {
-  if (!SLUG) return EXEMPLO ? pedidosExemplo() : STATE.exemploPedido ? [STATE.exemploPedido] : [];
+  if (!SLUG) return EXEMPLO ? [...(STATE.exemploPedido ? [STATE.exemploPedido] : []), ...pedidosExemplo()] : STATE.exemploPedido ? [STATE.exemploPedido] : [];
   const ids = meusPedidos();
   const { db } = await import("./firebase-init.js?v=3");
   const { doc, getDoc } = await import(FIRESTORE);
@@ -1258,6 +1270,7 @@ document.getElementById("cupom-codigo").addEventListener("input", (e) => {
 document.addEventListener("keydown", (e) => { if (e.key === "Escape") fecharCupom(); });
 
 function atualizarAberta() {
+  agenda.conferir();
   const antes = document.getElementById("loja-situacao").textContent;
   const mudou = recalcularAberta();
   if (!mudou && antes === LOJA.textoSituacao) return;
@@ -1277,8 +1290,10 @@ async function vigiarLoja() {
     const d = snap.data();
     LOJA.ligada = d.aberta !== false;
     LOJA.horario = d.horario || null;
+    LOJA.aceitaAgendamento = d.aceitaAgendamento === true;
     LOJA.abrirSozinho = !!d.abrirSozinho;
     atualizarAberta();
+    agenda.atualizar(); agenda.conferir();
   }, () => { /* sem internet: segue com o que já leu */ });
 }
 

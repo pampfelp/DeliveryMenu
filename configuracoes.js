@@ -29,6 +29,7 @@ function rascunhoDe(l) {
   return {
     nome: l.nome || "", cidade: l.cidade || "", bairro: l.bairro || "", whatsapp: soDigitos(l.whatsapp),
     horario: JSON.parse(JSON.stringify(l.horario || horarioPadrao())), abrirSozinho: !!l.abrirSozinho,
+    aceitaAgendamento: l.aceitaAgendamento === true,
     cor: l.cor || "#991b1b", logoUrl: l.logoUrl || "",
   };
 }
@@ -85,6 +86,8 @@ function render() {
       ${base ? `<button type="button" class="copiar-t" data-cf-repetir="${base}">Usar o horário de ${NOMES[base].toLowerCase()} em todos os dias abertos</button>` : ""}
       <div class="auto"><div>Abrir e fechar sozinho pelo horário<small>Ligado, a loja abre e fecha no horário acima. Desligado, você usa a chave em Pedidos.</small></div>
         <button type="button" class="chave-p${r.abrirSozinho ? "" : " off"}" data-cf-sozinho aria-pressed="${r.abrirSozinho}" aria-label="Abrir e fechar sozinho"><span class="trilho"></span></button></div>
+      <div class="auto"><div>Aceitar pedidos agendados<small>O cliente escolhe dia e hora dentro do horário acima, até 3 dias à frente.</small></div>
+        <button type="button" class="chave-p${r.aceitaAgendamento ? "" : " off"}" data-cf-agendamento aria-pressed="${r.aceitaAgendamento}" aria-label="Aceitar pedidos agendados"><span class="trilho"></span></button></div>
     </div></section>
     <section class="cf-cartao"><div class="cf-cab"><h2>Aparência</h2></div><div class="cf-corpo">
       <div class="logo-l"><button type="button" class="logo-c${r.logoUrl ? " com" : ""}" data-cf-logo aria-label="Enviar logo">${r.logoUrl ? `<img src="${esc(r.logoUrl)}" alt="" />` : `<i data-ic="foto"></i>`}</button>
@@ -122,7 +125,8 @@ async function salvar() {
   const errado = ORDEM.find((d) => r.horario[d]?.aberto && (!horaValida(r.horario[d].abre) || !horaValida(r.horario[d].fecha)));
   if (errado) return toast(`${NOMES[errado]}: use o horário no formato 18:00.`, "erro", 4000);
   if (r.abrirSozinho && !ORDEM.some((d) => r.horario[d]?.aberto)) return toast("Para abrir sozinho, deixe pelo menos um dia aberto.", "erro", 4000);
-  const dados = { nome: r.nome, cidade: r.cidade, bairro: r.bairro, whatsapp: r.whatsapp, horario: r.horario, abrirSozinho: r.abrirSozinho, cor: r.cor, logoUrl: r.logoUrl };
+  if (r.aceitaAgendamento && !ORDEM.some((d) => r.horario[d]?.aberto)) return toast("Para agendar, deixe pelo menos um dia aberto.", "erro", 4000);
+  const dados = { nome: r.nome, cidade: r.cidade, bairro: r.bairro, whatsapp: r.whatsapp, horario: r.horario, abrirSozinho: r.abrirSozinho, aceitaAgendamento: r.aceitaAgendamento, cor: r.cor, logoUrl: r.logoUrl };
   if (C.exemplo) {
     Object.assign(C.loja, dados); C.sujo = false;
     toast("Exemplo: as mudanças ficam só nesta tela.", "info", 3000);
@@ -177,6 +181,7 @@ function aoClicar(e) {
     C.sujo = true; render(); return;
   }
   if (alvo("[data-cf-sozinho]")) { lerCampos(); C.rasc.abrirSozinho = !C.rasc.abrirSozinho; C.sujo = true; render(); return; }
+  if (alvo("[data-cf-agendamento]")) { lerCampos(); C.rasc.aceitaAgendamento = !C.rasc.aceitaAgendamento; C.sujo = true; render(); return; }
   if ((el = alvo("[data-cf-cor]"))) { lerCampos(); C.rasc.cor = el.dataset.cfCor; C.sujo = true; render(); return; }
   if (alvo("[data-cf-tirar-logo]")) { lerCampos(); C.rasc.logoUrl = ""; C.sujo = true; render(); return; }
   if (alvo("[data-cf-logo]")) { $("cf-logo").click(); return; }

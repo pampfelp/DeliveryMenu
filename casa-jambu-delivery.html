@@ -21,7 +21,7 @@
 <meta name="twitter:title" content="Casa Jambu | Cardápio" />
 <meta name="twitter:image" content="https://pampfelp.github.io/DeliveryMenu/midias/casa-jambu/logo-compartilhar.jpg?v=1" />
 
-<link rel="modulepreload" href="./app.js?v=28" />
+<link rel="modulepreload" href="./app.js?v=29" />
 <link rel="preconnect" href="https://firestore.googleapis.com" crossorigin />
 <link rel="manifest" href="./manifest.json" />
 <meta name="theme-color" content="#991b1b" />
@@ -30,7 +30,7 @@
 
 <link rel="preload" href="./fontes/rubik-latin.woff2?v=1" as="font" type="font/woff2" crossorigin />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./loja.css?v=27" />
+<link rel="stylesheet" href="./loja.css?v=28" />
 </head>
 <body>
 <div id="app">
@@ -295,11 +295,22 @@
     </div>
   </div>
 
+  <!-- S25 / D25: horários de recebimento -->
+  <div class="info-loja" id="ag-janela" hidden>
+    <div class="escuro" data-ag-fechar></div>
+    <div class="janela-info ag-janela" role="dialog" aria-modal="true" aria-labelledby="ag-titulo">
+      <div class="alca so-cel"></div>
+      <div class="cab-j"><h2 id="ag-titulo">Quando você quer receber?</h2><button type="button" class="fechar" data-ag-fechar aria-label="Fechar agendamento"><i data-ic="x"></i></button></div>
+      <div class="corpo-j" id="ag-corpo"></div>
+      <div class="rodape-j"><button type="button" class="btn fantasma so-pc" data-ag-fechar>Cancelar</button><button type="button" class="btn" id="ag-confirmar">Escolha um horário</button></div>
+    </div>
+  </div>
+
   <nav class="nav">
     <a href="#inicio" data-aba="inicio" class="on"><i data-ic="home"></i>Início</a><a href="#promocoes" data-aba="promocoes"><i data-ic="promo"></i>Promoções</a><a href="#pedidos" data-aba="pedidos"><i data-ic="sacola"></i>Pedidos</a><a href="#perfil" data-aba="perfil"><i data-ic="user"></i>Perfil</a>
   </nav>
 </div>
 
-<script defer src="./abrir-cardapio.js?v=3"></script>
+<script defer src="./abrir-cardapio.js?v=4"></script>
 </body>
 </html>

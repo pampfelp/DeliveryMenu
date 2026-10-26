@@ -14,10 +14,11 @@ import { db } from "./firebase-init.js?v=3";
 import {
   collection, doc, onSnapshot, query, where, orderBy, writeBatch, runTransaction, updateDoc, serverTimestamp, Timestamp, getDocs,
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
-import { camposFicha, telefoneDe } from "./ficha-cliente.js?v=2";
+import { camposFicha, telefoneDe } from "./ficha-cliente.js?v=3";
 import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
+import { textoAgendamento } from "./agendamento.js?v=1";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);
 const $ = (id) => document.getElementById(id);
@@ -34,16 +35,20 @@ const P = { loja: null, entrada: [], pedidos: [], aba: "novo", verTodos: false, 
 
 /* ===== tempo ===== */
 const data = (t) => (t instanceof Date ? t : t?.toDate ? t.toDate() : null);
-const hhmm = (t) => { const d = data(t); return d ? `${String(d.getHours()).padStart(2, "0")}h${String(d.getMinutes()).padStart(2, "0")}` : ""; };
+const hhmm = (t) => { const d = data(t); return d ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Belem", hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(d).replace(":", "h") : ""; };
 const minutosDesde = (t) => { const d = data(t); return d ? Math.max(0, Math.round((P.agora() - d) / 60000)) : 0; };
 // previsão de chegada: a mesma conta da loja (conta-entrega.js), com janela de 10 min
 function previsao(p) {
+  if (p.agendadoPara) return "";
   const d = data(p.criadoEm), km = p.endereco?.km;
   if (!d || km == null) return "";
   const ate = new Date(d.getTime() + minutosKm(km, regraDe(P.loja)) * 60000);
   return ` · previsão ${hhmm(ate)} a ${hhmm(new Date(ate.getTime() + 600000))}`;
 }
-const inicioDoDia = (deslocamento = 0) => { const d = P.agora(); d.setHours(0, 0, 0, 0); d.setDate(d.getDate() + deslocamento); return d; };
+const inicioDoDia = (deslocamento = 0) => {
+  const d = new Date(P.agora().getTime() - 3 * 3600000);
+  return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + deslocamento, 3));
+};
 
 /* ===== situação de cada pedido ===== */
 const coluna = (p) => (p.status === "novo" ? "novo" : p.status === "preparo" ? "preparo" : p.status === "saiu" ? "saiu" : "fim");
@@ -86,7 +91,8 @@ function cartao(p) {
   const [ic, tipo] = TIPOS[p.tipo] || TIPOS.entrega;
   const [classePag, textoPag] = rotuloPagamento(p);
   const min = minutosDesde(p.criadoEm);
-  const atrasado = p.status === "preparo" && min > ATRASO_MIN;
+  const agendado = data(p.agendadoPara);
+  const atrasado = p.status === "preparo" && (agendado ? P.agora() > new Date(agendado.getTime() + 15 * 60000) : min > ATRASO_MIN);
   const acao = proximaAcao(p);
   const lugar = p.tipo === "entrega" && p.endereco?.bairro ? ` · ${esc(p.endereco.bairro)}` : "";
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${esc(i.nome)}`).join(", ");
@@ -95,6 +101,7 @@ function cartao(p) {
       <div class="l1"><span class="num">${numero(p)}</span><span class="hora">${hhmm(p.criadoEm)}</span><span class="tipo"><i data-ic="${ic}"></i>${tipo}</span></div>
       <div class="cli">${esc(p.cliente?.nome || "")}${lugar}</div>
       <div class="itens">${itens}</div>
+      ${p.agendadoPara ? `<div class="agenda-pedido"><i data-ic="agenda"></i>Agendado para ${esc(textoAgendamento(p.agendadoPara))}</div>` : ""}
       <div class="l3"><span class="total">${reais(p.total)}</span><span class="pag ${classePag}">${esc(textoPag)}</span><span class="tempo${atrasado ? " atrasado" : ""}">há ${min} min</span></div>
       ${acao ? `<button type="button" class="btn ${acao.forte ? "" : "fantasma "}acao" data-acao="${esc(p.id)}">${acao.rotulo}</button>` : ""}
     </article>`;
@@ -102,10 +109,11 @@ function cartao(p) {
 function linhaConcluido(p) {
   const fim = p.status === "cancelado" ? `<span class="pag cancelado">Cancelado</span>`
     : `<span>${p.tipo === "retirada" ? "Retirado" : "Entregue"} ${hhmm(p.concluidoEm)}</span>`;
-  return `<button type="button" class="mini" data-abrir="${esc(p.id)}"><b>${numero(p)}</b>${fim}<span>${reais(p.total)}</span></button>`;
+  const resumo = p.agendadoPara ? `<span>${fim}<small class="agenda-mini">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</small></span>` : fim;
+  return `<button type="button" class="mini" data-abrir="${esc(p.id)}"><b>${numero(p)}</b>${resumo}<span>${reais(p.total)}</span></button>`;
 }
 
-function todos() { return [...P.entrada, ...P.pedidos.filter((p) => data(p.criadoEm) >= inicioDoDia(0))]; }
+function todos() { return [...P.entrada, ...P.pedidos.filter((p) => data(p.criadoEm) >= inicioDoDia(0) || data(p.agendadoPara) >= inicioDoDia(0))]; }
 function renderQuadro() {
   const lista = todos();
   const por = (col) => lista.filter((p) => coluna(p) === col)
@@ -149,6 +157,7 @@ function abrirDetalhe(id) {
   const textoPag = g.pago ? `Pago às ${hhmm(g.pagoEm || p.criadoEm)}` : g.troco ? `Levar troco para ${reais(g.troco)}` : p.tipo === "retirada" ? "Receber na retirada" : "Receber na entrega";
   const km = e.km != null ? `${String(e.km.toFixed(1)).replace(".", ",")} km` : "";
   $("d-corpo").innerHTML = `
+    ${p.agendadoPara ? `<div class="agenda-faixa"><i data-ic="agenda"></i><span>Agendado para ${esc(textoAgendamento(p.agendadoPara))}<small>${p.tipo === "entrega" ? "Entregar" : "Deixar pronto"} até ${hhmm(new Date(data(p.agendadoPara).getTime() + 15 * 60000))}.${p.status === "novo" ? " Aceite agora e prepare mais perto da hora." : p.status === "preparo" ? " Prepare mais perto da hora." : ""}</small></span></div>` : ""}
     <div class="d-itens">
       <div class="bloco-t">Itens</div>
       ${(p.itens || []).map((i) => `<div class="item"><div><b><span>${i.qtd}x</span>${esc(i.nome)}</b>${i.resumo ? `<p>${esc(i.resumo)}</p>` : ""}${i.obs ? `<p class="obs">OBS: ${esc(i.obs)}</p>` : ""}</div><span class="v">${reais(i.total)}</span></div>`).join("")}
@@ -336,6 +345,7 @@ export function iniciarPedidos(loja, { exemplo = null } = {}) {
     return;
   }
   P.exemplo = false;
+  P.agora = () => new Date();
   let primeira = true;
   P.parar.push(onSnapshot(collection(db, "lojas", loja.id, "pedidosEntrada"), (snap) => {
     const antes = P.entrada.length;
@@ -345,8 +355,9 @@ export function iniciarPedidos(loja, { exemplo = null } = {}) {
     renderQuadro(); renderIndicadores();
     if (P.aberto) abrirDetalhe(P.aberto);
   }, () => toast("Não deu para ler os pedidos novos.", "erro", 5000)));
+  // A antecedência máxima é 72 h: quatro dias incluem agendados criados antes de hoje.
   P.parar.push(onSnapshot(query(collection(db, "lojas", loja.id, "pedidos"),
-    where("criadoEm", ">=", Timestamp.fromDate(inicioDoDia(-1))), orderBy("criadoEm", "desc")), (snap) => {
+    where("criadoEm", ">=", Timestamp.fromDate(inicioDoDia(-4))), orderBy("criadoEm", "desc")), (snap) => {
     P.pedidos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
     renderQuadro(); renderIndicadores();
     if (P.aberto) abrirDetalhe(P.aberto);

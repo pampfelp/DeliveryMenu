@@ -62,7 +62,7 @@ export async function carregarLoja() {
   if (!SLUG) return {
     real: false, BAIRROS, CATEGORIAS, SUGESTOES,
     LOJA: {
-      ...LOJA, aberta: ex !== "fechada", pagamentoOnline: ex !== "na-entrega", whatsapp: "91900000000",
+      ...LOJA, aberta: ex !== "fechada", aceitaAgendamento: true, pagamentoOnline: ex !== "na-entrega", whatsapp: "91900000000",
       // o que aparece em Mais informações (S20, D20)
       endereco: "Travessa das Flores, 120",
       horario: Object.fromEntries(["seg", "ter", "qua", "qui", "sex", "sab", "dom"].map((d) => [d,
@@ -96,6 +96,7 @@ export async function carregarLoja() {
       aberta: d.aberta !== false, // a chave de Pedidos; o app junta com o horário (horario.js)
       ligada: d.aberta !== false,
       horario: d.horario || null,
+      aceitaAgendamento: d.aceitaAgendamento === true,
       abrirSozinho: !!d.abrirSozinho,
       whatsapp: d.whatsapp || "",
       endereco: d.endereco || "", // o ponto de saída marcado em Entregas

@@ -828,6 +828,41 @@ body.com-janela { overflow: hidden; }
 }
 .cupom > span { text-align: left; }
 
+/* S25 / D25 e S12c: agendamento */
+.agendar[hidden] { display: none; }
+.agendar.on { box-shadow: inset 0 0 0 2px var(--accent); }
+.agendar.on svg.ic:first-child { color: var(--accent); }
+.agendar > span { text-align: left; }
+.ag-janela .corpo-j { display: block; }
+.ag-opcoes { display: grid; gap: 8px; }
+.ag-opcao { display: flex; align-items: center; gap: 12px; width: 100%; padding: 12px 14px; border: 1px solid var(--border); border-radius: var(--r-md); text-align: left; background: var(--surface); }
+.ag-opcao > span { flex: 1; font-weight: 500; font-size: 15px; line-height: 20px; color: var(--text-strong); }
+.ag-opcao small { display: block; font-weight: 400; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.ag-radio { flex: none; width: 20px; height: 20px; border: 2px solid #9ca3af; border-radius: 50%; }
+.ag-opcao.on .ag-radio { border: 6px solid var(--accent); }
+.ag-dias { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
+.ag-dia { min-height: 52px; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); font-weight: 500; font-size: 14px; line-height: 18px; color: var(--text); }
+.ag-dia small { font-weight: 400; font-size: 12px; line-height: 16px; color: var(--text-muted); }
+.ag-rotulo { margin-top: 16px; font-weight: 600; font-size: 12px; line-height: 16px; text-transform: uppercase; color: var(--text-muted); }
+.ag-horas { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 12px; }
+.ag-hora { height: 40px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); font-weight: 500; font-size: 14px; line-height: 20px; text-align: center; color: var(--text); }
+.ag-opcao.on, .ag-dia.on, .ag-hora.on { border: 2px solid var(--accent); background: #fdf2f2; color: var(--accent); }
+.ag-opcao.on { padding: 11px 13px; }
+.ag-ajuda, .ag-vazio { margin-top: 6px; font-size: 13px; line-height: 18px; color: var(--text-muted); }
+.ag-janela .rodape-j { display: flex; gap: 12px; }
+.ag-janela button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.ag-janela .btn:disabled { opacity: .55; cursor: default; }
+.ag-resumo { font-weight: 500; color: var(--accent); }
+@media (min-width: 1024px) {
+  .ag-janela { width: 560px; }
+  .ag-opcoes { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .ag-dias { gap: 10px; margin-top: 18px; }
+  .ag-dia { min-height: 54px; }
+  .ag-horas { grid-template-columns: repeat(6, 1fr); margin-top: 10px; }
+  .ag-rotulo { margin-top: 18px; }
+  .ag-janela .rodape-j { justify-content: flex-end; }
+}
+
 /* Bairro: lista da loja no lugar do datalist do navegador */
 .combo { position: relative; }
 .combo input { padding-right: 40px; }
