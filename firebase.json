@@ -1,0 +1,16 @@
+{
+  "functions": [{
+    "source": ".",
+    "codebase": "pagamentos",
+    "runtime": "nodejs22",
+    "ignore": [".git", ".env*", ".secret.local", "**/.secret*", "**/.env*", "**/*firebase-adminsdk*.json", "**/*service-account*.json", "*.html", "*.css", "*.png", "*.jpg", "*.bat", "*.txt", "*.md", "telas/**", "midias/**", "fontes/**", "rea/**", "replica/**", "node_modules/**", "functions/*.test.js", "**/*debug.log", "firestore.rules", "firestore.indexes.json", "verificar*.mjs", "gerar*.mjs", "Code.gs", "appsscript.json"]
+  }],
+  "firestore": { "rules": "firestore.rules", "indexes": "firestore.indexes.json" },
+  "emulators": {
+    "functions": { "port": 5001 },
+    "firestore": { "port": 8080 },
+    "auth": { "port": 9099 },
+    "ui": { "enabled": false },
+    "singleProjectMode": true
+  }
+}

@@ -19,6 +19,7 @@ import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
 import { textoAgendamento } from "./agendamento.js?v=1";
+import { chamarPagamento } from "./pagamentos.js?v=1";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);
 const $ = (id) => document.getElementById(id);
@@ -54,6 +55,7 @@ const inicioDoDia = (deslocamento = 0) => {
 const coluna = (p) => (p.status === "novo" ? "novo" : p.status === "preparo" ? "preparo" : p.status === "saiu" ? "saiu" : "fim");
 const numero = (p) => (p.numero ? `#${p.numero}` : "Novo");
 function proximaAcao(p) {
+  if (p.pagamento?.estornoPendente) return null;
   if (p.status === "novo") return { rotulo: "Aceitar pedido", forte: true, fazer: () => aceitar(p) };
   if (p.status === "preparo") return p.tipo === "entrega"
     ? { rotulo: "Saiu para entrega", fazer: () => mudarStatus(p, "saiu") }
@@ -63,7 +65,8 @@ function proximaAcao(p) {
 }
 function rotuloPagamento(p) {
   const g = p.pagamento || {};
-  if (p.status === "cancelado") return ["cancelado", "Cancelado"];
+  if (p.status === "cancelado") return ["cancelado", g.online ? (g.reembolsado ? "Pagamento devolvido" : "Devolução pendente") : "Cancelado"];
+  if (g.estornoPendente) return ["cancelado", "Conferindo devolução"];
   if (g.pago) return ["pago", `${g.forma || "Pix"} pago`];
   const onde = p.tipo === "retirada" ? "na retirada" : "na entrega";
   if (g.forma === "Dinheiro" && g.troco) return ["receber", `Dinheiro, troco p/ ${reais(g.troco).replace(",00", "")}`];
@@ -154,7 +157,7 @@ function abrirDetalhe(id) {
   $("d-estado").textContent = estados[p.status] || "";
   $("d-hora").innerHTML = `<span class="so-pc">Recebido às ${hhmm(p.criadoEm)}, há ${minutosDesde(p.criadoEm)} min</span><span class="so-cel">${hhmm(p.criadoEm)}</span>`;
   // no celular o pagamento não tem caixa própria: vai embaixo do total (P11)
-  const textoPag = g.pago ? `Pago às ${hhmm(g.pagoEm || p.criadoEm)}` : g.troco ? `Levar troco para ${reais(g.troco)}` : p.tipo === "retirada" ? "Receber na retirada" : "Receber na entrega";
+  const textoPag = g.reembolsado ? `Pagamento devolvido${g.estornoEm ? ` às ${hhmm(g.estornoEm)}` : ""}` : g.estornoPendente ? "Conferindo a devolução do pagamento" : g.pago ? `Pago às ${hhmm(g.pagoEm || p.criadoEm)}` : g.troco ? `Levar troco para ${reais(g.troco)}` : p.tipo === "retirada" ? "Receber na retirada" : "Receber na entrega";
   const km = e.km != null ? `${String(e.km.toFixed(1)).replace(".", ",")} km` : "";
   $("d-corpo").innerHTML = `
     ${p.agendadoPara ? `<div class="agenda-faixa"><i data-ic="agenda"></i><span>Agendado para ${esc(textoAgendamento(p.agendadoPara))}<small>${p.tipo === "entrega" ? "Entregar" : "Deixar pronto"} até ${hhmm(new Date(data(p.agendadoPara).getTime() + 15 * 60000))}.${p.status === "novo" ? " Aceite agora e prepare mais perto da hora." : p.status === "preparo" ? " Prepare mais perto da hora." : ""}</small></span></div>` : ""}
@@ -204,6 +207,7 @@ async function aceitar(p) {
       const entrada=await tx.get(entradaRef);
       if (!entrada.exists()) return false; // outra aba já aceitou/recusou
       const atual={id:entrada.id,...entrada.data()}, loja=await tx.get(lojaRef);
+      if (atual.pagamento?.online && (!atual.pagamento.pago || atual.pagamento.estornoPendente)) throw new Error("pagamento");
       const refC=atual.cupom ? doc(db,"lojas",lojaId,"cupons",atual.cupom) : null;
       const cupom=refC ? await tx.get(refC) : null;
       if (cupom?.data()?.individual) {
@@ -213,7 +217,12 @@ async function aceitar(p) {
       const n=(loja.data().contador || 1000)+1, {id,...dados}=atual;
       const ficha=await camposFicha(atual,{status:"preparo",numero:n},serverTimestamp());
       tx.update(lojaRef,{contador:n});
-      if (cupom?.exists()) tx.update(refC,{usos:(cupom.data().usos || 0)+1});
+      if (cupom?.exists()) {
+        const c = cupom.data(), reservou = atual.pagamento?.online && atual.pagamento.reservaCupom && !c.individual;
+        if (reservou && !(c.reservasOnline > 0)) throw new Error("reserva");
+        if (!reservou && c.limite != null && (c.usos || 0) + (c.reservasOnline || 0) >= c.limite) throw new Error("limite");
+        tx.update(refC,{usos:(c.usos || 0)+1,...(reservou ? {reservasOnline:c.reservasOnline-1} : {})});
+      }
       tx.set(doc(db,"lojas",lojaId,"pedidos",id),{...dados,status:"preparo",numero:n,aceitoEm:serverTimestamp()});
       tx.delete(entradaRef);
       if (temFicha(atual)) tx.set(doc(db,"lojas",lojaId,"clientes",telefoneDe(atual)),ficha,{merge:true});
@@ -240,8 +249,15 @@ async function mudarStatus(p, status) {
   } catch { toast("Não deu para atualizar. Tente de novo.","erro",4000); }
 }
 async function recusar(p) {
-  if (!(await confirmar("Recusar este pedido? O cliente vê na tela do pedido que ele não foi aceito.", { textoConfirmar: "Recusar" }))) return;
+  if (!(await confirmar(p.pagamento?.online ? "Recusar este pedido e solicitar a devolução do pagamento pelo Mercado Pago?" : "Recusar este pedido? O cliente vê na tela do pedido que ele não foi aceito.", { textoConfirmar: p.pagamento?.online ? "Recusar e devolver" : "Recusar" }))) return;
   if (P.exemplo) { toast("Exemplo: nada é gravado.", "info", 2500); return; }
+  if (p.pagamento?.online) {
+    try {
+      await chamarPagamento("recusar", { lojaId: P.loja.id, pedidoId: p.id }, { autenticado: true });
+      fecharDetalhe(); toast("Pedido recusado. A situação da devolução aparece no pedido.", "sucesso", 5000);
+    } catch (erro) { toast(erro.message || "Não foi possível conferir a devolução. Tente novamente.", "erro", 6000); }
+    return;
+  }
   const lojaId=P.loja.id, entradaRef=doc(db,"lojas",lojaId,"pedidosEntrada",p.id);
   try {
     const feito=await runTransaction(db,async (tx) => {

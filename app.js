@@ -12,7 +12,8 @@ import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 import { cestaCanonica, mesmaCesta, hashDestinatario } from "./oferta-cupom.js?v=1";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=9";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=10";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=1";
 import { iniciarAgenda } from "./agenda-cliente.js?v=1";
 import { textoAgendamento } from "./agendamento.js?v=1";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
@@ -80,7 +81,7 @@ function lerCliente() {
 const STATE = {
   sacola: lerSacola(), tipo: "entrega", produto: null, entrega: { status: "vazio" },
   // pagar online só aparece com o Mercado Pago ligado (decisão 8)
-  aba: LOJA.pagamentoOnline ? "online" : "entrega", forma: LOJA.pagamentoOnline ? "pix" : "dinheiro",
+  aba: LOJA.pagamentoOnline ? "online" : "entrega", forma: LOJA.pagamentoOnline ? "mercado-pago" : "dinheiro",
   cliente: lerCliente(), enviando: false, exemploPedido: null, cupom: null,
 };
 const agenda = iniciarAgenda(LOJA, {
@@ -709,8 +710,7 @@ document.getElementById("tipos").addEventListener("click", (e) => {
 /* ===== S14 pagamento: online primeiro (decisão dele, 2026-10-14) ===== */
 const FORMAS = {
   online: [
-    { id: "pix", nome: "Pix", detalhe: "Aprovação na hora", ic: "pix" },
-    { id: "credito-online", nome: "Cartão de crédito", detalhe: "Adicionar cartão", ic: "cartao" },
+    { id: "mercado-pago", nome: "Mercado Pago", detalhe: "Pix e cartão", ic: "cartao" },
   ],
   entrega: [
     { id: "dinheiro", nome: "Dinheiro", detalhe: "Informe se precisa de troco", ic: "dinheiro" },
@@ -720,10 +720,11 @@ const FORMAS = {
   ],
 };
 const NOTAS = {
-  online: "<b>Como funciona</b>Depois de revisar o pedido, aparecem o QR Code e o código copia e cola. O restaurante começa a preparar assim que o pagamento é confirmado.",
+  online: "<b>Como funciona</b>Você conclui o pagamento no Mercado Pago e volta para acompanhar o pedido. O restaurante só recebe o pedido após a confirmação do pagamento.",
   entrega: "<b>Como funciona</b>Você paga quando o pedido chegar. Se for em dinheiro, diga para quanto precisa de troco na revisão do pedido.",
 };
 function renderPagamento() {
+  if (!LOJA.pagamentoOnline) STATE.aba = "entrega";
   document.getElementById("abas-pagamento").hidden = !LOJA.pagamentoOnline;
   document.getElementById("titulo-na-entrega").hidden = LOJA.pagamentoOnline;
   document.querySelectorAll("#abas-pagamento [data-aba]").forEach((b) => b.classList.toggle("on", b.dataset.aba === STATE.aba));
@@ -733,7 +734,7 @@ function renderPagamento() {
       <i data-ic="${f.ic}"></i><span class="rotulo">${f.nome} <small>${f.detalhe}</small></span><span class="radio${f.id === STATE.forma ? " on" : ""}"></span>
     </button>`);
   // como na imagem validada: a explicação logo depois da forma escolhida no celular, depois das formas no computador
-  const nota = `<div class="nota">${NOTAS[STATE.aba]}</div>`;
+  const nota = `<div class="nota">${NOTAS[STATE.aba]}${!SLUG && STATE.aba === "online" ? "<p>Representação: nenhum pagamento será iniciado neste exemplo.</p>" : ""}</div>`;
   const pos = FORMAS[STATE.aba].findIndex((f) => f.id === STATE.forma);
   document.getElementById("formas").innerHTML = pc.matches
     ? `<div class="formas-grade">${formas.join("")}</div>${nota}`
@@ -747,6 +748,7 @@ function renderPagamento() {
 document.getElementById("abas-pagamento").addEventListener("click", (e) => {
   const b = e.target.closest("[data-aba]");
   if (!b) return;
+  if (b.dataset.aba === "online" && !LOJA.pagamentoOnline) return;
   STATE.aba = b.dataset.aba;
   renderPagamento();
 });
@@ -841,7 +843,7 @@ function renderRevisar() {
 function marcarEnviar() {
   document.querySelectorAll(".btn.enviar").forEach((b) => {
     b.classList.toggle("desligado", STATE.enviando);
-    b.innerHTML = STATE.enviando ? "<span>Enviando...</span>" : `<span>Enviar pedido</span><span>${reais(totalPedido())}</span>`;
+    b.innerHTML = STATE.enviando ? "<span>Enviando...</span>" : `<span>${STATE.aba === "online" ? "Ir para pagamento" : "Enviar pedido"}</span><span>${reais(totalPedido())}</span>`;
   });
 }
 // "100", "100,00" ou "1.000,50" em centavos; vazio é sem troco
@@ -857,6 +859,43 @@ function lerTroco() {
 /* ===== envio: grava em pedidosEntrada; o painel move para pedidos quando aceita ===== */
 const CHAVE_PEDIDOS = `deliverymenu:pedidos:${LOJA.id}`;
 function meusPedidos() { try { return JSON.parse(localStorage.getItem(CHAVE_PEDIDOS)) || []; } catch { return []; } }
+const CHAVE_CHECKOUT = `deliverymenu:checkout:${LOJA.id}`;
+let checkoutAtual = null;
+try { checkoutAtual = JSON.parse(localStorage.getItem(CHAVE_CHECKOUT)); } catch { /* vale somente nesta aba */ }
+const guardarCheckout = () => { try { localStorage.setItem(CHAVE_CHECKOUT, JSON.stringify(checkoutAtual)); } catch { /* vale somente nesta aba */ } };
+function lembrarPedido(id) {
+  try { localStorage.setItem(CHAVE_PEDIDOS, JSON.stringify([id, ...meusPedidos().filter((x) => x !== id)].slice(0, 20))); } catch { /* sem armazenamento */ }
+}
+async function abrirPagamento(pedido) {
+  if (!LOJA.pagamentoOnline || !pagamentoDisponivel()) throw new Error("O pagamento online não está disponível. Escolha como pagar na entrega.");
+  const assinatura = JSON.stringify(pedido);
+  try { checkoutAtual = JSON.parse(localStorage.getItem(CHAVE_CHECKOUT)) || checkoutAtual; } catch { /* mantém a tentativa desta aba */ }
+  if (checkoutAtual?.assinatura !== assinatura) {
+    const bytes = crypto.getRandomValues(new Uint8Array(16)); bytes[6] = (bytes[6] & 15) | 64; bytes[8] = (bytes[8] & 63) | 128;
+    const hex = [...bytes].map((b) => b.toString(16).padStart(2, "0")).join("");
+    checkoutAtual = { id: `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`, assinatura, cesta: JSON.stringify(STATE.sacola) };
+    guardarCheckout();
+  }
+  lembrarPedido(checkoutAtual.id);
+  const dados = await chamarPagamento("checkout", { lojaId: LOJA.id, pedidoId: checkoutAtual.id, pedido });
+  if (dados.pedidoId && dados.pedidoId !== checkoutAtual.id) throw new Error("Não foi possível confirmar o pedido. Confira seus pedidos antes de tentar de novo.");
+  const url = urlMercadoPago(dados.checkoutUrl || dados.url);
+  checkoutAtual.url = url; guardarCheckout(); lembrarPedido(checkoutAtual.id);
+  if (pedido.endereco) guardarEndereco(pedido.endereco);
+  location.hash = `#pedido/${checkoutAtual.id}`;
+  if (url && (!dados.estado || dados.estado === "aguardando")) location.assign(url);
+  else toast("Acompanhe a situação do pagamento nesta tela antes de tentar novamente.", "info", 5000);
+}
+function encerrarTentativa(id) {
+  if (checkoutAtual?.id === id) { checkoutAtual = null; guardarCheckout(); }
+}
+function concluirCheckout(id) {
+  if (checkoutAtual?.id !== id) return;
+  if (JSON.stringify(STATE.sacola) === checkoutAtual.cesta) {
+    STATE.sacola = []; tirarCupom(false); agenda.limpar(); salvarSacola();
+  }
+  encerrarTentativa(id);
+}
 
 async function enviarPedido() {
   if (STATE.enviando) return; // duplo clique não manda dois pedidos
@@ -892,6 +931,7 @@ async function enviarPedido() {
   STATE.enviando = true;
   marcarEnviar();
   try {
+    if (pedido.pagamento.online) { await abrirPagamento(pedido); return; }
     const { db } = await import("./firebase-init.js?v=3");
     const { collection, doc, writeBatch, serverTimestamp, Timestamp } = await import(FIRESTORE);
     let cupom = null;
@@ -916,7 +956,7 @@ async function enviarPedido() {
     if (err?.code === "permission-denied" && !agenda.conferir()) { location.hash = "#entrega"; return; }
     const motivo = err.cupomMotivo || (err?.code === "permission-denied" && STATE.cupom ? await cupomAindaServe() : "");
     if (motivo) { tirarCupom(false); toast(`${motivo} O cupom saiu do pedido; confira o total e envie de novo.`, "erro", 6000); renderRevisar(); return; }
-    toast(err?.code === "permission-denied" ? "O restaurante não está recebendo pedidos agora." : "Não deu para enviar. Confira a internet e tente de novo.", "erro", 5000);
+    toast(pedido.pagamento.online ? err.message || "Não deu para abrir o pagamento. Confira seus pedidos antes de tentar novamente." : err?.code === "permission-denied" ? "O restaurante não está recebendo pedidos agora." : "Não deu para enviar. Confira a internet e tente de novo.", "erro", 6000);
   } finally {
     STATE.enviando = false;
     marcarEnviar();
@@ -935,11 +975,21 @@ async function acompanhar(id) {
   }
   const { db } = await import("./firebase-init.js?v=3");
   const { doc, onSnapshot } = await import(FIRESTORE);
-  const vivo = { entrada: undefined, aceito: undefined, viu: false };
+  const lerPagamento = pagamentoDisponivel() || checkoutAtual?.id === id;
+  const vivo = { entrada: undefined, aceito: undefined, pagamento: lerPagamento ? undefined : null, viu: false };
   const mostrar = () => {
-    if (vivo.entrada === undefined || vivo.aceito === undefined) return; // espera as duas leituras
+    if (vivo.entrada === undefined || vivo.aceito === undefined || vivo.pagamento === undefined) return;
     const p = vivo.aceito || vivo.entrada;
-    if (p) { vivo.viu = true; renderAcompanhar(p); }
+    if (p) {
+      vivo.viu = true;
+      if (p.pagamento?.reembolsado) encerrarTentativa(id); else if (p.pagamento?.pago) concluirCheckout(id);
+      renderAcompanhar(p);
+    } else if (vivo.pagamento) {
+      vivo.viu = true;
+      if (vivo.pagamento.estado === "aprovado") concluirCheckout(id);
+      else if (["expirado", "cancelado", "reembolsado"].includes(vivo.pagamento.estado)) encerrarTentativa(id);
+      renderPagamentoPendente(vivo.pagamento);
+    }
     else if (!vivo.viu) document.getElementById("acompanhar").innerHTML = `<p class="nao-achou">Não encontramos este pedido.</p>`;
     // as duas vazias depois de ter visto: é o instante em que o painel move o pedido; fica a última tela
   };
@@ -947,8 +997,41 @@ async function acompanhar(id) {
   const erro = () => toast("Não deu para atualizar o pedido. Confira a internet.", "erro", 4000);
   const u1 = onSnapshot(doc(db, "lojas", LOJA.id, "pedidosEntrada", id), (s) => { vivo.entrada = ler(s) && { ...ler(s), status: "novo" }; mostrar(); }, erro);
   const u2 = onSnapshot(doc(db, "lojas", LOJA.id, "pedidos", id), (s) => { vivo.aceito = ler(s); mostrar(); }, erro);
-  pararAcomp = () => { u1(); u2(); };
+  const u3 = lerPagamento ? onSnapshot(doc(db, "lojas", LOJA.id, "pagamentosPedidos", id), (s) => { vivo.pagamento = ler(s); mostrar(); }, () => { vivo.pagamento = null; mostrar(); erro(); }) : () => {};
+  pararAcomp = () => { u1(); u2(); u3(); };
 }
+
+function renderPagamentoPendente(p) {
+  const estados = {
+    gerando: ["Preparando pagamento", "Estamos preparando o link do Mercado Pago. Confira novamente em instantes."],
+    aguardando: ["Aguardando pagamento", "Conclua o pagamento no Mercado Pago. O pedido ainda não foi enviado à cozinha."],
+    reconciliar: ["Conferindo pagamento", "Estamos conferindo a confirmação do Mercado Pago. O pedido ainda não foi enviado à cozinha."],
+    aprovado: ["Pagamento confirmado", "Estamos confirmando o pedido no restaurante. Acompanhe a atualização nesta tela."],
+    erro: ["Pagamento não concluído", "Não foi possível concluir este pagamento. Confira a situação antes de fazer outro pedido."],
+    expirado: ["Pagamento expirado", "O prazo deste pagamento terminou. Confira a situação antes de fazer outro pedido."],
+    cancelado: ["Pagamento cancelado", "Este pagamento foi cancelado. O pedido não foi enviado à cozinha."],
+    reembolsado: ["Pagamento devolvido", "A devolução foi confirmada. O prazo para aparecer depende da forma de pagamento."],
+    estorno_pendente: ["Devolução pendente", "A devolução do pagamento está pendente. Acompanhe por aqui ou fale com o restaurante."],
+  };
+  const [titulo, mensagem] = estados[p.estado] || estados.aguardando;
+  const venceu = p.expiresAt && quando(p.expiresAt) && quando(p.expiresAt) <= new Date();
+  const url = !venceu && ["gerando", "aguardando"].includes(p.estado) && urlMercadoPago(p.checkoutUrl);
+  document.getElementById("acompanhar").innerHTML = `<div class="ok"><div class="selo-ok espera"><i data-ic="relogio"></i></div><h1>${titulo}</h1><p>${mensagem}</p></div>
+    <div class="pg-acoes">${url ? `<a class="btn" href="${esc(url)}">Pagar no Mercado Pago</a>` : ""}
+    <button type="button" class="btn fantasma" data-conferir-pagamento="${esc(p.id)}" ${pagamentoDisponivel() ? "" : "disabled"}>Conferir pagamento</button><a class="btn fantasma" href="#inicio">Voltar ao cardápio</a></div>`;
+  pintarIcones(document.getElementById("acompanhar"));
+}
+let consultandoPagamento = false;
+document.addEventListener("click", async (e) => {
+  const botao = e.target.closest("[data-conferir-pagamento]");
+  if (!botao || consultandoPagamento) return;
+  consultandoPagamento = true; botao.disabled = true;
+  try {
+    await chamarPagamento("consultar", { lojaId: LOJA.id, pedidoId: botao.dataset.conferirPagamento });
+    toast("Conferência solicitada. A situação do pedido será atualizada nesta tela.", "info", 4000);
+  } catch (erro) { toast(erro.message, "erro", 5000); }
+  finally { consultandoPagamento = false; if (botao.isConnected) botao.disabled = !pagamentoDisponivel(); }
+});
 
 // estados das imagens S16 a S18 no modo exemplo: #pedido/exemplo, exemplo-aceito, exemplo-recusado
 function pedidoExemplo(id) {
@@ -961,6 +1044,7 @@ function pedidoExemplo(id) {
 }
 const quando = (t) => (t instanceof Date ? t : t?.toDate ? t.toDate() : null);
 function renderAcompanhar(p) {
+  if (p.pagamento?.estornoPendente) { renderPagamentoPendente({ ...p, estado: "estorno_pendente" }); return; }
   const criado = quando(p.criadoEm) || new Date();
   const aceito = quando(p.aceitoEm), saiu = quando(p.saiuEm), fim = quando(p.concluidoEm);
   const entrega = p.tipo === "entrega";
@@ -971,7 +1055,7 @@ function renderAcompanhar(p) {
     preparo: ["check", "", "Pedido aceito!", p.agendadoPara ? `O restaurante confirmou o pedido para ${textoAgendamento(p.agendadoPara)}.` : "O restaurante já está preparando o seu pedido."],
     saiu: ["entrega", "", "Saiu para entrega!", "O pedido está a caminho."],
     entregue: ["check", "", `Pedido ${nomeFim.toLowerCase()}!`, "Obrigado pela preferência."],
-    cancelado: ["x", "nao", "Pedido não aceito", "O restaurante não pôde aceitar este pedido agora. Nada foi cobrado."],
+    cancelado: ["x", "nao", "Pedido não aceito", p.pagamento?.online ? p.pagamento.reembolsado ? "O pagamento foi devolvido. O prazo para aparecer depende da forma de pagamento." : p.pagamento.estornoPendente ? "A devolução do pagamento está pendente. Acompanhe por aqui ou fale com o restaurante." : "Confira a devolução do pagamento com o restaurante." : "O restaurante não pôde aceitar este pedido agora. Nada foi cobrado."],
   }[p.status] || ["relogio", "espera", "Pedido enviado!", ""];
 
   // etapas: [nome, texto pequeno quando feita ou atual]
@@ -1079,11 +1163,11 @@ const SITUACAO = {
 };
 function cartaoPedido(p) {
   const [classe, texto] = SITUACAO[p.status] || SITUACAO.novo;
-  const rotulo = p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || texto : texto;
-  const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
+  const rotulo = p.pagamentoPendente ? ({ aprovado: "Confirmando pedido", reembolsado: "Pagamento devolvido", erro: "Pagamento não concluído", cancelado: "Pagamento cancelado", expirado: "Pagamento expirado", reconciliar: "Conferindo pagamento" }[p.estado] || "Aguardando pagamento") : p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || texto : texto;
+  const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.pagamentoPendente ? "Pagamento online" : p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${i.nome}`).join(", ");
   const corpo = `<div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span>${p.id ? '<i data-ic="direita"></i>' : ""}</div>
-    <p>${esc(itens)}</p>${p.agendadoPara ? `<p class="ag-resumo">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</p>` : ""}<div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${reais(p.total || 0)}</strong></div>`;
+    <p>${esc(itens)}</p>${p.agendadoPara ? `<p class="ag-resumo">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</p>` : ""}<div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${p.pagamentoPendente && p.total == null ? "Ver pagamento" : reais(p.total || 0)}</strong></div>`;
   // pedido feito em outro aparelho vem só da ficha, sem o acompanhamento
   return p.id ? `<a class="ped-c" href="#pedido/${esc(p.id)}">${corpo}</a>` : `<div class="ped-c">${corpo}</div>`;
 }
@@ -1113,9 +1197,11 @@ async function lerPedidos() {
   const { doc, getDoc } = await import(FIRESTORE);
   const [lidos, ficha] = await Promise.all([
     Promise.all(ids.map(async (id) => {
-      const [aceito, entrada] = await Promise.all(["pedidos", "pedidosEntrada"].map((c) => getDoc(doc(db, "lojas", LOJA.id, c, id)).catch(() => null)));
+      const colecoes = ["pedidos", "pedidosEntrada", ...(pagamentoDisponivel() || checkoutAtual?.id === id ? ["pagamentosPedidos"] : [])];
+      const [aceito, entrada, pagamento] = await Promise.all(colecoes.map((c) => getDoc(doc(db, "lojas", LOJA.id, c, id)).catch(() => null)));
       if (aceito?.exists()) return { id, ...aceito.data({ serverTimestamps: "estimate" }) };
       if (entrada?.exists()) return { id, ...entrada.data({ serverTimestamps: "estimate" }), status: "novo" };
+      if (pagamento?.exists()) return { id, ...pagamento.data(), pagamentoPendente: true };
       return null; // apagado no painel
     })),
     lerFicha(STATE.cliente?.telefone).catch(() => null),
@@ -1292,6 +1378,13 @@ async function vigiarLoja() {
     LOJA.horario = d.horario || null;
     LOJA.aceitaAgendamento = d.aceitaAgendamento === true;
     LOJA.abrirSozinho = !!d.abrirSozinho;
+    const onlineAntes = LOJA.pagamentoOnline;
+    LOJA.pagamentoOnline = pagamentoDisponivel() && d.pagamentoOnline?.ativo === true;
+    if (onlineAntes && !LOJA.pagamentoOnline && STATE.aba === "online") {
+      STATE.aba = "entrega"; STATE.forma = "dinheiro";
+      toast("O pagamento online foi pausado. Escolha uma forma de pagar na entrega.", "info", 5000);
+      if (["pagamento", "revisar"].includes(document.body.dataset.tela)) { location.hash = "#pagamento"; renderPagamento(); }
+    }
     atualizarAberta();
     agenda.atualizar(); agenda.conferir();
   }, () => { /* sem internet: segue com o que já leu */ });

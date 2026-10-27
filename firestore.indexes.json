@@ -1,0 +1,8 @@
+{
+  "indexes": [{
+    "collectionGroup": "transacoesPagamento",
+    "queryScope": "COLLECTION",
+    "fields": [{ "fieldPath": "finalizado", "order": "ASCENDING" }, { "fieldPath": "expiresAt", "order": "ASCENDING" }]
+  }],
+  "fieldOverrides": []
+}

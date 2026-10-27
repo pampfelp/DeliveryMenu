@@ -14,6 +14,7 @@
 
 import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=7";
 import { regraDe } from "./conta-entrega.js?v=1";
+import { pagamentoDisponivel } from "./pagamentos.js?v=1";
 
 export const SLUG = document.documentElement.dataset.loja || new URLSearchParams(location.search).get("loja");
 if (SLUG === "casa-jambu-delivery" && !document.documentElement.dataset.loja) {
@@ -101,7 +102,7 @@ export async function carregarLoja() {
       whatsapp: d.whatsapp || "",
       endereco: d.endereco || "", // o ponto de saída marcado em Entregas
       // pagar online só depois que a loja ligar o Mercado Pago (decisão 8)
-      pagamentoOnline: false,
+      pagamentoOnline: pagamentoDisponivel() && d.pagamentoOnline?.ativo === true,
     },
     BAIRROS: bairros.filter((b) => b.nome),
     CATEGORIAS: cats.sort(porOrdem)

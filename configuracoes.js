@@ -14,6 +14,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { regraDe } from "./conta-entrega.js?v=1";
 import { ORDEM, NOMES, situacao, horaValida } from "./horario.js?v=1";
 import { linkCardapio, linkPublico } from "./links-cardapio.js?v=1";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=1";
 
 const $ = (id) => document.getElementById(id);
 const CORES = ["#991b1b", "#c2410c", "#15803d", "#1d4ed8", "#6d28d9", "#1f2937"];
@@ -22,7 +23,7 @@ const fmtFone = (d) => (d.length > 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d
   : d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}` : d);
 const fmtHora = (t) => { const d = soDigitos(t).slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d; };
 
-const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false };
+const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false, pagamento: null, pagamentoOcupado: false };
 
 const horarioPadrao = () => Object.fromEntries(ORDEM.map((d) => [d, { aberto: true, abre: "18:00", fecha: "23:00" }]));
 function rascunhoDe(l) {
@@ -60,6 +61,41 @@ function htmlDias(r) {
     return `<div class="dia">${nome}${meio}<button type="button" class="chave-p${h.aberto ? "" : " off"}" data-cf-dia="${d}" aria-pressed="${!!h.aberto}" aria-label="${NOMES[d]} aberto"><span class="trilho"></span></button></div>`;
   }).join("");
 }
+function htmlPagamento() {
+  const disponivel = pagamentoDisponivel(), conectado = !!C.pagamento?.conectado, ativo = !!C.pagamento?.ativo;
+  const mensagem = !disponivel ? "Conexão disponível após a ativação do serviço." : C.exemplo ? "Representação: nenhuma conta será conectada neste exemplo."
+    : conectado ? (ativo ? "Conta conectada. Seus clientes podem pagar online." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.") : "Conecte a conta Mercado Pago da sua empresa para receber online.";
+  return `<section class="cf-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
+    <b>Mercado Pago</b><p>Sua empresa recebe diretamente na própria conta. A senha é informada somente no Mercado Pago.</p>
+    <p class="cf-pagamento-estado" role="status">${esc(mensagem)}</p>
+    <button type="button" class="btn" data-cf-pagamento="${conectado && ativo ? "pausar" : "conectar"}" ${!disponivel || C.pagamentoOcupado ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : conectado && ativo ? "Pausar pagamento online" : conectado ? "Conectar novamente" : "Conectar conta"}</button>
+  </div></section>`;
+}
+async function consultarPagamento() {
+  if (!pagamentoDisponivel() || C.exemplo) return;
+  const lojaId = C.loja.id;
+  try {
+    const estado = await chamarPagamento("status", { lojaId }, { autenticado: true });
+    if (C.loja?.id !== lojaId) return;
+    C.pagamento = estado;
+    const cartao = document.querySelector(".cf-pagamento")?.closest("section");
+    if (cartao) cartao.outerHTML = htmlPagamento();
+  } catch (erro) { toast(erro.message, "erro", 5000); }
+}
+async function mudarPagamento(acao) {
+  if (C.pagamentoOcupado || !pagamentoDisponivel()) return;
+  if (C.exemplo) { toast("Exemplo: nenhuma conta foi conectada.", "info", 3500); return; }
+  if (C.sujo && acao === "conectar") { toast("Salve as alterações antes de conectar a conta.", "info", 4000); return; }
+  C.pagamentoOcupado = true;
+  const cartao = () => document.querySelector(".cf-pagamento")?.closest("section");
+  if (cartao()) cartao().outerHTML = htmlPagamento();
+  try {
+    const dados = await chamarPagamento(acao, { lojaId: C.loja.id }, { autenticado: true });
+    if (acao === "conectar") location.assign(urlMercadoPago(dados.url));
+    else { C.pagamento = { ...C.pagamento, ativo: false }; toast("Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500); }
+  } catch (erro) { toast(erro.message, "erro", 5000); }
+  finally { C.pagamentoOcupado = false; if (cartao()) cartao().outerHTML = htmlPagamento(); }
+}
 function render() {
   if (!C.loja) return;
   const r = C.rasc, base = ORDEM.find((d) => r.horario[d]?.aberto);
@@ -80,6 +116,7 @@ function render() {
         <div class="campo"><label for="cf-whats">WhatsApp da loja</label><div class="in"><i data-ic="fone"></i><input id="cf-whats" type="tel" inputmode="numeric" placeholder="(00) 00000-0000" value="${esc(fmtFone(r.whatsapp))}" /></div>
           <p class="ajuda">Aparece para o cliente no botão "Falar com o restaurante", depois do pedido.</p></div>
       </div></section>
+      ${htmlPagamento()}
     </div>
     <section class="cf-cartao"><div class="cf-cab"><h2>Horário de funcionamento</h2></div><div class="cf-corpo">
       ${htmlDias(r)}
@@ -168,6 +205,7 @@ function aoClicar(e) {
   if ($("vista-configuracoes").hidden) return;
   const alvo = (s) => e.target.closest(s);
   let el;
+  if ((el = alvo("[data-cf-pagamento]"))) { mudarPagamento(el.dataset.cfPagamento); return; }
   if (alvo("[data-cf-salvar]")) { salvar(); return; }
   if (alvo("[data-cf-copiar]")) {
     navigator.clipboard?.writeText(linkPublico(C.loja.id)).then(() => toast("Link copiado.", "sucesso", 2000), () => toast("Não deu para copiar. Selecione o link e copie.", "erro", 3500));
@@ -208,6 +246,8 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
   C.exemplo = !!exemplo;
   C.rasc = rascunhoDe(C.loja);
   C.sujo = false;
+  C.pagamento = null;
+  C.pagamentoOcupado = false;
   document.addEventListener("click", aoClicar);
   document.addEventListener("input", aoDigitar);
   document.addEventListener("change", aoMudar);
@@ -220,6 +260,7 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
     if (url) { C.rasc.logoUrl = url; C.sujo = true; render(); }
   };
   render();
+  consultarPagamento();
   if (C.exemplo) return;
   // o banco só redesenha a tela quando não há mudança por salvar
   C.parar.push(onSnapshot(doc(db, "lojas", loja.id), (s) => {

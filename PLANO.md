@@ -1,6 +1,6 @@
 # Plano do Cardápio Delivery
 
-Atualizado em 2026-10-26. O estado vivo está em
+Atualizado em 2026-10-27. O estado vivo está em
 `Relatórios Claude/estado/DeliveryMenu.md`; `replica/features.csv` é um
 levantamento anterior e não comprova prontidão de produção.
 
@@ -14,9 +14,15 @@ levantamento anterior e não comprova prontidão de produção.
 - Cadastro de equipe retestado em Auth/Firestore Emulator: preserva sessão
   do dono, exige senha própria no primeiro acesso, impede vínculo cruzado
   entre restaurantes e encerra a sessão ao retirar acesso.
-- Pagamento online continua desativado. Pedido atual: cada empresa conecta
-  sua própria conta Mercado Pago por OAuth. Firebase Functions exige Blaze;
-  aguarda decisão sobre faturamento; Apps Script foi indicado como opção.
+- Pagamento online preparado em Firebase Functions Node.js 22: cada empresa
+  conecta sua própria conta Mercado Pago por OAuth e usa Checkout Pro, sem
+  comissão configurada para o app. Código testado com emulador e provedor
+  simulado; frontend `ativo: false` e backend `PAGAMENTOS_ATIVOS=false`.
+  Não houve Blaze, deploy das funções ou teste no Mercado Pago real.
+  Configuração e homologação futura: [PAGAMENTOS-FIREBASE.md](PAGAMENTOS-FIREBASE.md).
+- As novas regras e o índice de pagamento continuam locais, sem publicação.
+  Backend e cálculo: 70 testes completos com emulador; regras de pagamento:
+  42 verificações. Esses testes não comprovam capacidade de carga.
 - Pendentes: homologação em iPhone real, uso por funcionários reais,
   pagamento/estorno, instalação PWA, termos e preparação para carga.
 

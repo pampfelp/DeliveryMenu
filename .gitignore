@@ -3,3 +3,8 @@
 rea/evidencias/
 rea/*.json
 *.asar
+node_modules/
+.env*
+.secret.local
+*-debug.log*
+.firebase/

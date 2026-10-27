@@ -1,0 +1,15 @@
+{
+  "name": "deliverymenu-pagamentos",
+  "private": true,
+  "type": "module",
+  "main": "functions/index.js",
+  "engines": { "node": "22" },
+  "scripts": {
+    "test:pagamentos": "node --test functions/pagamentos.test.js functions/calcular-pedido.test.js",
+    "emulators": "firebase emulators:start --only functions,firestore,auth --project cardapio-delivery-ae048"
+  },
+  "dependencies": {
+    "firebase-admin": "14.5.0",
+    "firebase-functions": "7.4.0"
+  }
+}

@@ -29,6 +29,14 @@ analisado) fica fora deste repositório, em `C:\rea-alvos\` e
 HTML, CSS e JavaScript puros, sem build step, Firebase/Firestore e GitHub
 Pages, a partir do `boilerplate/` do segundo cérebro.
 
+O pagamento online foi preparado em Firebase Functions (Node.js 22), com
+OAuth para cada restaurante conectar a própria conta Mercado Pago. Está
+desativado nas duas pontas: `ativo: false` no frontend e
+`PAGAMENTOS_ATIVOS=false` no backend. Não houve habilitação do Blaze, deploy
+das funções ou homologação com o Mercado Pago real. O frontend continua sem
+build. Configuração, testes e sequência de ativação estão em
+[`PAGAMENTOS-FIREBASE.md`](PAGAMENTOS-FIREBASE.md).
+
 ## Vídeos das pizzas Casa Jambu
 
 Os dez sabores da loja `casa-jambu-delivery` usam os MP4 de

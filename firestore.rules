@@ -85,7 +85,7 @@ service cloud.firestore {
         && exists(/databases/$(database)/documents/lojas/$(lojaId)/cupons/$(d.cupom))
         && c.ativo == true
         && (c.get("validoAte", null) == null || request.time <= c.validoAte)
-        && (c.get("limite", null) == null || c.get("usos", 0) < c.limite)
+        && (c.get("limite", null) == null || c.get("usos", 0) + c.get("reservasOnline", 0) < c.limite)
         && d.subtotal >= c.get("minimo", 0)
         && d.desconto == (c.tipo == "pct" ? math.round(d.subtotal * c.valor / 100.0) : (c.valor < d.subtotal ? c.valor : d.subtotal))
         && d.total == d.subtotal + d.taxa - d.desconto
@@ -101,7 +101,8 @@ service cloud.firestore {
         && texto(request.resource.data.nome, 120)
         && texto(request.resource.data.cidade, 60)
         && texto(request.resource.data.bairro, 60);
-      allow update: if membroDa(lojaId) && request.resource.data.donoId == resource.data.donoId;
+      allow update: if membroDa(lojaId) && request.resource.data.donoId == resource.data.donoId
+        && !request.resource.data.diff(resource.data).affectedKeys().hasAny(["pagamentoOnline"]);
       allow delete: if donoDa(lojaId);
 
       match /categorias/{id} {
@@ -138,14 +139,41 @@ service cloud.firestore {
           && texto(request.resource.data.cliente.nome, 80)
           && texto(request.resource.data.cliente.telefone, 20)
           && request.resource.data.pagamento is map
-          && request.resource.data.pagamento.get("pago", false) == false;
+          && request.resource.data.pagamento.get("pago", false) == false
+          && request.resource.data.pagamento.get("online", false) == false
+          && request.resource.data.pagamento.keys().hasOnly(["forma", "online", "troco", "pago"]);
         allow get: if true;
-        allow list, update, delete: if membroDa(lojaId);
+        allow list, delete: if membroDa(lojaId);
+        allow update: if membroDa(lojaId)
+          && resource.data.pagamento.get("online", false) != true
+          && request.resource.data.pagamento == resource.data.pagamento;
       }
 
       match /pedidos/{id} {
+        function aceiteOnline() {
+          let entrada = get(/databases/$(database)/documents/lojas/$(lojaId)/pedidosEntrada/$(id)).data;
+          return entrada.pagamento.get("online", false) == true
+            && entrada.pagamento.get("pago", false) == true
+            && entrada.pagamento.get("estornoPendente", false) == false
+            && request.resource.data.status == "preparo"
+            && request.resource.data.diff(entrada).affectedKeys().hasOnly(["status", "numero", "aceitoEm"]);
+        }
         allow get: if true;
-        allow list, write: if membroDa(lojaId);
+        allow list, delete: if membroDa(lojaId);
+        allow create: if membroDa(lojaId)
+          && (request.resource.data.pagamento.get("online", false) != true || aceiteOnline());
+        allow update: if membroDa(lojaId)
+          && ((resource.data.pagamento.get("online", false) != true
+              && request.resource.data.pagamento.get("online", false) != true)
+            || (request.resource.data.status in ["preparo", "saiu", "entregue"]
+              && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["status", "numero", "aceitoEm", "saiuEm", "concluidoEm"])));
+      }
+
+      // O recibo é escrito apenas pelo servidor. O id aleatório permite acompanhar.
+      match /pagamentosPedidos/{id} {
+        allow get: if true;
+        allow list: if membroDa(lojaId);
+        allow write: if false;
       }
 
       // cupons: quem tem o código lê (para conferir na sacola); a lista e a escrita são do dono
