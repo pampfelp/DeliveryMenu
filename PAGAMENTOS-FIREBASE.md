@@ -7,6 +7,19 @@ mudança para Blaze, deploy das funções, conexão com conta real nem cobrança
 no Mercado Pago. As regras novas e o índice de reconciliação são locais;
 ainda não foram publicados.
 
+Atualização da tentativa de ativação: Felipe relatou adiantamento de R$150
+na etapa de faturamento do Google e recusou. O diálogo de upgrade foi
+fechado; o projeto continua Spark, conferido no Console. Não habilitar
+Blaze nem vincular faturamento com base na autorização anterior.
+A alternativa em Apps Script já indicada por ele precisa de avaliação e
+adaptação do backend, antes de se declarar o pagamento disponível.
+
+No Console atual, o registro de reCAPTCHA clássico está descontinuado,
+com o campo de segredo desabilitado. Retomar a rota Firebase exige usar
+Fraud Defense/reCAPTCHA Enterprise e adaptar o provedor no cliente;
+essa adaptação ainda não está feita. A criação da aplicação Mercado Pago
+foi autorizada, mas voltou à validação de segurança e não foi confirmada.
+
 ## Modelo implementado
 
 Cada restaurante conecta a própria conta pelo OAuth do Mercado Pago, com
