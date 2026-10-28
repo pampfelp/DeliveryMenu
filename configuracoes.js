@@ -14,7 +14,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { regraDe } from "./conta-entrega.js?v=1";
 import { ORDEM, NOMES, situacao, horaValida } from "./horario.js?v=1";
 import { linkCardapio, linkPublico } from "./links-cardapio.js?v=1";
-import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=1";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=2";
 
 const $ = (id) => document.getElementById(id);
 const CORES = ["#991b1b", "#c2410c", "#15803d", "#1d4ed8", "#6d28d9", "#1f2937"];

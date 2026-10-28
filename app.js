@@ -12,8 +12,9 @@ import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { SACOLA_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";
 import { cestaCanonica, mesmaCesta, hashDestinatario } from "./oferta-cupom.js?v=1";
 import { normalizarCodigo, codigoValido, descontoDe, motivoRecusa, textoDesconto } from "./cupom.js?v=1";
-import { carregarLoja, SLUG } from "./loja-dados.js?v=10";
-import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=1";
+import { carregarLoja, SLUG } from "./loja-dados.js?v=11";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=2";
+import { PAGAMENTOS } from "./pagamentos-config.js?v=2";
 import { iniciarAgenda } from "./agenda-cliente.js?v=1";
 import { textoAgendamento } from "./agendamento.js?v=1";
 import { distanciaKm, taxaKm, minutosKm } from "./conta-entrega.js?v=1";
@@ -964,10 +965,11 @@ async function enviarPedido() {
 }
 
 /* ===== S16 a S18 acompanhar: lê o pedido pelo id, na entrada ou já aceito ===== */
-let pararAcomp = null;
-function pararAcompanhar() { if (pararAcomp) { pararAcomp(); pararAcomp = null; } }
+let pararAcomp = null, versaoAcomp = 0, consultandoPagamento = false;
+function pararAcompanhar() { versaoAcomp++; if (pararAcomp) { pararAcomp(); pararAcomp = null; } }
 async function acompanhar(id) {
   pararAcompanhar();
+  const versao = versaoAcomp;
   if (!SLUG) {
     const p = id === "exemplo" && STATE.exemploPedido ? STATE.exemploPedido : EXEMPLO && /^exemplo/.test(id) ? pedidoExemplo(id) : null;
     if (p) renderAcompanhar(p); else location.replace("#inicio");
@@ -975,9 +977,35 @@ async function acompanhar(id) {
   }
   const { db } = await import("./firebase-init.js?v=3");
   const { doc, onSnapshot } = await import(FIRESTORE);
+  const ativo = () => versao === versaoAcomp && location.hash === `#pedido/${id}`;
+  if (!ativo()) return;
   const lerPagamento = pagamentoDisponivel() || checkoutAtual?.id === id;
   const vivo = { entrada: undefined, aceito: undefined, pagamento: lerPagamento ? undefined : null, viu: false };
+  let consultaTimer = null, consultaControle = null;
+  const consultarAutomaticamente = () => {
+    const p = vivo.aceito || vivo.entrada;
+    const estado = p?.pagamento?.estornoPendente ? "estorno_pendente" : p?.pagamento?.reembolsado ? "reembolsado" : p?.pagamento?.pago ? "aprovado" : vivo.pagamento?.estado;
+    return ativo() && PAGAMENTOS.servico === "appscript" && pagamentoDisponivel() && !document.hidden && navigator.onLine !== false
+      && ["gerando", "aguardando", "reconciliar", "estorno_pendente"].includes(estado);
+  };
+  const atualizarConsulta = () => {
+    if (!consultarAutomaticamente()) {
+      clearTimeout(consultaTimer); consultaTimer = null; consultaControle?.abort(); return;
+    }
+    if (consultaTimer || consultaControle) return;
+    consultaTimer = setTimeout(async () => {
+      consultaTimer = null;
+      if (!consultarAutomaticamente()) return;
+      if (consultandoPagamento) { atualizarConsulta(); return; }
+      consultandoPagamento = true; consultaControle = new AbortController();
+      try { await chamarPagamento("consultar", { lojaId: LOJA.id, pedidoId: id }, { signal: consultaControle.signal }); }
+      catch { /* o botão Conferir continua disponível; a próxima consulta tenta de novo */ }
+      finally { consultandoPagamento = false; consultaControle = null; if (ativo()) atualizarConsulta(); }
+    }, 15000);
+  };
   const mostrar = () => {
+    if (!ativo()) return;
+    atualizarConsulta();
     if (vivo.entrada === undefined || vivo.aceito === undefined || vivo.pagamento === undefined) return;
     const p = vivo.aceito || vivo.entrada;
     if (p) {
@@ -994,11 +1022,19 @@ async function acompanhar(id) {
     // as duas vazias depois de ter visto: é o instante em que o painel move o pedido; fica a última tela
   };
   const ler = (snap) => (snap.exists() ? { id, ...snap.data({ serverTimestamps: "estimate" }) } : null);
-  const erro = () => toast("Não deu para atualizar o pedido. Confira a internet.", "erro", 4000);
+  const erro = () => { if (ativo()) toast("Não deu para atualizar o pedido. Confira a internet.", "erro", 4000); };
   const u1 = onSnapshot(doc(db, "lojas", LOJA.id, "pedidosEntrada", id), (s) => { vivo.entrada = ler(s) && { ...ler(s), status: "novo" }; mostrar(); }, erro);
   const u2 = onSnapshot(doc(db, "lojas", LOJA.id, "pedidos", id), (s) => { vivo.aceito = ler(s); mostrar(); }, erro);
   const u3 = lerPagamento ? onSnapshot(doc(db, "lojas", LOJA.id, "pagamentosPedidos", id), (s) => { vivo.pagamento = ler(s); mostrar(); }, () => { vivo.pagamento = null; mostrar(); erro(); }) : () => {};
-  pararAcomp = () => { u1(); u2(); u3(); };
+  document.addEventListener("visibilitychange", atualizarConsulta);
+  window.addEventListener("online", atualizarConsulta);
+  window.addEventListener("offline", atualizarConsulta);
+  pararAcomp = () => {
+    u1(); u2(); u3(); clearTimeout(consultaTimer); consultaTimer = null; consultaControle?.abort();
+    document.removeEventListener("visibilitychange", atualizarConsulta);
+    window.removeEventListener("online", atualizarConsulta);
+    window.removeEventListener("offline", atualizarConsulta);
+  };
 }
 
 function renderPagamentoPendente(p) {
@@ -1021,15 +1057,15 @@ function renderPagamentoPendente(p) {
     <button type="button" class="btn fantasma" data-conferir-pagamento="${esc(p.id)}" ${pagamentoDisponivel() ? "" : "disabled"}>Conferir pagamento</button><a class="btn fantasma" href="#inicio">Voltar ao cardápio</a></div>`;
   pintarIcones(document.getElementById("acompanhar"));
 }
-let consultandoPagamento = false;
 document.addEventListener("click", async (e) => {
   const botao = e.target.closest("[data-conferir-pagamento]");
   if (!botao || consultandoPagamento) return;
+  const versao = versaoAcomp;
   consultandoPagamento = true; botao.disabled = true;
   try {
     await chamarPagamento("consultar", { lojaId: LOJA.id, pedidoId: botao.dataset.conferirPagamento });
-    toast("Conferência solicitada. A situação do pedido será atualizada nesta tela.", "info", 4000);
-  } catch (erro) { toast(erro.message, "erro", 5000); }
+    if (versao === versaoAcomp) toast("Conferência solicitada. A situação do pedido será atualizada nesta tela.", "info", 4000);
+  } catch (erro) { if (versao === versaoAcomp) toast(erro.message, "erro", 5000); }
   finally { consultandoPagamento = false; if (botao.isConnected) botao.disabled = !pagamentoDisponivel(); }
 });
 

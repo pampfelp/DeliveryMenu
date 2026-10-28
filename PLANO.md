@@ -8,18 +8,23 @@ levantamento anterior e não comprova prontidão de produção.
 
 - Publicados anteriormente: loja com pedidos reais e acompanhamento,
   painel, usuários, CRM e ofertas individuais.
+- Ordenação de categorias corrigida em 27/10: captura estável, alças maiores,
+  prévia acompanhando o ponteiro, rolagem automática e cancelamento sem salvar.
+  Conferidos também itens, grupos e opções. Persistência após recarregar no
+  emulador; 16 cenários no navegador, incluindo toque simulado.
 - Agendamento implementado em 26/10: chave por loja, horários a cada 30 min
   até 72 horas, conferência no Firestore e data/hora visível para equipe e
   cliente. Testes de regras e fluxo completo realizados no emulador.
 - Cadastro de equipe retestado em Auth/Firestore Emulator: preserva sessão
   do dono, exige senha própria no primeiro acesso, impede vínculo cruzado
   entre restaurantes e encerra a sessão ao retirar acesso.
-- Pagamento online preparado em Firebase Functions Node.js 22: cada empresa
+- Serviço de pagamento publicado no Apps Script, desativado: cada empresa
   conecta sua própria conta Mercado Pago por OAuth e usa Checkout Pro, sem
   comissão configurada para o app. Código testado com emulador e provedor
   simulado; frontend `ativo: false` e backend `PAGAMENTOS_ATIVOS=false`.
-  Não houve Blaze, deploy das funções ou teste no Mercado Pago real.
-  Configuração e homologação futura: [PAGAMENTOS-FIREBASE.md](PAGAMENTOS-FIREBASE.md).
+  Não houve Blaze, adiantamento de R$150 ou teste no Mercado Pago real.
+  Faltam credenciais, App Check, permissões/rotina e homologação.
+  Configuração: [PAGAMENTOS-APPS-SCRIPT.md](PAGAMENTOS-APPS-SCRIPT.md).
 - As novas regras e o índice de pagamento continuam locais, sem publicação.
   Backend e cálculo: 70 testes completos com emulador; regras de pagamento:
   42 verificações. Esses testes não comprovam capacidade de carga.

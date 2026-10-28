@@ -2,7 +2,7 @@ import { db } from "./firebase-init.js?v=3";
 import { collection, doc, getDocs, query, orderBy, documentId, startAfter, limit, where, onSnapshot, Timestamp, serverTimestamp, runTransaction } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
-import { observarCatalogo } from "./cardapio.js?v=5";
+import { observarCatalogo } from "./cardapio.js?v=6";
 import { taxaParaCliente } from "./entregas.js?v=5";
 import { resumirCliente, mesDe, montarFavorito, dataDe, hashDestinatario, mesmaCesta, normalizar, tipoItem } from "./crm-dados.js?v=1";
 import { descontoDe } from "./cupom.js?v=1";

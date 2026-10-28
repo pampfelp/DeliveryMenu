@@ -29,7 +29,7 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
   const transacaoRef = (id) => db.doc(`transacoesPagamento/${id}`);
   const publicoRef = (loja, id) => db.doc(`lojas/${loja}/pagamentosPedidos/${id}`);
   const pedidoRef = (loja, id, final = false) => db.doc(`lojas/${loja}/${final ? "pedidos" : "pedidosEntrada"}/${id}`);
-  const callbackURL = () => `${config.url.replace(/\/$/, "")}/callback`;
+  const callbackURL = () => config.callbackURL || `${config.url.replace(/\/$/, "")}/callback`;
   const publicar = (tx, t, estado, extra = {}) => tx.set(publicoRef(t.lojaId, t.pedidoId), { estado, ...extra, atualizadoEm: carimbo() }, { merge: true });
   const validarIds = (lojaId, pedidoId) => {
     if (!lojaValida(lojaId) || (pedidoId !== undefined && !pedidoValido(pedidoId))) falha("VALIDACAO", "Confira a loja e o pedido.");
@@ -198,8 +198,8 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     try {
       const token = await tokenDaConta(lojaId, t.contaId), back = new URL(config.frontend);
       back.searchParams.set("loja", lojaId); back.hash = `pedido/${id}`;
-      const notification = new URL(`${config.url.replace(/\/$/, "")}/webhook`);
-      notification.search = new URLSearchParams({ lojaId, pedidoId: id }).toString();
+      const notification = config.webhookURL ? new URL(config.webhookURL(lojaId, id)) : new URL(`${config.url.replace(/\/$/, "")}/webhook`);
+      if (!config.webhookURL) notification.search = new URLSearchParams({ lojaId, pedidoId: id }).toString();
       const preferencia = await mp("/checkout/preferences", { method: "POST", token, idempotencia: sha256(`preferencia:${id}`), body: {
         items: [{ id, title: "Pedido no restaurante", quantity: 1, unit_price: t.pedido.total / 100, currency_id: "BRL" }],
         external_reference: `${lojaId}:${id}`, metadata: { loja_id: lojaId, pedido_id: id },
@@ -347,7 +347,8 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
   }
   async function webhook(req) {
     const q = req.query || {}, id = q["data.id"];
-    if (!assinaturaWebhook({ assinatura: req.headers?.["x-signature"], requestId: req.headers?.["x-request-id"], dataId: id, segredo: segredo().webhookSecret, agora: +agora() })) falha("ASSINATURA_INVALIDA", "Notificação não autorizada.", 401);
+    const assinou = config.verificarWebhook ? config.verificarWebhook(req) : assinaturaWebhook({ assinatura: req.headers?.["x-signature"], requestId: req.headers?.["x-request-id"], dataId: id, segredo: segredo().webhookSecret, agora: +agora() });
+    if (!assinou) falha("ASSINATURA_INVALIDA", "Notificação não autorizada.", 401);
     validarIds(q.lojaId, q.pedidoId);
     if (!contaValida(id) || (req.body?.data?.id != null && String(req.body.data.id).toLowerCase() !== id.toLowerCase())) falha("VALIDACAO", "Notificação inválida.");
     const t = await transacao(q.lojaId, q.pedidoId), token = await tokenDaConta(t.lojaId, t.contaId);
@@ -425,9 +426,11 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     }
   };
   // A futura rotina periódica usa a mesma reconciliação; não libera reserva por relógio.
-  handler.expirarPendentes = async () => {
+  handler.expirarPendentes = async ({ consultarEmAberto = false } = {}) => {
     if (config.ativos !== true) return [];
-    const vencidas = await db.collection("transacoesPagamento").where("finalizado", "==", false).where("expiresAt", "<=", agora()).limit(50).get();
+    let busca = db.collection("transacoesPagamento").where("finalizado", "==", false);
+    if (!consultarEmAberto) busca = busca.where("expiresAt", "<=", agora());
+    const vencidas = await busca.limit(50).get();
     const resultados = [];
     for (const d of vencidas.docs) {
       const t = d.data();

@@ -11,8 +11,11 @@ Atualização da tentativa de ativação: Felipe relatou adiantamento de R$150
 na etapa de faturamento do Google e recusou. O diálogo de upgrade foi
 fechado; o projeto continua Spark, conferido no Console. Não habilitar
 Blaze nem vincular faturamento com base na autorização anterior.
-A alternativa em Apps Script já indicada por ele precisa de avaliação e
-adaptação do backend, antes de se declarar o pagamento disponível.
+A alternativa em Apps Script foi implementada e publicada, desativada.
+O estado atual e a sequência de configuração estão em
+[PAGAMENTOS-APPS-SCRIPT.md](PAGAMENTOS-APPS-SCRIPT.md). Este arquivo descreve
+a rota Firebase Functions preparada anteriormente; não executá-la sem nova
+autorização de faturamento. Pagamento real ainda não está disponível.
 
 No Console atual, o registro de reCAPTCHA clássico está descontinuado,
 com o campo de segredo desabilitado. Retomar a rota Firebase exige usar

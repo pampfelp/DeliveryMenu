@@ -21,6 +21,7 @@ import {
 } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
 import { esc, fmtMoeda, toast, confirmar, gerarId } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
+import { ordenavel, cancelarOrdenacao } from "./ordenavel.js?v=1";
 import { linkCardapio } from "./links-cardapio.js?v=1";
 import { videoDoItem, carregarVideo } from "./midias-video.js?v=2";
 import { validarVideo, enviarVideo } from "./midias-upload.js?v=2";
@@ -147,6 +148,7 @@ function linhaCel(i) {
 }
 
 function render() {
+  cancelarOrdenacao();
   if (C.carregou) leitoresCatalogo.forEach((fn) => fn({lojaId:C.loja?.id,cats:C.cats,itens:C.itens}));
   if (!C.loja) return;
   const cats = catsOrdenadas();
@@ -192,46 +194,43 @@ function render() {
   if (C.janela?.tipo === "categorias") renderJanela();
 }
 
-/* ===== arrastar para ordenar (mouse e dedo) ===== */
-function ordenavel(raiz, aoSoltar) {
-  raiz.addEventListener("pointerdown", (e) => {
-    const alca = e.target.closest("[data-alca]");
-    const linha = alca?.parentElement;
-    if (!alca || !linha?.dataset.id) return;
-    e.preventDefault();
-    const pai = linha.parentElement;
-    linha.classList.add("arrastando");
-    try { alca.setPointerCapture(e.pointerId); } catch { /* ponteiro que já saiu: segue sem capturar */ }
-    const mover = (ev) => {
-      const irmaos = [...pai.children].filter((x) => x !== linha && x.dataset.id);
-      const antes = irmaos.find((x) => { const r = x.getBoundingClientRect(); return ev.clientY < r.top + r.height / 2; });
-      if (antes) { if (linha.nextElementSibling !== antes) pai.insertBefore(linha, antes); }
-      else if (irmaos.length && irmaos[irmaos.length - 1].nextElementSibling !== linha) irmaos[irmaos.length - 1].after(linha);
-    };
-    const soltar = () => {
-      alca.removeEventListener("pointermove", mover);
-      alca.removeEventListener("pointerup", soltar);
-      alca.removeEventListener("pointercancel", soltar);
-      linha.classList.remove("arrastando");
-      aoSoltar(pai, [...pai.children].map((x) => x.dataset.id).filter(Boolean));
-    };
-    alca.addEventListener("pointermove", mover);
-    alca.addEventListener("pointerup", soltar);
-    alca.addEventListener("pointercancel", soltar);
-  });
-}
-// grava a nova ordem só do que mudou de lugar
-function salvarOrdem(colecao, ids) {
+/* ===== gravar a ordem sem esperar o servidor para redesenhar ===== */
+const tentativasOrdem = new Map();
+async function salvarOrdem(colecao, ids) {
   const lista = colecao === "itens" ? C.itens : C.cats;
-  const passos = ids.map((id, n) => ({ id, n })).filter(({ id, n }) => lista.find((x) => x.id === id)?.ordem !== n)
-    .map(({ id, n }) => ({ op: "update", colecao, id, dados: { ordem: n } }));
-  if (passos.length) gravar(passos);
+  const loja = C.loja;
+  const tentativa = Symbol();
+  const alterados = ids.map((id, ordem) => ({ atual: lista.find((x) => x.id === id), ordem }))
+    .filter(({ atual, ordem }) => atual && atual.ordem !== ordem)
+    .map(({ atual, ordem }) => ({ id: atual.id, anterior: atual.ordem, ordem }));
+  if (!alterados.length) return;
+  alterados.forEach(({ id, ordem }) => {
+    lista.find((x) => x.id === id).ordem = ordem;
+    tentativasOrdem.set(`${colecao}/${id}`, tentativa);
+  });
+  render();
+  const ok = await gravar(alterados.map(({ id, ordem }) => ({ op: "update", colecao, id, dados: { ordem } })));
+  if (C.loja !== loja) return;
+  let restaurou = false;
+  alterados.forEach(({ id, anterior, ordem }) => {
+    const chave = `${colecao}/${id}`;
+    if (tentativasOrdem.get(chave) !== tentativa) return;
+    tentativasOrdem.delete(chave);
+    const atual = (colecao === "itens" ? C.itens : C.cats).find((x) => x.id === id);
+    if (!ok && atual?.ordem === ordem) {
+      if (anterior === undefined) delete atual.ordem;
+      else atual.ordem = anterior;
+      restaurou = true;
+    }
+  });
+  if (restaurou) render();
 }
 
 /* ===== janela: item, grupo de opções, categoria ===== */
 function abrirJanela() { $("c-modal").hidden = false; document.body.classList.add("com-janela"); }
 function fecharJanela() {
   if (salvandoItem) return;
+  cancelarOrdenacao();
   limparVideoPendente();
   C.rascunho = null; C.grupo = null; C.janela = null;
   $("c-modal").hidden = true;
@@ -253,6 +252,7 @@ function cabecalho(titulo, sub, voltar) {
 }
 
 function renderJanela() {
+  cancelarOrdenacao();
   const j = C.janela;
   if (!j) return;
   const cab = $("c-cab"), corpo = $("c-corpo-m"), pe = $("c-pe"), janela = document.querySelector(".c-janela");
@@ -670,6 +670,8 @@ export function iniciarCardapio(loja, { exemplo = null } = {}) {
   C.parar.push(ouvir("categorias"), ouvir("itens"));
 }
 export function pararCardapio() {
+  cancelarOrdenacao();
+  tentativasOrdem.clear();
   if (!salvandoItem) limparVideoPendente();
   previasExemplo.forEach((url) => URL.revokeObjectURL(url));
   previasExemplo.clear();

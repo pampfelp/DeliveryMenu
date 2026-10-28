@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Verificação de ordenação</title>
+<style>
+  body { font: 16px system-ui; max-width: 820px; margin: 24px auto; padding: 0 16px; color: #233044; }
+  button { padding: 10px 16px; cursor: pointer; }
+  #lista { height: 220px; overflow: auto; border: 1px solid #aeb8c5; margin: 18px 0; }
+  .linha { display: flex; align-items: center; gap: 14px; height: 44px; padding: 0 12px; box-sizing: border-box; border-bottom: 1px solid #ddd; background: white; }
+  .alca { display: grid; place-items: center; width: 32px; height: 32px; touch-action: none; cursor: grab; }
+  .arrastando { opacity: .25; }
+  .ordenacao-ativa, .ordenacao-ativa * { user-select: none; cursor: grabbing; }
+  .ordenacao-previa, .ordenacao-previa * { pointer-events: none !important; }
+  pre { white-space: pre-wrap; background: #f0f3f7; padding: 16px; }
+</style>
+<h1>Verificação de ordenação</h1>
+<p>Eventos simulados de mouse e toque exercitam o helper no navegador. A captura de ponteiro depende de interação física; estes casos usam os eventos documentais.</p>
+<button id="executar" type="button">Executar verificações</button>
+<div id="raiz"><div id="lista"></div></div>
+<pre id="resultado" role="status">Aguardando execução.</pre>
+<script type="module">
+  import { ordenavel, cancelarOrdenacao } from "../ordenavel.js?v=1";
+  const raiz = document.getElementById("raiz"), lista = document.getElementById("lista");
+  const resultado = document.getElementById("resultado"), botao = document.getElementById("executar");
+  const nomes = ["Abacate", "Banana", "Caju", "Damasco", "Ervilha", "Figo", "Goiaba", "Hortelã", "Inhame", "Jabuticaba", "Kiwi", "Limão", "Manga", "Nectarina", "Oliva", "Pera", "Quiabo", "Romã", "Salsa", "Tâmara", "Uva", "Vagem", "Waffle", "Xarope", "Zimbro"];
+  let gravacoes = 0;
+  ordenavel(raiz, () => { gravacoes++; });
+  const ordem = () => [...lista.children].map((el) => el.dataset.id).join(",");
+  const quadro = () => new Promise((resolve) => requestAnimationFrame(resolve));
+  const aguardar = async (ms) => { const inicio = performance.now(); do { await quadro(); } while (performance.now() - inicio < ms); };
+  function reiniciar() {
+    cancelarOrdenacao();
+    lista.innerHTML = nomes.map((nome, i) => `<div class="linha" data-id="${i}"><span class="alca" data-alca aria-label="Arrastar">::</span><span>${nome}</span></div>`).join("");
+    lista.scrollTop = 0;
+    gravacoes = 0;
+  }
+  function evento(alvo, tipo, x, y, toque = false, ponteiro = 71) {
+    alvo.dispatchEvent(new PointerEvent(tipo, { bubbles: true, cancelable: true, pointerId: ponteiro, isPrimary: true, pointerType: toque ? "touch" : "mouse", button: 0, buttons: tipo === "pointerup" ? 0 : 1, clientX: x, clientY: y }));
+  }
+  function iniciar(toque = false) {
+    const linha = lista.firstElementChild, r = linha.querySelector("[data-alca]").getBoundingClientRect();
+    const p = { x: r.left + r.width / 2, y: r.top + r.height / 2, toque };
+    evento(linha.querySelector("[data-alca]"), "pointerdown", p.x, p.y, toque);
+    return p;
+  }
+  const mover = (p, y, id = 71) => evento(document, "pointermove", p.x, y, p.toque, id);
+  const soltar = (p, y) => evento(document, "pointerup", p.x, y, p.toque);
+  const exigir = (condicao, texto) => { if (!condicao) throw new Error(texto); };
+  const limpo = () => !document.querySelector(".ordenacao-previa, .arrastando") && !document.body.classList.contains("ordenacao-ativa");
+  reiniciar();
+  botao.addEventListener("click", async () => {
+    botao.disabled = true;
+    const resultados = [];
+    async function caso(nome, executar) {
+      reiniciar();
+      try { await executar(); exigir(limpo(), "Restou prévia ou estado de arraste"); resultados.push({ nome, passou: true }); }
+      catch (erro) { resultados.push({ nome, passou: false, erro: erro.message }); cancelarOrdenacao(); }
+      resultado.textContent = JSON.stringify({ resultados }, null, 2);
+    }
+    for (const toque of [false, true]) {
+      const modo = toque ? "toque" : "mouse";
+      await caso(`${modo}: clique e limiar não gravam`, async () => {
+        let p = iniciar(toque); soltar(p, p.y);
+        p = iniciar(toque); mover(p, p.y + 3); await quadro(); soltar(p, p.y + 3);
+        exigir(gravacoes === 0, "Clique ou movimento curto gravou");
+      });
+      await caso(`${modo}: último movimento antes do quadro é aplicado`, async () => {
+        const antes = ordem(), p = iniciar(toque);
+        mover(p, p.y + 100); soltar(p, p.y + 100);
+        exigir(ordem() !== antes && gravacoes === 1, "Soltura não aplicou a posição final");
+      });
+      await caso(`${modo}: cancelamento restaura sem gravar`, async () => {
+        const antes = ordem(), p = iniciar(toque);
+        mover(p, p.y + 100); await quadro();
+        exigir(ordem() !== antes, "Não iniciou reordenação");
+        evento(document, "pointercancel", p.x, p.y + 100, toque);
+        exigir(ordem() === antes && gravacoes === 0, "Cancelamento alterou a ordem ou gravou");
+      });
+      await caso(`${modo}: Escape restaura sem gravar`, async () => {
+        const antes = ordem(), p = iniciar(toque);
+        mover(p, p.y + 100); await quadro();
+        document.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }));
+        exigir(ordem() === antes && gravacoes === 0, "Escape alterou a ordem ou gravou");
+      });
+      await caso(`${modo}: outro ponteiro é ignorado`, async () => {
+        const antes = ordem(), p = iniciar(toque);
+        mover(p, p.y + 100, 99);
+        evento(document, "pointerup", p.x, p.y + 100, toque, 99);
+        await quadro(); soltar(p, p.y);
+        exigir(ordem() === antes && gravacoes === 0, "Outro ponteiro interferiu");
+      });
+      await caso(`${modo}: dois arrastes seguidos`, async () => {
+        const antes = ordem();
+        let p = iniciar(toque); mover(p, p.y + 100); await quadro(); soltar(p, p.y + 100);
+        const primeira = ordem();
+        p = iniciar(toque); mover(p, p.y + 140); await quadro(); soltar(p, p.y + 140);
+        exigir(primeira !== antes && ordem() !== primeira && gravacoes === 2, "Segundo arraste falhou");
+      });
+      await caso(`${modo}: rolagem automática por pelo menos 250 ms`, async () => {
+        const p = iniciar(toque), borda = lista.getBoundingClientRect().bottom - 5;
+        mover(p, borda); await aguardar(300);
+        exigir(lista.scrollTop > 30, "A própria lista não rolou");
+        soltar(p, borda);
+        exigir(gravacoes === 1, "Rolagem não concluiu a reordenação");
+      });
+      await caso(`${modo}: remoção durante gesto limpa a sessão`, async () => {
+        const p = iniciar(toque), linha = lista.firstElementChild;
+        mover(p, p.y + 100); await quadro(); linha.remove(); await quadro();
+        exigir(limpo() && gravacoes === 0, "Remoção deixou arraste ativo ou gravou");
+        const antes = ordem(); mover(p, p.y + 150); soltar(p, p.y + 150); await quadro();
+        exigir(ordem() === antes && gravacoes === 0 && limpo(), "Eventos antigos continuam operando");
+      });
+    }
+    reiniciar();
+    resultado.textContent = JSON.stringify({ passou: resultados.every((r) => r.passou), total: resultados.length, resultados }, null, 2);
+    botao.disabled = false;
+  });
+</script>
+</html>
