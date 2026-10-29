@@ -888,12 +888,15 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 #i-video-previa video { display: block; width: 100%; max-width: 320px; max-height: 240px; margin-top: 12px; border-radius: var(--r-md); background: #111; object-fit: contain; }
 
 /* Conexão da conta de pagamento nas configurações existentes. */
+.cf-pagamento-cartao { grid-column: 1 / -1; }
 .cf-pagamento > b { font-size: 15px; color: var(--text-strong); }
 .cf-pagamento > p { margin-top: 8px; font-size: 13px; line-height: 19px; color: var(--text-muted); }
 .cf-pagamento .cf-pagamento-estado { padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-muted); }
 .cf-pagamento .btn { width: 100%; margin-top: 12px; min-height: 42px; }
 .cf-pagamento .btn:disabled { opacity: .55; cursor: default; }
-.cf-pagamento-passos { list-style: decimal; padding-left: 20px; margin-top: 12px; font-size: 13px; line-height: 19px; }
-.cf-pagamento-passos li + li { margin-top: 10px; }
+.cf-pagamento-passos { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px 32px; list-style: decimal; padding-left: 20px; margin-top: 12px; font-size: 13px; line-height: 19px; }
 .cf-pagamento-passos p { color: var(--text-muted); margin-top: 4px; }
 .cf-pagamento p { overflow-wrap: anywhere; }
+@media (min-width: 900px) {
+  .cf-pagamento-cartao .cf-pagamento-passos { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}

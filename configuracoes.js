@@ -70,7 +70,7 @@ function htmlPagamento() {
       : conectado ? (ativo ? "Conta conectada. Pagamento online ativo. Acompanhe os pedidos no painel." : "Conta conectada. Pagamento online pausado. Confira a conta abaixo e ative quando estiver pronto.")
         : "Conta não conectada. Comece pelo passo 1 para conectar ou reconectar a conta da sua empresa.");
   const acao = C.pagamentoErro ? "consultar" : conectado ? ativo ? "pausar" : "ativar" : "conectar";
-  return `<section class="cf-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
+  return `<section class="cf-cartao cf-pagamento-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
     <b>Mercado Pago</b><p>Sua empresa recebe diretamente na própria conta. A senha é informada somente no Mercado Pago.</p>
     <ol class="cf-pagamento-passos">
       <li><b>Conectar sua conta</b><p>Clique em Conectar conta Mercado Pago. Entre na conta da empresa e confira se é a conta certa antes de autorizar.</p></li>
@@ -133,6 +133,7 @@ function render() {
   const r = C.rasc, base = ORDEM.find((d) => r.horario[d]?.aberto);
   $("cf-ver").href = C.exemplo ? "./?exemplo=1" : linkCardapio(C.loja.id);
   $("cf-grade").innerHTML = `
+    ${htmlPagamento()}
     <div class="cf-col">
       <section class="cf-cartao"><div class="cf-cab"><h2>Dados do restaurante</h2></div><div class="cf-corpo">
         <div class="campo"><label for="cf-nome">Nome do restaurante <i class="obrig">*</i></label><input id="cf-nome" maxlength="120" value="${esc(r.nome)}" /></div>
@@ -148,7 +149,6 @@ function render() {
         <div class="campo"><label for="cf-whats">WhatsApp da loja</label><div class="in"><i data-ic="fone"></i><input id="cf-whats" type="tel" inputmode="numeric" placeholder="(00) 00000-0000" value="${esc(fmtFone(r.whatsapp))}" /></div>
           <p class="ajuda">Aparece para o cliente no botão "Falar com o restaurante", depois do pedido.</p></div>
       </div></section>
-      ${htmlPagamento()}
     </div>
     <section class="cf-cartao"><div class="cf-cab"><h2>Horário de funcionamento</h2></div><div class="cf-corpo">
       ${htmlDias(r)}
