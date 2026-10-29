@@ -9,13 +9,25 @@ As tarifas das transações do Mercado Pago continuam sendo as do vendedor.
 
 Projeto: [DeliveryMenu - Pagamentos](https://script.google.com/home/projects/1SN3JkKZrgOD60f-DTwj66a8hArsf48DOeLxAIrOMvJ_rGZ0Hokg0s1DJ/edit).
 Identificação da versão e endereço público em `pagamentos-appscript/projeto.json`.
-Versão 1 publicada com autorização do Felipe. Health público respondeu HTTP200
-e `ativo:false`, sem login. Isso comprova publicação do serviço, não pagamento.
+Em 29/10/2026, a versão 2 está publicada na implantação existente. Após
+recarregar o editor, o código foi comparado com o pacote local, normalizando
+somente as quebras de linha. O health público respondeu HTTP 200 e
+`ativo:true`; a rota `ativar`, sem Firebase ID token, respondeu
+`NAO_AUTENTICADO`. Isso comprova publicação e rejeição sem autenticação.
 
-Antes de ativar: configurar credenciais OAuth da aplicação Mercado Pago,
-chave de proteção, App Check Enterprise, permissões do script, rotina e regras
-do Firestore. Homologar OAuth, checkout, notificação, consulta, recusa e estorno
-no provedor. O frontend continua `ativo:false`; não apresentar como disponível.
+Credenciais OAuth e chave mestre já estão nas propriedades privadas. A rotina
+de cinco minutos foi instalada em 28/10 às 22h34, com um gatilho observado.
+O provedor App Check Enterprise foi conferido na interface; Auth e Firestore
+continuam no Spark, sem habilitar faturamento.
+
+O frontend local está com `ativo:true` e a site key pública configurada.
+A publicação desse frontend aguarda a conferência de infraestrutura, domínios
+e regras atuais. Conectar a conta mantém o pagamento da loja pausado; ativar
+e pausar são ações explícitas autenticadas. A chave global do serviço não
+ativa automaticamente o checkout de uma loja.
+
+Ainda falta homologar OAuth, checkout, notificação, consulta, recusa e estorno
+no Mercado Pago. Não há confirmação de conta conectada nem de cobrança real.
 
 ## Segurança e confirmação
 
@@ -56,7 +68,7 @@ no provedor. O frontend continua `ativo:false`; não apresentar como disponível
 
 | Propriedade | Finalidade |
 |---|---|
-| `PAGAMENTOS_ATIVOS` | Manter `false` durante configuração/homologação. |
+| `PAGAMENTOS_ATIVOS` | Habilita o serviço global; confirmado `true` em 29/10/2026. Cada loja exige ativação própria. |
 | `PAGAMENTOS_URL` | URL `/exec` da implantação do projeto. |
 | `MP_CLIENT_ID` | Identificador da aplicação Mercado Pago própria do app. |
 | `MP_CLIENT_SECRET` | Segredo OAuth da mesma aplicação, somente no servidor. |
@@ -71,8 +83,10 @@ prints, logs ou configuração pública. Configurar notificações genéricas da
 aplicação não substitui essa URL autenticada por pedido.
 
 No frontend, `pagamentos-config.js` usa `servico:'appscript'`, URL pública,
-site key pública do App Check e a chave `ativo`. As duas ativações só devem
-ocorrer após validação real; nunca trocar só a chave visual.
+site key pública do App Check e a chave `ativo`, atualmente `true` no código
+local. Essa configuração disponibiliza a integração; o callback OAuth apenas
+conecta a conta, sem ativar o pagamento da loja. A ativação própria da loja
+é feita pela ação **Ativar pagamento online** no painel.
 
 Executar `configurarPagamentos` no editor para autorizar os escopos e instalar
 a rotina de cinco minutos. A instalação é idempotente. Os escopos são chamadas
@@ -98,12 +112,16 @@ node --test pagamentos-appscript/*.test.js
 node rea/verificar-pagamentos-cliente.mjs
 ```
 
-82 testes Apps Script passaram, incluindo execução em VM sem APIs Node e fluxo
-compilado contra o emulador real com provedor simulado. O fluxo percorreu OAuth,
-replay recusado, checkout, confirmação de pendência pela rotina, aviso inválido,
-aviso válido/repetido, recusa, estorno e ficha do cliente. 70 testes da lógica
-anterior também passaram. Sem emulador, o teste de integração é ignorado;
-isso não equivale à execução completa. Não houve transação real nesses testes.
+Na conferência de 29/10/2026, a lógica de pagamentos teve 45 testes aprovados
+e 26 ignorados; Apps Script teve 83 aprovados e um ignorado. Os cinco grupos
+do cliente passaram, incluindo conectar sem ativar a loja e ativação/pausa
+explícitas autenticadas. O teste do serviço desligado injeta `ativo:false`,
+independente da configuração de produção, e os transportes são simulados.
+
+A execução integrada atual não rodou: o emulador falhou no selector loopback
+com JRE 21. Há uma execução anterior do fluxo compilado contra emulador real
+com provedor simulado, mas ela não valida a versão atual. Testes ignorados
+não equivalem à execução completa. Não houve transação real nesses testes.
 
 ## Limites de operação
 

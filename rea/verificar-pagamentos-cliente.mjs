@@ -2,20 +2,22 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import vm from "node:vm";
-import { chamarPagamento, pagamentoDisponivel, urlMercadoPago } from "../pagamentos.js?v=1";
 
 const fetchOriginal = globalThis.fetch, locationOriginal = globalThis.location;
 let chamadas = [];
 globalThis.fetch = async (...args) => { chamadas.push(args); throw new Error("Rede real proibida neste teste."); };
 try {
-  assert.equal(pagamentoDisponivel(), false, "o preparo deve continuar desativado");
+  const fonte = await readFile(new URL("../pagamentos.js", import.meta.url), "utf8");
+  const fonteDesligada = fonte.replace(/import \{ PAGAMENTOS \} from [^;]+;/, 'const PAGAMENTOS = {ativo:false};');
+  const { chamarPagamento, pagamentoDisponivel, urlMercadoPago } = await import(`data:text/javascript;base64,${Buffer.from(fonteDesligada).toString("base64")}`);
+  assert.equal(pagamentoDisponivel(), false, "a configuração injetada deve estar desativada");
   await assert.rejects(chamarPagamento("conectar", { lojaId: "loja-teste" }, { autenticado: true }), { codigo: "INDISPONIVEL" });
+  await assert.rejects(chamarPagamento("ativar", { lojaId: "loja-teste" }, { autenticado: true }), { codigo: "INDISPONIVEL" });
   assert.equal(chamadas.length, 0, "desativado não consulta rede ou autenticação");
   for (const url of ["https://auth.mercadopago.com/authorization", "https://www.mercadopago.com.br/checkout/v1/redirect?pref_id=teste"]) assert.ok(urlMercadoPago(url));
   for (const url of ["http://www.mercadopago.com.br/", "https://mercadopago.com.br.exemplo.test/", "https://usuario@mercadopago.com.br/", "javascript:void(0)", "https://mercadopago.com.br:444/"]) assert.equal(urlMercadoPago(url), "");
   console.log("OK integração desligada não usa rede e destinos externos são restritos");
 
-  const fonte = await readFile(new URL("../pagamentos.js", import.meta.url), "utf8");
   const injetada = fonte.replace(/import \{ PAGAMENTOS \} from [^;]+;/, 'const PAGAMENTOS = {ativo:true,url:"https://servico-teste.invalid",chaveAppCheck:""};');
   const cliente = await import(`data:text/javascript;base64,${Buffer.from(injetada).toString("base64")}`);
   globalThis.location = { search: "?emulator=1" };
@@ -54,6 +56,10 @@ try {
   assert.deepEqual(JSON.parse(envio.body), { lojaId: "loja-teste", rota: "status", token: "jwt-simulado", appCheckToken: "appcheck-simulado" });
   for (const valor of ["jwt-simulado", "appcheck-simulado", "Authorization", "X-Firebase-AppCheck"]) assert.equal(destino.includes(valor), false);
   assert.equal(envio.headers.Authorization, undefined); assert.equal(envio.headers["X-Firebase-AppCheck"], undefined);
+  resposta = { ok: true, data: { ativo: true } };
+  assert.equal((await apps.chamarPagamento("ativar", { lojaId: "loja-teste" }, { autenticado: true })).ativo, true);
+  assert.equal(JSON.parse(chamadas.at(-1)[1].body).rota, "ativar");
+  assert.equal(JSON.parse(chamadas.at(-1)[1].body).token, "jwt-simulado");
   resposta = { ok: true, data: { estado: "aguardando", checkoutUrl: "https://www.mercadopago.com.br/checkout/teste" } };
   await apps.chamarPagamento("checkout", pedido);
   assert.equal(chamadas.at(-1)[0], scriptURL); assert.equal(JSON.parse(chamadas.at(-1)[1].body).rota, "checkout");
@@ -81,6 +87,26 @@ try {
   assert.equal(envio.headers.Authorization, "Bearer jwt-simulado"); assert.equal(envio.headers["X-Firebase-AppCheck"], "appcheck-simulado"); assert.equal(envio.body, undefined);
   assert.match(fonte, /ReCaptchaEnterpriseProvider/); assert.doesNotMatch(fonte, /ReCaptchaV3Provider/);
   console.log("OK Apps Script: POST simples, URLs restritas, credenciais só no corpo, erro lógico e App Check Enterprise");
+
+  const configuracoesFonte = await readFile(new URL("../configuracoes.js", import.meta.url), "utf8");
+  const trechoConfiguracoes = configuracoesFonte.slice(configuracoesFonte.indexOf("function htmlPagamento()"), configuracoesFonte.indexOf("function render()"));
+  const acoes = [], avisos = [], destinos = [], C = { loja: { id: "loja-teste" }, pagamento: null, exemplo: false, sujo: false };
+  const cfgContexto = { C, pagamentoDisponivel: () => true, esc: (v) => String(v), document: { querySelector: () => null },
+    location: { assign: (url) => destinos.push(url) }, urlMercadoPago: (url) => url,
+    toast: (mensagem) => avisos.push(mensagem), chamarPagamento: async (rota, dados, opts) => { acoes.push({ rota, dados, opts }); return rota === "conectar" ? { url: "https://auth.mercadopago.com/authorization" } : { ativo: rota === "ativar" }; } };
+  vm.createContext(cfgContexto); vm.runInContext(`${trechoConfiguracoes}\nthis.api={htmlPagamento,mudarPagamento};`, cfgContexto);
+  assert.match(cfgContexto.api.htmlPagamento(), /data-cf-pagamento="conectar"/);
+  C.pagamento = { conectado: true, ativo: false };
+  assert.match(cfgContexto.api.htmlPagamento(), /data-cf-pagamento="ativar"/);
+  assert.match(cfgContexto.api.htmlPagamento(), /Conta conectada\. Pagamento online pausado/);
+  assert.match(cfgContexto.api.htmlPagamento(), /Ativar pagamento online/);
+  await cfgContexto.api.mudarPagamento("ativar");
+  assert.equal(C.pagamento.ativo, true); assert.equal(acoes.at(-1).rota, "ativar"); assert.equal(acoes.at(-1).opts.autenticado, true);
+  assert.match(cfgContexto.api.htmlPagamento(), /Pausar pagamento online/);
+  await cfgContexto.api.mudarPagamento("pausar"); assert.equal(C.pagamento.ativo, false);
+  await cfgContexto.api.mudarPagamento("conectar"); assert.equal(destinos.length, 1); assert.equal(C.pagamento.ativo, false);
+  assert(avisos.includes("Pagamento online ativado."));
+  console.log("OK configuração: conectar mantém pagamento pausado; ativar e pausar são ações explícitas autenticadas");
 
   const appFonte = await readFile(new URL("../app.js", import.meta.url), "utf8");
   const trecho = appFonte.slice(appFonte.indexOf("let pararAcomp ="), appFonte.indexOf("function renderPagamentoPendente("))

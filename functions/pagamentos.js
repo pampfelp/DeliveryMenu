@@ -145,10 +145,10 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     const campos = tokensCifrados(tokens, estado.lojaId, contaId);
     await membro(estado.lojaId, estado.uid);
     await db.runTransaction(async (tx) => {
-      // A conexão só é publicada depois que as credenciais cifradas estão guardadas.
+      // Conectar a conta não libera o checkout; ativação é uma ação separada.
       tx.set(contaRef(estado.lojaId, contaId), campos, { merge: true });
-      tx.set(integracaoRef(estado.lojaId), { ativo: true, contaId, atualizadoEm: carimbo() }, { merge: true });
-      tx.update(lojaRef(estado.lojaId), { pagamentoOnline: { ativo: true, provedor: "mercadopago" } });
+      tx.set(integracaoRef(estado.lojaId), { ativo: false, contaId, atualizadoEm: carimbo() }, { merge: true });
+      tx.update(lojaRef(estado.lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
     });
     const url = new URL("painel.html", config.frontend); url.searchParams.set("pagamento", "conectado"); url.hash = "configuracoes";
     return url.href;
@@ -159,6 +159,19 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
       tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
     });
     return { ativo: false };
+  }
+  async function ativar(lojaId) {
+    await db.runTransaction(async (tx) => {
+      const ref = integracaoRef(lojaId), integracao = (await tx.get(ref)).data();
+      if (!contaValida(integracao?.contaId)) falha("RECONECTAR", "Conecte a conta de pagamento deste restaurante.", 409);
+      const conta = (await tx.get(contaRef(lojaId, integracao.contaId))).data();
+      let tokens;
+      try { tokens = conta?.protegido && !conta.reconectar && decifrar(conta.protegido, segredo().tokensKey, lojaId, integracao.contaId); } catch { /* credencial inválida exige reconexão */ }
+      if (!tokens || typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.refresh_token !== "string" || !tokens.refresh_token) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 409);
+      tx.update(ref, { ativo: true, atualizadoEm: carimbo() });
+      tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: true, provedor: "mercadopago" } });
+    });
+    return { ativo: true };
   }
   async function transacao(lojaId, id) {
     const t = (await transacaoRef(id).get()).data();
@@ -402,17 +415,17 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     if (req.method === "OPTIONS") return res.status(204).end();
     try {
       const rota = String(req.path || new URL(req.url, "http://local").pathname).replace(/\/$/, "").split("/").at(-1);
-      const esperados = { status: "GET", conectar: "POST", callback: "GET", pausar: "POST", checkout: "POST", consultar: "POST", webhook: "POST", recusar: "POST" };
+      const esperados = { status: "GET", conectar: "POST", callback: "GET", ativar: "POST", pausar: "POST", checkout: "POST", consultar: "POST", webhook: "POST", recusar: "POST" };
       if (!esperados[rota]) falha("NAO_ENCONTRADO", "Endereço não encontrado.", 404);
       if (req.method !== esperados[rota]) falha("METODO_INVALIDO", "Método não permitido.", 405);
       if (req.rawBody?.length > 100000 || (typeof req.body === "string" && req.body.length > 100000)) falha("VALIDACAO", "Pedido muito grande.", 413);
       if (typeof req.body === "string") { try { req.body = JSON.parse(req.body); } catch { falha("VALIDACAO", "Pedido inválido."); } }
       const body = req.body || {}, query = req.query || {}, lojaId = rota === "status" ? query.lojaId : body.lojaId;
       if (rota !== "status" && config.ativos !== true) falha("PAGAMENTO_DESATIVADO", "O pagamento online ainda não está disponível.", 503);
-      if (["status", "conectar", "pausar", "recusar"].includes(rota)) {
+      if (["status", "conectar", "ativar", "pausar", "recusar"].includes(rota)) {
         validarIds(lojaId, rota === "recusar" ? body.pedidoId : undefined);
         const user = await autenticar(req, lojaId);
-        const resultado = rota === "status" ? await status(lojaId) : rota === "conectar" ? await conectar(lojaId, user.uid) : rota === "pausar" ? await pausar(lojaId) : await recusar(lojaId, body.pedidoId);
+        const resultado = rota === "status" ? await status(lojaId) : rota === "conectar" ? await conectar(lojaId, user.uid) : rota === "ativar" ? await ativar(lojaId) : rota === "pausar" ? await pausar(lojaId) : await recusar(lojaId, body.pedidoId);
         return res.status(200).json({ ok: true, data: resultado });
       }
       if (rota === "callback") return res.redirect(303, await callback(query));

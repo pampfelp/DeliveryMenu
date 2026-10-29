@@ -74,6 +74,8 @@ test("bundle síncrono: OAuth, checkout, webhook verificado e estorno no Firesto
   assert.equal(u.searchParams.get("redirect_uri"), `${dados.get("PAGAMENTOS_URL")}?rota=callback`);
   const callback = contexto.doGet({ parameter: { rota: "callback", code: "code-local", state } });
   assert.match(callback.html, /Conta conectada/); assert.doesNotMatch(callback.html, /token-vendedor|code-local/);
+  assert.equal((await db.doc(`lojas/${loja}`).get()).data().pagamentoOnline.ativo, false);
+  assert.equal(post({ rota: "ativar", lojaId: loja, token: "sessao-dono" }).data.ativo, true);
   assert.equal((await db.doc(`lojas/${loja}`).get()).data().pagamentoOnline.ativo, true);
   assert.match(contexto.doGet({ parameter: { rota: "callback", code: "code-local", state } }).html, /Não foi possível/);
   const pedido = { cliente: { nome: "Pessoa de teste", telefone: ["91", "90000", "0000"].join("") }, tipo: "retirada", itens: [{ itemId: "pizza", qtd: 1, escolhas: {} }], subtotal: 5000, total: 5000 };

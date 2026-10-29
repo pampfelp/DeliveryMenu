@@ -140,12 +140,29 @@ integracao("OAuth usa PKCE, estado de uso único e tokens ficam cifrados", async
   assert.equal(desafioPKCE(estados.verifier), url.searchParams.get("code_challenge"));
   const callback = await f.chamar("callback", { method: "GET", query: { state, code: "codigo-simulado" } });
   assert.equal(callback.http, 303); assert.match(callback.url, /pagamento=conectado#configuracoes/);
+  assert.equal((await f.db.doc(f.privado).get()).data().ativo, false);
+  assert.equal((await f.db.doc(`lojas/${f.lojaId}`).get()).data().pagamentoOnline.ativo, false);
+  assert.equal((await f.iniciar()).body.erro.codigo, "PAGAMENTO_DESATIVADO");
   const conta = (await f.db.doc(`${f.privado}/contas/123`).get()).data();
   assert.equal(decifrar(conta.protegido, chave, f.lojaId, "123").access_token, "novo-token");
   assert.equal(JSON.stringify((await f.db.doc(`lojas/${f.lojaId}`).get()).data()).includes("novo-token"), false);
   const antes = f.chamadas.length;
   assert.equal((await f.chamar("callback", { method: "GET", query: { state, code: "codigo-simulado" } })).http, 400);
   assert.equal(f.chamadas.length, antes);
+});
+integracao("ativar exige membro e conta cifrada atual; repetir e pausar preservam a conta", async (t) => {
+  const f = await fixture(t), body = { lojaId: f.lojaId }, headers = { authorization: "Bearer dono" };
+  assert.equal((await f.chamar("ativar", { body })).http, 401);
+  assert.equal((await f.chamar("ativar", { body, headers: { authorization: "Bearer intruso" } })).http, 403);
+  await f.chamar("pausar", { body, headers });
+  for (let i = 0; i < 2; i++) assert.equal((await f.chamar("ativar", { body, headers })).body.data.ativo, true);
+  assert.equal((await f.db.doc(`lojas/${f.lojaId}`).get()).data().pagamentoOnline.ativo, true);
+  await f.chamar("pausar", { body, headers });
+  await f.db.doc(`${f.privado}/contas/123`).update({ reconectar: true });
+  assert.equal((await f.chamar("ativar", { body, headers })).body.erro.codigo, "RECONECTAR");
+  assert.equal((await f.db.doc(f.privado).get()).data().ativo, false);
+  await f.db.doc(f.privado).update({ contaId: "456" });
+  assert.equal((await f.chamar("ativar", { body, headers })).body.erro.codigo, "RECONECTAR");
 });
 integracao("OAuth vencido ou acesso removido não faz troca de token", async (t) => {
   const f = await fixture(t);

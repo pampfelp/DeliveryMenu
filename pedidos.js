@@ -19,7 +19,7 @@ import { esc, fmtMoeda, toast, confirmar } from "./shared.js?v=1";
 import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
 import { textoAgendamento } from "./agendamento.js?v=1";
-import { chamarPagamento } from "./pagamentos.js?v=2";
+import { chamarPagamento } from "./pagamentos.js?v=3";
 import { periodoPedidos, noPeriodo, pedidoVisivel } from "./periodo-pedidos.js?v=1";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);

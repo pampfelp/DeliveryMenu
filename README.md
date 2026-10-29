@@ -29,12 +29,16 @@ analisado) fica fora deste repositório, em `C:\rea-alvos\` e
 HTML, CSS e JavaScript puros, sem build step, Firebase/Firestore e GitHub
 Pages, a partir do `boilerplate/` do segundo cérebro.
 
-O serviço de pagamento foi publicado no Apps Script, ainda desativado, com
-OAuth para cada restaurante conectar a própria conta Mercado Pago. Firebase
-Auth e Firestore continuam no Spark; o adiantamento de R$150 foi recusado.
-Faltam credenciais, App Check, permissões/rotina, regras e homologação real
-antes de liberar cobranças. O frontend continua sem build. Configuração e
-testes estão em [`PAGAMENTOS-APPS-SCRIPT.md`](PAGAMENTOS-APPS-SCRIPT.md).
+O serviço de pagamento está publicado na versão 2 do Apps Script, com health
+`ativo:true` conferido em 29/10/2026. Credenciais privadas, rotina de cinco
+minutos e registro do App Check Enterprise foram configurados. Firebase Auth
+e Firestore continuam no Spark; o adiantamento de R$150 foi recusado.
+O frontend local está habilitado, com site key pública; sua publicação aguarda
+a conferência de infraestrutura, domínios e regras atuais. Conectar a própria
+conta Mercado Pago mantém o pagamento da loja pausado; a ativação é explícita
+no painel. OAuth e cobranças reais ainda não foram homologados. O frontend
+continua sem build. Estado e testes estão em
+[`PAGAMENTOS-APPS-SCRIPT.md`](PAGAMENTOS-APPS-SCRIPT.md).
 A alternativa Firebase Functions está documentada em
 [`PAGAMENTOS-FIREBASE.md`](PAGAMENTOS-FIREBASE.md), sem deploy.
 

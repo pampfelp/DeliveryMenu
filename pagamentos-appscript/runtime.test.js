@@ -223,6 +223,9 @@ test("OAuth completo é síncrono, usa PKCE e cifra os tokens sem crypto Node", 
   assert.equal(url.searchParams.get("redirect_uri"), `${scriptURL}?rota=callback`);
   const html = f.get({ rota: "callback", state, code: "codigo-simulado" });
   assert.equal(html.kind, "html"); assert.match(html.html, /Conta conectada/); assert.ok(html.html.includes("pagamento=conectado#configuracoes"));
+  assert.match(html.html, /Pagamento online pausado/);
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false);
+  assert.equal(f.docs.get("lojas/loja-teste").pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
   const conta = f.docs.get("integracoesPagamento/loja-teste/contas/123"); assert.ok(conta.protegido.mapValue.fields.tag.stringValue);
   assert.equal(JSON.stringify(conta).includes("token-vendedor-simulado"), false);
   assert.equal(JSON.stringify(f.docs.get("lojas/loja-teste")).includes("token-vendedor-simulado"), false);
@@ -232,6 +235,47 @@ test("OAuth completo é síncrono, usa PKCE e cifra os tokens sem crypto Node", 
   const antes = f.chamadas.filter((c) => c.url === "https://api.mercadopago.com/oauth/token").length;
   const repetido = f.get({ rota: "callback", state, code: "codigo-simulado" }); assert.match(repetido.html, /Não foi possível/);
   assert.equal(f.chamadas.filter((c) => c.url === "https://api.mercadopago.com/oauth/token").length, antes);
+});
+
+function contaConectada() {
+  const f = fixture({ propriedades: ativo, permitirMP: true });
+  const inicio = f.post({ rota: "conectar", lojaId: "loja-teste", token: clienteJWT });
+  const state = new URL(inicio.data.url).searchParams.get("state");
+  assert.match(f.get({ rota: "callback", state, code: "codigo-simulado" }).html, /Conta conectada/);
+  return f;
+}
+test("ativação explícita exige autenticação/membro, é repetível e pausa preserva a conta", () => {
+  const f = contaConectada(), body = { rota: "ativar", lojaId: "loja-teste", token: clienteJWT };
+  assert.equal(f.post({ ...body, token: undefined }).erro.codigo, "NAO_AUTENTICADO");
+  f.seed("lojas/outra-loja", { donoId: "outro-dono", pagamentoOnline: { ativo: false } });
+  assert.equal(f.post({ ...body, lojaId: "outra-loja" }).erro.codigo, "SEM_PERMISSAO");
+  const privado = JSON.stringify(f.docs.get("integracoesPagamento/loja-teste/contas/123"));
+  for (let i = 0; i < 2; i++) assert.deepEqual(f.post(body), { ok: true, data: { ativo: true } });
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, true);
+  assert.equal(f.docs.get("lojas/loja-teste").pagamentoOnline.mapValue.fields.ativo.booleanValue, true);
+  assert.deepEqual(f.post({ ...body, rota: "pausar" }), { ok: true, data: { ativo: false } });
+  assert.equal(JSON.stringify(f.docs.get("integracoesPagamento/loja-teste/contas/123")), privado);
+  assert.equal(JSON.stringify(f.docs.get("lojas/loja-teste")).includes("token-vendedor-simulado"), false);
+});
+test("ativar rejeita conta ausente, revogada, trocada ou cifrada para outra loja", () => {
+  const body = { rota: "ativar", lojaId: "loja-teste", token: clienteJWT };
+  for (const mudar of [
+    (f) => f.docs.delete("integracoesPagamento/loja-teste/contas/123"),
+    (f) => { f.docs.get("integracoesPagamento/loja-teste/contas/123").reconectar = { booleanValue: true }; },
+    (f) => { f.docs.get("integracoesPagamento/loja-teste").contaId = { stringValue: "456" }; },
+    (f) => { f.docs.get("integracoesPagamento/loja-teste/contas/123").protegido.mapValue.fields.tag = { stringValue: "invalida" }; },
+  ]) {
+    const f = contaConectada(); mudar(f);
+    assert.equal(f.post(body).erro.codigo, "RECONECTAR");
+    assert.equal(f.docs.get("lojas/loja-teste").pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
+    assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false);
+  }
+  const f = contaConectada();
+  f.seed("lojas/outra-loja", { donoId: "dono", pagamentoOnline: { ativo: false } });
+  f.seed("integracoesPagamento/outra-loja", { contaId: "123", ativo: false });
+  f.docs.set("integracoesPagamento/outra-loja/contas/123", structuredClone(f.docs.get("integracoesPagamento/loja-teste/contas/123")));
+  assert.equal(f.post({ ...body, lojaId: "outra-loja" }).erro.codigo, "RECONECTAR");
+  assert.equal(f.docs.get("lojas/outra-loja").pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
 });
 test("OAuth sem client secret falha antes de enviar o código ao provedor", () => {
   const propriedades = { ...ativo }; delete propriedades.MP_CLIENT_SECRET;

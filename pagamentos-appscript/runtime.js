@@ -112,7 +112,7 @@ export function receberPost(e) {
     if (!v || typeof v !== "object" || Array.isArray(v)) throw erro("VALIDACAO", "Pedido inválido.");
     const { rota: fornecida, token, appCheckToken, ...body } = v;
     const rota = q.rota === "webhook" ? "webhook" : fornecida;
-    if (!["status", "conectar", "pausar", "checkout", "consultar", "recusar", "webhook"].includes(rota)) throw erro("VALIDACAO", "Operação inválida.");
+    if (!["status", "conectar", "ativar", "pausar", "checkout", "consultar", "recusar", "webhook"].includes(rota)) throw erro("VALIDACAO", "Operação inválida.");
     if (rota === "webhook" && q.rota !== "webhook") throw erro("VALIDACAO", "Notificação inválida.");
     const res = resposta();
     criarServico()({ path: `/${rota}`, method: rota === "status" ? "GET" : "POST", rawBody: raw,
@@ -133,7 +133,7 @@ export function receberGet(e) {
   catch { /* Retorno não revela código, state, tokens nem erro do provedor. */ }
   const titulo = ok ? "Conta conectada" : "Não foi possível conectar a conta";
   const destino = `${FRONTEND}painel.html?pagamento=${ok ? "conectado" : "erro"}#configuracoes`;
-  return HtmlService.createHtmlOutput(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><body style="font-family:system-ui;background:#f3f4f6;color:#1f2937;padding:32px"><h1>${titulo}</h1><p>${ok ? "Volte ao painel para continuar." : "Volte ao painel e tente conectar novamente."}</p><a target="_top" href="${esc(destino)}" style="display:inline-block;padding:14px 20px;background:#991b1b;color:white;border-radius:8px;text-decoration:none">Voltar ao painel</a></body>`);
+  return HtmlService.createHtmlOutput(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><body style="font-family:system-ui;background:#f3f4f6;color:#1f2937;padding:32px"><h1>${titulo}</h1><p>${ok ? "Pagamento online pausado. Volte ao painel para ativar após a conferência." : "Volte ao painel e tente conectar novamente."}</p><a target="_top" href="${esc(destino)}" style="display:inline-block;padding:14px 20px;background:#991b1b;color:white;border-radius:8px;text-decoration:none">Voltar ao painel</a></body>`);
 }
 export function reconciliar() {
   const resultados = criarServico().expirarPendentes({ consultarEmAberto: true });

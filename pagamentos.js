@@ -1,4 +1,4 @@
-import { PAGAMENTOS } from "./pagamentos-config.js?v=2";
+import { PAGAMENTOS } from "./pagamentos-config.js?v=3";
 
 export const pagamentoDisponivel = () => PAGAMENTOS.ativo === true;
 const falha = (codigo, mensagem) => Object.assign(new Error(mensagem), { codigo });
@@ -38,7 +38,7 @@ async function cabecalhos(autenticado, emulador) {
 
 export async function chamarPagamento(rota, dados, { autenticado = false, signal } = {}) {
   if (!pagamentoDisponivel()) throw falha("INDISPONIVEL", "Conexão disponível após a ativação do serviço.");
-  if (!["status", "conectar", "pausar", "checkout", "consultar", "recusar"].includes(rota)) throw falha("VALIDACAO", "Operação de pagamento inválida.");
+  if (!["status", "conectar", "ativar", "pausar", "checkout", "consultar", "recusar"].includes(rota)) throw falha("VALIDACAO", "Operação de pagamento inválida.");
   const emulador = new URLSearchParams(location.search).get("emulator") === "1";
   const appscript = PAGAMENTOS.servico === "appscript";
   const base = !appscript && emulador ? "http://localhost:5001/cardapio-delivery-ae048/southamerica-east1/pagamentos" : PAGAMENTOS.url;

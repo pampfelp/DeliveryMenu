@@ -14,7 +14,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { regraDe } from "./conta-entrega.js?v=1";
 import { ORDEM, NOMES, situacao, horaValida } from "./horario.js?v=1";
 import { linkCardapio, linkPublico } from "./links-cardapio.js?v=1";
-import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=2";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=3";
 
 const $ = (id) => document.getElementById(id);
 const CORES = ["#991b1b", "#c2410c", "#15803d", "#1d4ed8", "#6d28d9", "#1f2937"];
@@ -64,11 +64,11 @@ function htmlDias(r) {
 function htmlPagamento() {
   const disponivel = pagamentoDisponivel(), conectado = !!C.pagamento?.conectado, ativo = !!C.pagamento?.ativo;
   const mensagem = !disponivel ? "Conexão disponível após a ativação do serviço." : C.exemplo ? "Representação: nenhuma conta será conectada neste exemplo."
-    : conectado ? (ativo ? "Conta conectada. Seus clientes podem pagar online." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.") : "Conecte a conta Mercado Pago da sua empresa para receber online.";
+    : conectado ? (ativo ? "Conta conectada. Seus clientes podem pagar online." : "Conta conectada. Pagamento online pausado. Ative após concluir a conferência.") : "Conecte a conta Mercado Pago da sua empresa para receber online.";
   return `<section class="cf-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
     <b>Mercado Pago</b><p>Sua empresa recebe diretamente na própria conta. A senha é informada somente no Mercado Pago.</p>
     <p class="cf-pagamento-estado" role="status">${esc(mensagem)}</p>
-    <button type="button" class="btn" data-cf-pagamento="${conectado && ativo ? "pausar" : "conectar"}" ${!disponivel || C.pagamentoOcupado ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : conectado && ativo ? "Pausar pagamento online" : conectado ? "Conectar novamente" : "Conectar conta"}</button>
+    <button type="button" class="btn" data-cf-pagamento="${conectado ? ativo ? "pausar" : "ativar" : "conectar"}" ${!disponivel || C.pagamentoOcupado ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : conectado && ativo ? "Pausar pagamento online" : conectado ? "Ativar pagamento online" : "Conectar conta"}</button>
   </div></section>`;
 }
 async function consultarPagamento() {
@@ -92,7 +92,7 @@ async function mudarPagamento(acao) {
   try {
     const dados = await chamarPagamento(acao, { lojaId: C.loja.id }, { autenticado: true });
     if (acao === "conectar") location.assign(urlMercadoPago(dados.url));
-    else { C.pagamento = { ...C.pagamento, ativo: false }; toast("Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500); }
+    else { C.pagamento = { ...C.pagamento, ativo: dados.ativo === true }; toast(dados.ativo ? "Pagamento online ativado." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500); }
   } catch (erro) { toast(erro.message, "erro", 5000); }
   finally { C.pagamentoOcupado = false; if (cartao()) cartao().outerHTML = htmlPagamento(); }
 }
