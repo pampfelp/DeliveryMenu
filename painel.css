@@ -129,7 +129,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .periodos-rapidos button[aria-pressed="true"] { background: var(--text-strong); color: var(--surface); }
 .periodo-pedidos label { display: grid; gap: 4px; font-size: 12px; color: var(--text-muted); }
 .periodo-pedidos input { min-height: 40px; min-width: 0; max-width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text-strong); font: inherit; }
-.periodo-pedidos > .btn { height: 40px; padding: 0 14px; }
+.periodo-pedidos > .btn { width: auto; height: 40px; padding: 0 14px; }
 .periodo-aviso { flex-basis: 100%; font-size: 13px; color: var(--text-muted); }
 .periodo-aviso.erro { color: var(--danger); }
 @media (max-width: 1023px) { .periodo-pedidos { margin: 14px 16px 0; } .periodos-rapidos { flex-basis: 100%; } }
@@ -142,7 +142,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .ped { background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); padding: 12px; cursor: pointer; }
 .ped:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 .ped.novo { border-left: 4px solid var(--accent); padding-left: 10px; box-shadow: var(--shadow-card); }
-.ped .l1 { display: flex; align-items: center; gap: 8px; }
+.ped .l1 { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
 .ped .num { font-weight: 600; font-size: 15px; line-height: 20px; color: var(--text-strong); }
 .ped .hora { font-size: 13px; color: var(--text-muted); }
 .ped .tipo { margin-left: auto; display: inline-flex; align-items: center; gap: 4px; font-weight: 500; font-size: 12px; line-height: 16px; color: var(--text-muted); }
@@ -271,7 +271,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
   .cab .sel { height: 40px; padding: 0 12px; display: flex; align-items: center; gap: 8px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); font-weight: 500; font-size: 14px; line-height: 20px; color: var(--text-strong); }
   .cab .chave { margin-left: auto; background: var(--surface); border: 1px solid var(--border); border-radius: var(--r-md); height: 40px; padding: 0 12px; }
   .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; }
-  .quadro { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 20px; align-items: start; }
+  .quadro { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-top: 20px; align-items: start; }
   .coluna { background: #eceef1; border-radius: var(--r-lg); padding: 12px; display: grid; gap: 10px; }
   .coluna h2 { display: flex; align-items: center; gap: 8px; font-weight: 600; font-size: 15px; line-height: 20px; color: var(--text-strong); padding: 2px 2px 4px; }
   .coluna h2 .cont { margin-left: auto; }
