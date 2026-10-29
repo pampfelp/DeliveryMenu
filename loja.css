@@ -643,11 +643,11 @@ body { font-family: Rubik, system-ui, sans-serif; font-size: 14px; line-height: 
   .com-capa #tela-inicio::before { height: 72px; }
   .banner-loja { width: min(1280px, calc(100% - 64px)); height: 360px; margin: 0 auto; border-radius: 0 0 var(--r-lg) var(--r-lg); }
   .banner-loja > .capa-video { width: 640px; left: 50%; transform: translateX(-50%); mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent); }
-  .com-capa .inicio-grade { padding-top: 0; margin-top: -80px; }
-  .com-capa .inicio-main { min-width: 0; }
-  .com-capa .cabeca { margin: 0; padding: 0; }
-  .com-capa .cabeca .logo { width: 160px; height: 160px; }
-  .com-capa .sacola-lateral { margin-top: 112px; }
+  .com-capa #tela-inicio .inicio-grade { padding-top: 0; margin-top: -80px; }
+  .com-capa #tela-inicio .inicio-main { min-width: 0; }
+  .com-capa #tela-inicio .cabeca { margin: 0; padding: 0; }
+  .com-capa #tela-inicio .cabeca .logo { width: 160px; height: 160px; }
+  .com-capa #tela-inicio .sacola-lateral { margin-top: 112px; }
 }
 #tela-produto .x { z-index: 2; }
 /* logo que não é quadrado aparece inteiro (a cor de fundo vem do canto da imagem, em app.js) */
