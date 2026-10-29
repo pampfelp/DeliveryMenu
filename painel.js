@@ -22,7 +22,7 @@ import { iniciarCardapio, pararCardapio, mostrarCardapio, fecharCardapio } from 
 import { iniciarEntregas, pararEntregas, mostrarEntregas, fecharEntregas } from "./entregas.js?v=5";
 import { iniciarClientes, pararClientes, mostrarClientes, fecharClientes } from "./clientes.js?v=2";
 import { CRM_EXEMPLO } from "./crm-exemplo.js?v=1";
-import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=7";
+import { iniciarConfiguracoes, pararConfiguracoes, mostrarConfiguracoes } from "./configuracoes.js?v=8";
 import { iniciarCupons, pararCupons, mostrarCupons, fecharCupons } from "./cupons.js?v=4";
 import { iniciarUsuarios, pararUsuarios, mostrarUsuarios, fecharUsuarios } from "./usuarios.js?v=1";
 import { PEDIDOS_EXEMPLO, CATEGORIAS, LOJA as LOJA_EXEMPLO, BAIRROS as BAIRROS_EXEMPLO, CUPONS_EXEMPLO } from "./dados-exemplo.js?v=7";

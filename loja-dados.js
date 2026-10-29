@@ -14,7 +14,7 @@
 
 import { LOJA, BAIRROS, CATEGORIAS, SUGESTOES } from "./dados-exemplo.js?v=7";
 import { regraDe } from "./conta-entrega.js?v=1";
-import { pagamentoDisponivel } from "./pagamentos.js?v=2";
+import { pagamentoDisponivel } from "./pagamentos.js?v=3";
 
 export const SLUG = document.documentElement.dataset.loja || new URLSearchParams(location.search).get("loja");
 if (SLUG === "casa-jambu-delivery" && !document.documentElement.dataset.loja) {

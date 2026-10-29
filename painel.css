@@ -893,3 +893,7 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .cf-pagamento .cf-pagamento-estado { padding: 10px 12px; border-radius: var(--r-md); background: var(--surface-muted); }
 .cf-pagamento .btn { width: 100%; margin-top: 12px; min-height: 42px; }
 .cf-pagamento .btn:disabled { opacity: .55; cursor: default; }
+.cf-pagamento-passos { list-style: decimal; padding-left: 20px; margin-top: 12px; font-size: 13px; line-height: 19px; }
+.cf-pagamento-passos li + li { margin-top: 10px; }
+.cf-pagamento-passos p { color: var(--text-muted); margin-top: 4px; }
+.cf-pagamento p { overflow-wrap: anywhere; }

@@ -23,7 +23,7 @@ const fmtFone = (d) => (d.length > 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d
   : d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}` : d);
 const fmtHora = (t) => { const d = soDigitos(t).slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d; };
 
-const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false, pagamento: null, pagamentoOcupado: false };
+const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false, pagamento: null, pagamentoOcupado: false, pagamentoErro: "", pagamentoConsulta: null, pagamentoSessao: null };
 
 const horarioPadrao = () => Object.fromEntries(ORDEM.map((d) => [d, { aberto: true, abre: "18:00", fecha: "23:00" }]));
 function rascunhoDe(l) {
@@ -63,38 +63,70 @@ function htmlDias(r) {
 }
 function htmlPagamento() {
   const disponivel = pagamentoDisponivel(), conectado = !!C.pagamento?.conectado, ativo = !!C.pagamento?.ativo;
-  const mensagem = !disponivel ? "Conexão disponível após a ativação do serviço." : C.exemplo ? "Representação: nenhuma conta será conectada neste exemplo."
-    : conectado ? (ativo ? "Conta conectada. Seus clientes podem pagar online." : "Conta conectada. Pagamento online pausado. Ative após concluir a conferência.") : "Conecte a conta Mercado Pago da sua empresa para receber online.";
+  const conhecido = !!C.pagamento && !C.pagamentoErro && !C.pagamentoConsulta;
+  const mensagem = C.exemplo ? "Exemplo: nenhuma conta será conectada e nenhum pagamento será ativado."
+    : !disponivel ? "Pagamento online indisponível. Entre em contato com o suporte para liberar a conexão."
+    : C.pagamentoErro || (!conhecido ? "Conferindo a conexão da sua empresa…"
+      : conectado ? (ativo ? "Conta conectada. Pagamento online ativo. Acompanhe os pedidos no painel." : "Conta conectada. Pagamento online pausado. Confira a conta abaixo e ative quando estiver pronto.")
+        : "Conta não conectada. Comece pelo passo 1 para conectar ou reconectar a conta da sua empresa.");
+  const acao = C.pagamentoErro ? "consultar" : conectado ? ativo ? "pausar" : "ativar" : "conectar";
   return `<section class="cf-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
     <b>Mercado Pago</b><p>Sua empresa recebe diretamente na própria conta. A senha é informada somente no Mercado Pago.</p>
+    <ol class="cf-pagamento-passos">
+      <li><b>Conectar sua conta</b><p>Clique em Conectar conta Mercado Pago. Entre na conta da empresa e confira se é a conta certa antes de autorizar.</p></li>
+      <li><b>Autorizar no Mercado Pago</b><p>Confira e autorize o acesso. Se houver verificação de identidade, conclua no próprio Mercado Pago. Ao terminar, clique em Voltar ao painel. Não precisa informar chaves ou códigos de integração.</p></li>
+      <li><b>Ativar recebimentos</b><p>De volta ao painel, confira a conta conectada e clique em Ativar pagamento online. Conectar a conta mantém os recebimentos pausados até essa ativação.</p></li>
+    </ol>
     <p class="cf-pagamento-estado" role="status">${esc(mensagem)}</p>
-    <button type="button" class="btn" data-cf-pagamento="${conectado ? ativo ? "pausar" : "ativar" : "conectar"}" ${!disponivel || C.pagamentoOcupado ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : conectado && ativo ? "Pausar pagamento online" : conectado ? "Ativar pagamento online" : "Conectar conta"}</button>
+    ${conectado && conhecido ? `<p>Conta conectada: <b>${esc(C.pagamento.conta ?? "Identificação não disponível")}</b></p>` : ""}
+    <button type="button" class="btn" data-cf-pagamento="${acao}" ${C.exemplo || !disponivel || C.pagamentoOcupado || C.pagamentoConsulta || (!conhecido && !C.pagamentoErro) ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : C.pagamentoErro ? "Tentar novamente" : conectado && ativo ? "Pausar pagamento online" : conectado ? "Ativar pagamento online" : "Conectar conta Mercado Pago"}</button>
+    <p>Pausar impede novos pagamentos online. Continue acompanhando os pedidos já pagos ou em processamento. Se precisar trocar uma conta conectada, fale com o suporte antes.</p>
+    <p><a href="./pagamento-online.html" target="_blank" rel="noopener">Ver o passo a passo completo</a></p>
   </div></section>`;
 }
+function atualizarPagamento() {
+  const cartao = document.querySelector(".cf-pagamento")?.closest("section");
+  if (cartao) cartao.outerHTML = htmlPagamento();
+}
 async function consultarPagamento() {
-  if (!pagamentoDisponivel() || C.exemplo) return;
-  const lojaId = C.loja.id;
+  if (!pagamentoDisponivel() || C.exemplo || C.pagamentoConsulta || C.pagamentoOcupado) return;
+  const lojaId = C.loja.id, consulta = {};
+  C.pagamentoConsulta = consulta; C.pagamentoErro = ""; C.pagamento = null;
+  atualizarPagamento();
   try {
     const estado = await chamarPagamento("status", { lojaId }, { autenticado: true });
-    if (C.loja?.id !== lojaId) return;
+    if (C.loja?.id !== lojaId || C.pagamentoConsulta !== consulta) return;
+    if (typeof estado.conectado !== "boolean" || typeof estado.ativo !== "boolean") throw new Error("Situação da conta não confirmada.");
     C.pagamento = estado;
-    const cartao = document.querySelector(".cf-pagamento")?.closest("section");
-    if (cartao) cartao.outerHTML = htmlPagamento();
-  } catch (erro) { toast(erro.message, "erro", 5000); }
+  } catch {
+    if (C.loja?.id === lojaId && C.pagamentoConsulta === consulta) C.pagamentoErro = "Não foi possível conferir a conexão. Tente novamente. Se continuar, fale com o suporte.";
+  } finally {
+    if (C.loja?.id === lojaId && C.pagamentoConsulta === consulta) { C.pagamentoConsulta = null; atualizarPagamento(); }
+  }
 }
 async function mudarPagamento(acao) {
-  if (C.pagamentoOcupado || !pagamentoDisponivel()) return;
+  if (acao === "consultar") { await consultarPagamento(); return; }
+  if (C.pagamentoOcupado || C.pagamentoConsulta || !pagamentoDisponivel()) return;
   if (C.exemplo) { toast("Exemplo: nenhuma conta foi conectada.", "info", 3500); return; }
+  if (!C.pagamento || C.pagamentoErro || !["conectar", "ativar", "pausar"].includes(acao)) return;
+  if ((acao === "conectar" && C.pagamento.conectado) || (acao !== "conectar" && !C.pagamento.conectado)) return;
   if (C.sujo && acao === "conectar") { toast("Salve as alterações antes de conectar a conta.", "info", 4000); return; }
+  const lojaId = C.loja.id, sessao = C.pagamentoSessao;
   C.pagamentoOcupado = true;
-  const cartao = () => document.querySelector(".cf-pagamento")?.closest("section");
-  if (cartao()) cartao().outerHTML = htmlPagamento();
+  atualizarPagamento();
   try {
-    const dados = await chamarPagamento(acao, { lojaId: C.loja.id }, { autenticado: true });
+    const dados = await chamarPagamento(acao, { lojaId }, { autenticado: true });
+    if (C.loja?.id !== lojaId || C.pagamentoSessao !== sessao) return;
     if (acao === "conectar") location.assign(urlMercadoPago(dados.url));
-    else { C.pagamento = { ...C.pagamento, ativo: dados.ativo === true }; toast(dados.ativo ? "Pagamento online ativado." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500); }
-  } catch (erro) { toast(erro.message, "erro", 5000); }
-  finally { C.pagamentoOcupado = false; if (cartao()) cartao().outerHTML = htmlPagamento(); }
+    else {
+      if (typeof dados.ativo !== "boolean") throw new Error("Situação do pagamento não confirmada.");
+      C.pagamento = { ...C.pagamento, ativo: dados.ativo }; toast(dados.ativo ? "Pagamento online ativado." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500);
+    }
+  } catch {
+    if (C.loja?.id === lojaId && C.pagamentoSessao === sessao) { C.pagamento = null; C.pagamentoErro = "Não foi possível confirmar a ação. Tente novamente para conferir a situação da conta."; }
+  } finally {
+    if (C.loja?.id === lojaId && C.pagamentoSessao === sessao) { C.pagamentoOcupado = false; atualizarPagamento(); }
+  }
 }
 function render() {
   if (!C.loja) return;
@@ -248,6 +280,9 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
   C.sujo = false;
   C.pagamento = null;
   C.pagamentoOcupado = false;
+  C.pagamentoErro = "";
+  C.pagamentoConsulta = null;
+  C.pagamentoSessao = {};
   document.addEventListener("click", aoClicar);
   document.addEventListener("input", aoDigitar);
   document.addEventListener("change", aoMudar);
@@ -270,6 +305,8 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
   }));
 }
 export function pararConfiguracoes() {
+  C.pagamentoConsulta = null;
+  C.pagamentoSessao = null;
   C.parar.forEach((f) => f());
   C.parar = [];
   document.removeEventListener("click", aoClicar);

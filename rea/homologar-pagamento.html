@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="pt-BR">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Homologação de pagamento</title>
+<style>body{font:16px system-ui;margin:24px;line-height:1.5}main{max-width:640px;margin:auto}button{font:inherit;padding:12px;margin:4px 4px 4px 0}button:disabled{opacity:.5}</style>
+<body>
+<main>
+  <h1>Homologação de pagamento</h1>
+  <p>Pedido de teste de R$ 5,00. A devolução só acontece ao clicar no botão.</p>
+  <p id="estado" role="status">Conferindo pedido…</p>
+  <button id="conferir" disabled>Conferir pagamento</button>
+  <button id="recusar" disabled>Recusar e devolver R$ 5,00</button>
+  <p><a href="../painel.html">Entrar no painel</a></p>
+</main>
+<script type="module">
+import { db, auth } from "../firebase-init.js?v=3";
+import { chamarPagamento } from "../pagamentos.js?v=3";
+import { doc, onSnapshot, getDocFromServer } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-firestore.js";
+import { onAuthStateChanged } from "https://www.gstatic.com/firebasejs/12.16.0/firebase-auth.js";
+
+const params = new URLSearchParams(location.search), lojaId = params.get("loja"), pedidoId = params.get("pedido");
+const estado = document.getElementById("estado"), conferir = document.getElementById("conferir"), recusar = document.getElementById("recusar");
+const valido = /^homologacao-[a-f0-9]{16}$/.test(lojaId || "") && /^[a-zA-Z0-9_-]{20,80}$/.test(pedidoId || "");
+let recibo = null, entrada = null, ocupado = false, falha = false;
+const apto = () => valido && auth.currentUser && !falha && recibo?.estado === "aprovado" && entrada?.total === 500
+  && entrada.pagamento?.online === true && entrada.pagamento?.pago === true;
+function pintar() {
+  conferir.disabled = !valido || ocupado;
+  recusar.disabled = ocupado || !apto();
+  if (!ocupado) estado.textContent = falha ? "Não foi possível conferir o pedido. Tente novamente."
+    : `Pagamento: ${["gerando", "aguardando", "reconciliar", "aprovado", "expirado", "cancelado", "reembolsado", "estorno_pendente"].includes(recibo?.estado) ? recibo.estado : "aguardando leitura"}. ${auth.currentUser ? "Sessão iniciada." : "Entre no painel para devolver."}`;
+}
+if (!valido) estado.textContent = "Link de homologação inválido.";
+else {
+  const publico = doc(db, "lojas", lojaId, "pagamentosPedidos", pedidoId), pedido = doc(db, "lojas", lojaId, "pedidosEntrada", pedidoId);
+  const erro = () => { falha = true; pintar(); };
+  const parar = [onSnapshot(publico, (s) => { recibo = s.exists() ? s.data() : null; falha = false; pintar(); }, erro),
+    onSnapshot(pedido, (s) => { entrada = s.exists() ? s.data() : null; pintar(); }, erro), onAuthStateChanged(auth, pintar)];
+  window.addEventListener("pagehide", () => parar.forEach((fn) => fn()), { once: true });
+  async function executar(devolver) {
+    if (ocupado || (devolver && !apto())) return;
+    ocupado = true; pintar(); estado.textContent = "Conferindo com o serviço…";
+    try {
+      if (devolver) {
+        const [r, p] = await Promise.all([getDocFromServer(publico), getDocFromServer(pedido)]);
+        recibo = r.exists() ? r.data() : null; entrada = p.exists() ? p.data() : null;
+        if (!apto()) throw new Error("Pedido sem confirmação para devolver.");
+      }
+      await chamarPagamento(devolver ? "recusar" : "consultar", { lojaId, pedidoId }, devolver ? { autenticado: true } : {});
+      falha = false;
+    } catch { falha = true; }
+    finally { ocupado = false; pintar(); }
+  }
+  conferir.addEventListener("click", () => executar(false));
+  recusar.addEventListener("click", () => executar(true));
+  pintar();
+}
+</script>
+</body>
+</html>

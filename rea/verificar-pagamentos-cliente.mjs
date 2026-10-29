@@ -93,9 +93,15 @@ try {
   const acoes = [], avisos = [], destinos = [], C = { loja: { id: "loja-teste" }, pagamento: null, exemplo: false, sujo: false };
   const cfgContexto = { C, pagamentoDisponivel: () => true, esc: (v) => String(v), document: { querySelector: () => null },
     location: { assign: (url) => destinos.push(url) }, urlMercadoPago: (url) => url,
-    toast: (mensagem) => avisos.push(mensagem), chamarPagamento: async (rota, dados, opts) => { acoes.push({ rota, dados, opts }); return rota === "conectar" ? { url: "https://auth.mercadopago.com/authorization" } : { ativo: rota === "ativar" }; } };
-  vm.createContext(cfgContexto); vm.runInContext(`${trechoConfiguracoes}\nthis.api={htmlPagamento,mudarPagamento};`, cfgContexto);
+    toast: (mensagem) => avisos.push(mensagem), chamarPagamento: async (rota, dados, opts) => { acoes.push({ rota, dados, opts }); return rota === "conectar" ? { url: "https://auth.mercadopago.com/authorization" } : rota === "status" ? { conectado: false, ativo: false } : { ativo: rota === "ativar" }; } };
+  vm.createContext(cfgContexto); vm.runInContext(`${trechoConfiguracoes}\nthis.api={htmlPagamento,mudarPagamento,consultarPagamento};`, cfgContexto);
   assert.match(cfgContexto.api.htmlPagamento(), /data-cf-pagamento="conectar"/);
+  assert.match(cfgContexto.api.htmlPagamento(), /Conferindo a conexão/);
+  await cfgContexto.api.mudarPagamento("ativar"); assert.equal(acoes.length, 0);
+  await cfgContexto.api.consultarPagamento(); assert.equal(acoes.at(-1).rota, "status");
+  assert.match(cfgContexto.api.htmlPagamento(), /Conectar conta Mercado Pago/);
+  assert.match(cfgContexto.api.htmlPagamento(), /Autorizar no Mercado Pago/);
+  assert.match(cfgContexto.api.htmlPagamento(), /Ativar recebimentos/);
   C.pagamento = { conectado: true, ativo: false };
   assert.match(cfgContexto.api.htmlPagamento(), /data-cf-pagamento="ativar"/);
   assert.match(cfgContexto.api.htmlPagamento(), /Conta conectada\. Pagamento online pausado/);
@@ -104,9 +110,34 @@ try {
   assert.equal(C.pagamento.ativo, true); assert.equal(acoes.at(-1).rota, "ativar"); assert.equal(acoes.at(-1).opts.autenticado, true);
   assert.match(cfgContexto.api.htmlPagamento(), /Pausar pagamento online/);
   await cfgContexto.api.mudarPagamento("pausar"); assert.equal(C.pagamento.ativo, false);
+  await cfgContexto.api.mudarPagamento("conectar"); assert.equal(destinos.length, 0, "conta conectada não oferece troca implícita");
+  C.pagamento = { conectado: false, ativo: false };
   await cfgContexto.api.mudarPagamento("conectar"); assert.equal(destinos.length, 1); assert.equal(C.pagamento.ativo, false);
   assert(avisos.includes("Pagamento online ativado."));
-  console.log("OK configuração: conectar mantém pagamento pausado; ativar e pausar são ações explícitas autenticadas");
+  const chamarConfiguracao = cfgContexto.chamarPagamento;
+  cfgContexto.chamarPagamento = async () => { throw new Error("Erro interno que não deve ficar no card"); };
+  await cfgContexto.api.consultarPagamento(); assert.match(cfgContexto.api.htmlPagamento(), /Tentar novamente/);
+  assert.equal(C.pagamento, null); await cfgContexto.api.mudarPagamento("ativar"); assert.equal(C.pagamento, null);
+  let resolverStatus, consultas = 0;
+  cfgContexto.chamarPagamento = async () => { consultas++; return new Promise((resolve) => { resolverStatus = resolve; }); };
+  const consultaAntiga = cfgContexto.api.mudarPagamento("consultar");
+  await cfgContexto.api.mudarPagamento("consultar"); assert.equal(consultas, 1, "retry não duplica consulta pendente");
+  C.loja = { id: "outra-loja" }; C.pagamentoConsulta = null; C.pagamento = { conectado: false, ativo: false };
+  resolverStatus({ conectado: true, ativo: true }); await consultaAntiga;
+  assert.equal(C.pagamento.conectado, false, "resposta antiga não altera a loja atual");
+  cfgContexto.chamarPagamento = chamarConfiguracao;
+  await cfgContexto.api.consultarPagamento(); assert.equal(C.pagamentoErro, ""); assert.equal(C.pagamento.conectado, false);
+  cfgContexto.esc = (v) => String(v).replaceAll("<", "&lt;").replaceAll(">", "&gt;");
+  C.pagamento = { conectado: true, ativo: false, conta: "<conta-teste>" };
+  assert.match(cfgContexto.api.htmlPagamento(), /&lt;conta-teste&gt;/); assert.doesNotMatch(cfgContexto.api.htmlPagamento(), /<conta-teste>/);
+  cfgContexto.pagamentoDisponivel = () => false;
+  assert.match(cfgContexto.api.htmlPagamento(), /indisponível.*suporte/);
+  assert.doesNotMatch(cfgContexto.api.htmlPagamento(), /Developers/);
+  cfgContexto.pagamentoDisponivel = () => true; C.exemplo = true;
+  assert.match(cfgContexto.api.htmlPagamento(), /Exemplo: nenhuma conta será conectada/);
+  const antesExemplo = acoes.length; await cfgContexto.api.mudarPagamento("ativar"); assert.equal(acoes.length, antesExemplo);
+  C.exemplo = false;
+  console.log("OK configuração: passos, status conhecido, retry sem duplicar, troca de loja, conta escapada e ações autenticadas");
 
   const appFonte = await readFile(new URL("../app.js", import.meta.url), "utf8");
   const trecho = appFonte.slice(appFonte.indexOf("let pararAcomp ="), appFonte.indexOf("function renderPagamentoPendente("))
@@ -167,6 +198,15 @@ try {
   saiuDuranteImport.contexto.location.hash = "#inicio"; saiuDuranteImport.contexto.api.pararAcompanhar(); await inicializando;
   assert.equal(saiuDuranteImport.streams.size, 0); assert.equal(saiuDuranteImport.timers.size, 0);
   console.log("OK consulta automática: 15s, estados pendentes, visibilidade, offline, abortar, sem sobreposição ou callback antigo");
+  const consumidores = await Promise.all(["app.js", "loja-dados.js", "pedidos.js", "configuracoes.js"]
+    .map((arquivo) => readFile(new URL(`../${arquivo}`, import.meta.url), "utf8")));
+  const moduloPagamento = consumidores.map((src) => src.match(/from ["'](\.\/pagamentos\.js\?v=[^"']+)["']/)?.[1]);
+  assert.ok(moduloPagamento.every(Boolean));
+  assert.equal(new Set(moduloPagamento).size, 1, "loja e painel compartilham a mesma instância de pagamentos");
+  const configuracoes = [consumidores[0], fonte].map((src) => src.match(/from ["'](\.\/pagamentos-config\.js\?v=[^"']+)["']/)?.[1]);
+  assert.ok(configuracoes.every(Boolean));
+  assert.equal(new Set(configuracoes).size, 1, "a disponibilidade do pagamento usa a mesma configuração");
+  console.log("OK imports: loja, checkout e painel compartilham pagamentos e configuração sem versões antigas");
 } finally {
   globalThis.fetch = fetchOriginal;
   if (locationOriginal === undefined) delete globalThis.location; else globalThis.location = locationOriginal;
