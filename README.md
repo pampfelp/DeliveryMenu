@@ -29,14 +29,21 @@ analisado) fica fora deste repositório, em `C:\rea-alvos\` e
 HTML, CSS e JavaScript puros, sem build step, Firebase/Firestore e GitHub
 Pages, a partir do `boilerplate/` do segundo cérebro.
 
-O serviço de pagamento está publicado na versão 2 do Apps Script, com health
-`ativo:true` conferido em 29/10/2026. Credenciais privadas, rotina de cinco
+O serviço de pagamento está publicado na versão 6 do Apps Script, em
+29/10/2026 às 13h29, com URL preservada e health `ativo:true`. O projeto de cota
+dos acessos privados ao Google foi corrigido; diagnóstico real Firestore/Auth
+retornou HTTP 200. Credenciais privadas, rotina de cinco
 minutos e registro do App Check Enterprise foram configurados. Firebase Auth
 e Firestore continuam no Spark; o adiantamento de R$150 foi recusado.
-O frontend local está habilitado, com site key pública; sua publicação aguarda
-a conferência de infraestrutura, domínios e regras atuais. Conectar a própria
-conta Mercado Pago mantém o pagamento da loja pausado; a ativação é explícita
-no painel. OAuth e cobranças reais ainda não foram homologados. O frontend
+O OAuth da Casa Jambu foi concluído na interface de produção e o painel
+confirmou conta conectada, com recebimentos pausados. Cada empresa conecta
+a própria conta no painel, sem criar aplicação ou copiar chaves; o guia está
+em [Conectar sua conta](pagamento-online.html). O frontend `abccd2f` foi
+publicado no Pages (run 40908990535); dez assets HTTP 200 iguais à fonte.
+Um checkout real de R$5 abriu no Mercado Pago em uma loja de homologação
+isolada; pagamento, confirmação e devolução ainda não foram concluídos.
+A sessão do vendedor apareceu como comprador ("Eu mesmo"), com pagamento
+bloqueado. Isso não comprova a causa do bloqueio. O frontend
 continua sem build. Estado e testes estão em
 [`PAGAMENTOS-APPS-SCRIPT.md`](PAGAMENTOS-APPS-SCRIPT.md).
 A alternativa Firebase Functions está documentada em

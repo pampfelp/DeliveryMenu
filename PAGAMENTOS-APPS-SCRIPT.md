@@ -9,25 +9,60 @@ As tarifas das transações do Mercado Pago continuam sendo as do vendedor.
 
 Projeto: [DeliveryMenu - Pagamentos](https://script.google.com/home/projects/1SN3JkKZrgOD60f-DTwj66a8hArsf48DOeLxAIrOMvJ_rGZ0Hokg0s1DJ/edit).
 Identificação da versão e endereço público em `pagamentos-appscript/projeto.json`.
-Em 29/10/2026, a versão 2 está publicada na implantação existente. Após
-recarregar o editor, o código foi comparado com o pacote local, normalizando
-somente as quebras de linha. O health público respondeu HTTP 200 e
-`ativo:true`; a rota `ativar`, sem Firebase ID token, respondeu
-`NAO_AUTENTICADO`. Isso comprova publicação e rejeição sem autenticação.
+Em 29/10/2026 às 13h29, a versão 6 foi publicada na implantação existente,
+com endereço preservado. A fonte foi comparada ao pacote local por cópia
+do editor, normalizando as quebras de linha. Health `ativo:true` e rejeição
+`NAO_AUTENTICADO` em `ativar` sem Firebase ID token já foram conferidos.
+
+O diagnóstico real inicial retornou Firestore HTTP 200 e Auth HTTP 403,
+`PERMISSION_DENIED`/`SERVICE_DISABLED`, com projeto de cota incorreto.
+O helper dos acessos privados ao Google passou a enviar `x-goog-user-project`
+com o projeto Firebase. Novo diagnóstico real: Firestore HTTP 200 e Auth
+HTTP 200. A versão 3 foi atualizada com sucesso pela interface nativa.
+Não houve migração de projeto GCP nem alteração de escopos ou faturamento.
+O diagnóstico fica no editor, sem rota web, e não registra tokens nem corpos.
 
 Credenciais OAuth e chave mestre já estão nas propriedades privadas. A rotina
 de cinco minutos foi instalada em 28/10 às 22h34, com um gatilho observado.
 O provedor App Check Enterprise foi conferido na interface; Auth e Firestore
 continuam no Spark, sem habilitar faturamento.
 
-O frontend local está com `ativo:true` e a site key pública configurada.
-A publicação desse frontend aguarda a conferência de infraestrutura, domínios
-e regras atuais. Conectar a conta mantém o pagamento da loja pausado; ativar
-e pausar são ações explícitas autenticadas. A chave global do serviço não
-ativa automaticamente o checkout de uma loja.
+O frontend `bac4651` está publicado: Pages concluído com sucesso e dez assets
+HTTP 200 iguais à fonte conferidos em 29/10. Está com `ativo:true` e a site key
+pública configurada. O botão **Conectar** foi testado na interface de produção:
+passou por Auth/App Check SDK, ID token no backend e Firestore, e abriu a
+autorização oficial da aplicação Cardapio Delivery no Mercado Pago, após
+selecionar Brasil. A tela pede acesso a perfil/movimentações e criação,
+cancelamento e devolução de pagamentos. O usuário autorizou; o callback
+concluiu e o painel confirmou a conta conectada, com recebimentos pausados.
+Conectar mantém o pagamento da loja pausado; ativar e pausar são ações
+explícitas autenticadas. A chave global não ativa o checkout de uma loja.
 
-Ainda falta homologar OAuth, checkout, notificação, consulta, recusa e estorno
-no Mercado Pago. Não há confirmação de conta conectada nem de cobrança real.
+O frontend `abccd2f` publicou a orientação em três etapas no painel e o
+guia público `pagamento-online.html`: cada empresa autoriza sua própria
+conta pela aplicação central, sem editar código nem copiar credenciais.
+Pages run 40908990535 success; dez assets HTTP 200 iguais à fonte.
+
+Um checkout real de R$5 foi criado pelo cardápio normal com App Check JWT,
+em loja isolada `homologacao-2eff489530234329`, e abriu no Mercado Pago.
+O usuário não conseguiu pagar: a sessão reconheceu comprador e vendedor
+como a mesma conta ("Eu mesmo"). Não houve pagamento confirmado. Ainda
+falta homologar aprovação, notificação, consulta final, recusa e devolução.
+Pix sem conta também mostrou erro genérico ao usuário. Diagnóstico privado
+do editor em 29/10 às 13h27: search HTTP200 com zero pagamentos; preferência
+HTTP200, não expirada, recebedor/total/referência/prazo correspondentes.
+O MP não retornou motivo de recusa porque nenhum pagamento foi criado.
+Isso não identifica a causa da falha de processamento no checkout.
+O helper de homologação é administrativo e não faz parte do cadastro de
+empresas: preserva a origem pausada, recifra a conta com AAD da loja isolada
+e bloqueia renovação de sua cópia para não duplicar o refresh token.
+
+A versão 5 verifica `/users/me` antes da ativação, fora da transação, e
+confere conta e versão da credencial antes de gravar. Revogação confirmada
+pausa somente a conta ainda atual; falha transitória preserva a autorização.
+O status renova uma autorização ativa vencida antes de responder, evitando
+anunciar pausa quando o checkout continuaria ativo. A cópia de homologação
+tem `renovacaoBloqueada:true`, confirmado em produção; nunca renova tokens.
 
 ## Segurança e confirmação
 
@@ -113,7 +148,7 @@ node rea/verificar-pagamentos-cliente.mjs
 ```
 
 Na conferência de 29/10/2026, a lógica de pagamentos teve 45 testes aprovados
-e 26 ignorados; Apps Script teve 83 aprovados e um ignorado. Os cinco grupos
+e 26 ignorados; Apps Script teve 100 aprovados e um ignorado. Os seis grupos
 do cliente passaram, incluindo conectar sem ativar a loja e ativação/pausa
 explícitas autenticadas. O teste do serviço desligado injeta `ativo:false`,
 independente da configuração de produção, e os transportes são simulados.
@@ -141,4 +176,6 @@ Fontes: [Apps Script web apps](https://developers.google.com/apps-script/guides/
 [cotas](https://developers.google.com/apps-script/guides/services/quotas),
 [V8](https://developers.google.com/apps-script/guides/v8-runtime),
 [App Check para backend próprio](https://firebase.google.com/docs/app-check/custom-resource-backend),
-[reCAPTCHA sem faturamento](https://docs.cloud.google.com/recaptcha/docs/billing-information).
+[reCAPTCHA sem faturamento](https://docs.cloud.google.com/recaptcha/docs/billing-information),
+[autenticação REST e projeto de cota](https://docs.cloud.google.com/docs/authentication/rest),
+[Identity Platform e projeto de cota](https://docs.cloud.google.com/identity-platform/docs/activity-logging).

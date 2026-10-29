@@ -1,7 +1,10 @@
 # Conectar o Mercado Pago da sua empresa
 
 Cada empresa conecta a própria conta pelo painel. Você não precisa programar,
-criar chaves nem entrar na área de desenvolvedores.
+criar chaves de integração nem entrar na área de desenvolvedores.
+
+Tenha uma conta Mercado Pago liberada para receber pagamentos. Para oferecer
+Pix, cadastre uma chave Pix nessa conta. [Como ativar o Pix](https://www.mercadopago.com.br/blog/como-ativar-pix-mercado-pago).
 
 1. Entre no painel da sua empresa e abra **Configurações → Pagamento online**.
 2. Clique em **Conectar conta Mercado Pago**. Entre na conta que deve receber
@@ -40,3 +43,8 @@ processamento. Não desconecte a conta pelo Mercado Pago durante essa conferênc
   de repetir a autorização. Se continuar sem conexão, fale com o suporte.
 
 No painel de exemplo, nenhuma conta é conectada e nenhum pagamento é ativado.
+
+No primeiro teste, peça a alguém para fazer uma compra pequena como cliente
+e confira o pagamento no painel. Use um comprador diferente da conta que
+recebe. Se o checkout mostrar erro, confira o estado do pedido antes de
+tentar novamente.

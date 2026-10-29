@@ -2,13 +2,14 @@ import "core-js/actual/url/index.js";
 import "core-js/actual/url-search-params/index.js";
 import { criarHandler } from "../functions/pagamentos.js?v=1";
 import { criarFirestoreRest, SERVER_TIMESTAMP } from "./firestore.js?v=1";
-import { configurarAleatoriedade, verificarAppCheckJWT, tokenWebhook, verificarTokenWebhook } from "./seguranca.js?v=1";
+import { configurarAleatoriedade, verificarAppCheckJWT, tokenWebhook, verificarTokenWebhook, cifrar, decifrar, aleatorio } from "./seguranca.js?v=1";
 
 const PROJETO = "cardapio-delivery-ae048", NUMERO = "308771638053";
 const APP = "1:308771638053:web:b2076912a86188fbff68cc";
 const FIREBASE_KEY = "AIzaSyCsY34ZT38ZjAkdNidqG45Nz4qPCVTamEs";
 const FRONTEND = "https://pampfelp.github.io/DeliveryMenu/";
 const props = () => PropertiesService.getScriptProperties();
+const headersGoogle = () => ({ Authorization: `Bearer ${ScriptApp.getOAuthToken()}`, "x-goog-user-project": PROJETO });
 const erro = (codigo, mensagem) => Object.assign(new Error(mensagem), { codigo });
 const json = (v) => ContentService.createTextOutput(JSON.stringify(v)).setMimeType(ContentService.MimeType.JSON);
 function requisicao(url, { method = "GET", body, headers = {} } = {}) {
@@ -58,7 +59,6 @@ function criarServico() {
   if (!/^https:\/\/script\.google\.com\/macros\/s\/[\w-]+\/exec$/.test(url || "")) throw erro("CONFIGURACAO", "O serviço ainda não foi publicado.");
   if (p.getProperty("PAGAMENTOS_ATIVOS") === "true" && (!/^\d{1,30}$/.test(p.getProperty("MP_CLIENT_ID") || "") || !segredo().clientSecret || !segredo().tokensKey)) throw erro("CONFIGURACAO", "Configure as credenciais do serviço de pagamento.");
   configurarAleatoriedade(gerarBytes);
-  const headersGoogle = () => ({ Authorization: `Bearer ${ScriptApp.getOAuthToken()}` });
   const db = criarFirestoreRest({ projectId: PROJETO, request: (u, op) => requisicao(u, { ...op, headers: headersGoogle() }) });
   const auth = {
     verifyIdToken(token) {
@@ -134,6 +134,120 @@ export function receberGet(e) {
   const titulo = ok ? "Conta conectada" : "Não foi possível conectar a conta";
   const destino = `${FRONTEND}painel.html?pagamento=${ok ? "conectado" : "erro"}#configuracoes`;
   return HtmlService.createHtmlOutput(`<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${titulo}</title><body style="font-family:system-ui;background:#f3f4f6;color:#1f2937;padding:32px"><h1>${titulo}</h1><p>${ok ? "Pagamento online pausado. Volte ao painel para ativar após a conferência." : "Volte ao painel e tente conectar novamente."}</p><a target="_top" href="${esc(destino)}" style="display:inline-block;padding:14px 20px;background:#991b1b;color:white;border-radius:8px;text-decoration:none">Voltar ao painel</a></body>`);
+}
+export function prepararHomologacao() {
+  try {
+    configurarAleatoriedade(gerarBytes);
+    const p = props(), origem = "casa-jambu-delivery", salvo = p.getProperty("HOMOLOGACAO_LOJA_ID");
+    const id = salvo || `homologacao-${Utilities.getUuid().replace(/-/g, "").slice(0, 16).toLowerCase()}`;
+    if (!/^homologacao-[a-f0-9]{16}$/.test(id)) throw erro("HOMOLOGACAO", "Identificação de homologação inválida.");
+    const db = criarFirestoreRest({ projectId: PROJETO, request: (u, op) => requisicao(u, { ...op, headers: headersGoogle() }) });
+    db.runTransaction((tx) => {
+      const ler = (path) => tx.get(db.doc(path)).data();
+      const loja = ler(`lojas/${origem}`), integracao = ler(`integracoesPagamento/${origem}`);
+      if (typeof loja?.donoId !== "string" || !loja.donoId || loja.pagamentoOnline?.ativo !== false || integracao?.ativo !== false || !/^\d{1,30}$/.test(String(integracao?.contaId || ""))) throw erro("HOMOLOGACAO", "Confira a loja de origem pausada e conectada.");
+      const contaId = String(integracao.contaId), conta = ler(`integracoesPagamento/${origem}/contas/${contaId}`);
+      const conferirConta = (v, lojaId) => {
+        if (v?.reconectar !== false || !(+new Date(v.expiresAt) > Date.now() + 30 * 60000)
+          || +new Date(v.refreshAte || 0) > Date.now() || v.refreshLease) throw erro("HOMOLOGACAO", "Confira a validade da conexão antes do teste.");
+        const tokens = decifrar(v.protegido, segredo().tokensKey, lojaId, contaId);
+        if (typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.refresh_token !== "string" || !tokens.refresh_token) throw erro("HOMOLOGACAO", "Conexão indisponível para o teste.");
+        return tokens;
+      };
+      const tokens = conferirConta(conta, origem), destino = ler(`lojas/${id}`);
+      const vinculo = ler(`integracoesPagamento/${id}`), privada = ler(`integracoesPagamento/${id}/contas/${contaId}`);
+      const categoria = ler(`lojas/${id}/categorias/homologacao`), item = ler(`lojas/${id}/itens/pix-teste`);
+      if (salvo) {
+        if (destino?.homologacaoOrigem !== origem || destino.donoId !== loja.donoId || destino.slug !== id
+          || destino.pagamentoOnline?.ativo !== true || destino.aberta !== true || destino.abrirSozinho !== false || vinculo?.contaId !== contaId || vinculo.ativo !== true
+          || categoria?.nome !== "Homologação" || item?.preco !== 500 || item.categoriaId !== "homologacao" || item.esgotado !== false || !Array.isArray(item.grupos) || item.grupos.length) throw erro("HOMOLOGACAO", "A homologação existente precisa ser conferida.");
+        conferirConta(privada, id);
+        if (privada.renovacaoBloqueada !== true) tx.update(db.doc(`integracoesPagamento/${id}/contas/${contaId}`), { renovacaoBloqueada: true });
+        return;
+      }
+      if (destino || vinculo || privada || categoria || item) throw erro("HOMOLOGACAO", "Destino de homologação já existe.");
+      tx.create(db.doc(`lojas/${id}`), { donoId: loja.donoId, slug: id, nome: "Homologação Casa Jambu", homologacaoOrigem: origem,
+        aberta: true, abrirSozinho: false, aceitaAgendamento: false, cor: "#991b1b", moeda: "BRL", pagamentoOnline: { ativo: true, provedor: "mercadopago" } });
+      tx.create(db.doc(`lojas/${id}/categorias/homologacao`), { nome: "Homologação", ordem: 0 });
+      tx.create(db.doc(`lojas/${id}/itens/pix-teste`), { categoriaId: "homologacao", nome: "Pix de teste", descricao: "Homologação de pagamento — R$ 5,00", preco: 500, esgotado: false, grupos: [], ordem: 0 });
+      tx.create(db.doc(`integracoesPagamento/${id}`), { contaId, ativo: true });
+      tx.create(db.doc(`integracoesPagamento/${id}/contas/${contaId}`), { protegido: cifrar(tokens, segredo().tokensKey, id, contaId),
+        expiresAt: new Date(conta.expiresAt), versao: aleatorio(), reconectar: false, refreshAte: new Date(0), refreshLease: null, renovacaoBloqueada: true });
+    });
+    p.setProperty("HOMOLOGACAO_LOJA_ID", id);
+    return { link: `${FRONTEND}index.html?loja=${id}`, valor: 500 };
+  } catch { throw erro("HOMOLOGACAO", "Não foi possível preparar a loja isolada. Confira a origem pausada, a conexão e o destino do teste."); }
+}
+export function diagnosticarHomologacao() {
+  const codigos = ["unauthorized", "forbidden", "bad_request", "not_found", "invalid_token", "invalid_grant", "internal_error", "service_unavailable",
+    "CONFIGURACAO", "VALIDACAO", "PERMISSION_DENIED", "NOT_FOUND", "UNAUTHENTICATED", "RESOURCE_EXHAUSTED", "UNAVAILABLE"];
+  const codigo = (v) => codigos.includes(v) ? v : "";
+  try {
+    const p = props(), lojaId = p.getProperty("HOMOLOGACAO_LOJA_ID");
+    if (!/^homologacao-[a-f0-9]{16}$/.test(lojaId || "")) return { http: 0, codigo: "CONFIGURACAO" };
+    const db = criarFirestoreRest({ projectId: PROJETO, request: (u, op) => requisicao(u, { ...op, headers: headersGoogle() }) });
+    const consultas = db.collection("transacoesPagamento").where("lojaId", "==", lojaId).limit(5).get();
+    const texto = (v) => typeof v === "string" && /^[a-z_]{1,80}$/.test(v) ? v : "";
+    const pedidos = consultas.docs.map((doc) => {
+      try {
+        const t = doc.data();
+        if (t.lojaId !== lojaId || t.pedidoId !== doc.id || !/^[a-zA-Z0-9_-]{20,80}$/.test(doc.id) || t.pedido?.total !== 500
+          || !/^\d{1,30}$/.test(String(t.contaId || "")) || !/^[a-zA-Z0-9_-]{1,160}$/.test(t.preferenceId || "")) return { http: 0, codigo: "VALIDACAO" };
+        const conta = db.doc(`integracoesPagamento/${lojaId}/contas/${t.contaId}`).get().data();
+        const tokens = decifrar(conta?.protegido, p.getProperty("MP_TOKENS_KEY"), lojaId, t.contaId);
+        if (typeof tokens.access_token !== "string" || !tokens.access_token) return { http: 0, codigo: "CONFIGURACAO" };
+        const buscar = (path, resumir) => {
+          let http = 0;
+          try {
+            const resposta = UrlFetchApp.fetch(`https://api.mercadopago.com${path}`, { method: "get", headers: { Authorization: `Bearer ${tokens.access_token}` },
+              followRedirects: false, muteHttpExceptions: true, validateHttpsCertificates: true });
+            const status = resposta.getResponseCode(); http = Number.isInteger(status) ? status : 0;
+            const dados = JSON.parse(resposta.getContentText());
+            if (http < 200 || http >= 300) return { http, codigo: codigo(dados.error) };
+            return { http, ...resumir(dados) };
+          } catch { return { http, codigo: "" }; }
+        };
+        const referencia = `${lojaId}:${doc.id}`;
+        const pagamentos = buscar(`/v1/payments/search?external_reference=${encodeURIComponent(referencia)}`, (dados) => {
+          if (!Array.isArray(dados.results)) return { codigo: "VALIDACAO" };
+          return { count: dados.results.length, resultados: dados.results.map((v) => ({ status: texto(v.status), status_detail: texto(v.status_detail),
+            totalCorreto: Number.isFinite(Number(v.transaction_amount)) && Math.round(Number(v.transaction_amount) * 100) === 500,
+            recebedorCorreto: String(v.collector_id) === String(t.contaId), referenciaCorreta: v.external_reference === referencia,
+            ...(typeof v.live_mode === "boolean" ? { live_mode: v.live_mode } : {}) })) };
+        });
+        const preferencia = buscar(`/checkout/preferences/${encodeURIComponent(t.preferenceId)}`, (v) => ({
+          ...(typeof v.active === "boolean" ? { active: v.active } : {}), ...(typeof v.expires === "boolean" ? { expires: v.expires } : {}),
+          expiracaoIgual: Number.isFinite(+new Date(v.expiration_date_to)) && +new Date(v.expiration_date_to) === +new Date(t.expiresAt),
+          referenciaCorreta: v.external_reference === referencia, recebedorCorreto: String(v.collector_id) === String(t.contaId),
+          totalCorreto: Array.isArray(v.items) && Math.round(v.items.reduce((s, i) => s + Number(i.quantity) * Number(i.unit_price), 0) * 100) === 500,
+          ...(typeof v.live_mode === "boolean" ? { live_mode: v.live_mode } : {}) }));
+        return { estado: texto(t.estado), expirou: !(+new Date(t.expiresAt) > Date.now()), pagamentos, preferencia };
+      } catch (err) { return { http: Number.isInteger(err?.status) ? err.status : 0, codigo: codigo(err?.code) }; }
+    });
+    return { count: pedidos.length, pedidos };
+  } catch (err) { return { http: Number.isInteger(err?.status) ? err.status : 0, codigo: codigo(err?.code) }; }
+}
+export function diagnosticar() {
+  return [
+    ["firestore", `https://firestore.googleapis.com/v1/projects/${PROJETO}/databases/(default)/documents/lojas/casa-jambu-delivery`],
+    ["auth", `https://identitytoolkit.googleapis.com/admin/v2/projects/${PROJETO}/config`],
+  ].map(([servico, url]) => {
+    let http = 0;
+    const resultado = () => ({ servico, http, codigo: "", motivo: "", api: "", projetoCorreto: false });
+    try {
+      const resposta = UrlFetchApp.fetch(url, { method: "get", headers: headersGoogle(),
+        followRedirects: false, muteHttpExceptions: true, validateHttpsCertificates: true });
+      const status = resposta.getResponseCode();
+      http = Number.isInteger(status) ? status : 0;
+      if (http >= 200 && http < 300) return { servico, http };
+      const dados = JSON.parse(resposta.getContentText()), falha = dados?.error;
+      const detalhe = Array.isArray(falha?.details) ? falha.details.find((d) => d?.["@type"] === "type.googleapis.com/google.rpc.ErrorInfo") : null;
+      const campo = (valor) => typeof valor === "string" && /^[A-Z][A-Z_]{0,79}$/.test(valor) ? valor : "";
+      return { ...resultado(), codigo: campo(falha?.status), motivo: campo(detalhe?.reason),
+        api: ["firestore.googleapis.com", "identitytoolkit.googleapis.com"].includes(detalhe?.metadata?.service) ? detalhe.metadata.service : "",
+        projetoCorreto: detalhe?.metadata?.consumer === `projects/${NUMERO}` };
+    } catch { return resultado(); }
+  });
 }
 export function reconciliar() {
   const resultados = criarServico().expirarPendentes({ consultarEmAberto: true });

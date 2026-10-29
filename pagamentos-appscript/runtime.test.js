@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createHmac } from "node:crypto";
+import { createHmac, createCipheriv, createDecipheriv } from "node:crypto";
 import vm from "node:vm";
 
 const bundle = await readFile(new URL("./publicar/Code.gs", import.meta.url), "utf8");
@@ -44,7 +44,7 @@ function fixture({ propriedades = {}, lojaDono = "dono", disabled = false, ident
   const seed = (path, v) => docs.set(path, codificar(v).mapValue.fields);
   seed("lojas/loja-teste", { nome: "Loja de teste", donoId: lojaDono });
   seed("integracoesPagamento/loja-teste", { contaId: "123", ativo: true });
-  seed("integracoesPagamento/loja-teste/contas/123", { protegido: { iv: "simulado", texto: "simulado", tag: "simulado" }, reconectar: false });
+  seed("integracoesPagamento/loja-teste/contas/123", { protegido: { iv: "simulado", texto: "simulado", tag: "simulado" }, reconectar: false, expiresAt: new Date(Date.now() + 3600000) });
   const resposta = (dados, codigo = 200) => ({ getResponseCode: () => codigo, getContentText: () => JSON.stringify(dados) });
   const contexto = {
     URL: undefined, URLSearchParams: undefined, crypto: undefined, Buffer: undefined, AbortSignal: undefined,
@@ -70,6 +70,8 @@ function fixture({ propriedades = {}, lojaDono = "dono", disabled = false, ident
       const body = op.payload ? JSON.parse(op.payload) : null;
       chamadas.push({ url, op, body });
       assert.equal(op.followRedirects, false); assert.equal(op.validateHttpsCertificates, true);
+      const privadoGoogle = url.startsWith(firestoreBase) || url === `https://identitytoolkit.googleapis.com/v1/projects/${projeto}/accounts:lookup`;
+      assert.equal(op.headers?.["x-goog-user-project"], privadoGoogle ? projeto : undefined);
       if (url.startsWith("https://identitytoolkit.googleapis.com/v1/accounts:lookup?")) {
         assert.equal(op.method, "post"); assert.equal(body.idToken, clienteJWT); assert.equal(op.headers.Authorization, undefined);
         if (identidadeErro) return resposta({ error: { message: "DETALHE-PRIVADO-IDENTIDADE" } }, 400);
@@ -130,6 +132,223 @@ function fixture({ propriedades = {}, lojaDono = "dono", disabled = false, ident
   };
 }
 const ativo = { PAGAMENTOS_ATIVOS: "true", MP_CLIENT_ID: "999", MP_CLIENT_SECRET: "segredo-simulado", MP_TOKENS_KEY: chave };
+
+function homologacaoFixture() {
+  const f = fixture({ propriedades: { ...ativo, RNG_SEQUENCIA: "47" } }), origem = "casa-jambu-delivery";
+  const id = "homologacao-0123456789abcdef", contaId = "123", tokens = { access_token: "ACESSO-TESTE-PRIVADO", refresh_token: "REFRESH-TESTE-PRIVADO" };
+  f.contexto.Utilities.getUuid = () => "01234567-89ab-cdef-0123-456789abcdef";
+  const cipher = createCipheriv("aes-256-gcm", Buffer.from(chave, "base64"), Buffer.alloc(12, 3));
+  cipher.setAAD(Buffer.from(`${origem}:${contaId}`));
+  const texto = Buffer.concat([cipher.update(JSON.stringify(tokens)), cipher.final()]);
+  f.seed(`lojas/${origem}`, { donoId: "dono", pagamentoOnline: { ativo: false }, endereco: "ENDERECO-NAO-COPIAR", nome: "ORIGEM-NAO-COPIAR" });
+  f.seed(`integracoesPagamento/${origem}`, { contaId, ativo: false });
+  f.seed(`integracoesPagamento/${origem}/contas/${contaId}`, { protegido: { iv: Buffer.alloc(12, 3).toString("base64"), texto: texto.toString("base64"), tag: cipher.getAuthTag().toString("base64") }, expiresAt: new Date(Date.now() + 3600000), reconectar: false, refreshAte: new Date(0), refreshLease: null });
+  return { f, origem, id, contaId, tokens };
+}
+
+test("homologação isolada é atômica, recifra AAD e reutiliza sem alterar histórico/origem", () => {
+  const { f, origem, id, contaId, tokens } = homologacaoFixture();
+  const antes = new Map([...f.docs].map(([k, v]) => [k, JSON.stringify(v)]));
+  const resultado = f.contexto.prepararHomologacaoPagamentos();
+  assert.deepEqual(JSON.parse(JSON.stringify(resultado)), { link: `${frontend}index.html?loja=${id}`, valor: 500 });
+  for (const [k, v] of antes) assert.equal(JSON.stringify(f.docs.get(k)), v);
+  const criados = [...f.docs.keys()].filter((k) => !antes.has(k)); assert.equal(criados.length, 5);
+  assert.equal(f.docs.get(`lojas/${id}`).pagamentoOnline.mapValue.fields.ativo.booleanValue, true);
+  assert.equal(f.docs.get(`lojas/${id}/itens/pix-teste`).preco.integerValue, "500");
+  const protegidos = f.docs.get(`integracoesPagamento/${id}/contas/${contaId}`).protegido.mapValue.fields;
+  const decifrar = (loja) => {
+    const dec = createDecipheriv("aes-256-gcm", Buffer.from(chave, "base64"), Buffer.from(protegidos.iv.stringValue, "base64"));
+    dec.setAAD(Buffer.from(`${loja}:${contaId}`)); dec.setAuthTag(Buffer.from(protegidos.tag.stringValue, "base64"));
+    return JSON.parse(Buffer.concat([dec.update(Buffer.from(protegidos.texto.stringValue, "base64")), dec.final()]).toString());
+  };
+  assert.deepEqual(decifrar(id), tokens); assert.throws(() => decifrar(origem));
+  assert.equal(f.valores.get("HOMOLOGACAO_LOJA_ID"), id); assert(Number(f.valores.get("RNG_SEQUENCIA")) > 47);
+  const commits = f.chamadas.filter((c) => c.url === `${firestoreBase}:commit`); assert.equal(commits.length, 1); assert.equal(commits[0].body.writes.length, 5);
+  f.seed(`lojas/${id}/pedidosEntrada/pedido-preservado`, { total: 500, status: "novo" });
+  const historico = JSON.stringify([...f.docs]); f.contexto.prepararHomologacaoPagamentos(); assert.equal(JSON.stringify([...f.docs]), historico);
+  const saida = JSON.stringify([resultado, f.logs, criados.map((k) => k.startsWith(`lojas/${id}`) ? f.docs.get(k) : null)]);
+  for (const valor of [tokens.access_token, tokens.refresh_token, chave, googleToken, "ENDERECO-NAO-COPIAR", "ORIGEM-NAO-COPIAR"]) assert.equal(saida.includes(valor), false);
+  assert.equal(f.chamadas.some((c) => c.url.startsWith("https://api.mercadopago.com/")), false);
+});
+
+test("homologação falha sem sobrescrever destino ou origem e sem registrar erro cru", () => {
+  for (const caso of ["destino", "flag", "expirada", "cifra", "reconectar", "origem-ativa"]) {
+    const { f, origem, id, contaId } = homologacaoFixture();
+    if (caso === "destino") f.seed(`lojas/${id}`, { donoId: "outro" });
+    if (caso === "flag") f.valores.set("HOMOLOGACAO_LOJA_ID", origem);
+    if (caso === "origem-ativa") f.seed(`lojas/${origem}`, { donoId: "dono", pagamentoOnline: { ativo: true } });
+    if (["expirada", "cifra", "reconectar"].includes(caso)) {
+      const conta = f.docs.get(`integracoesPagamento/${origem}/contas/${contaId}`);
+      if (caso === "expirada") conta.expiresAt.timestampValue = new Date(Date.now() + 60000).toISOString();
+      if (caso === "cifra") conta.protegido.mapValue.fields.tag.stringValue = Buffer.alloc(16).toString("base64");
+      if (caso === "reconectar") conta.reconectar.booleanValue = true;
+    }
+    const antes = JSON.stringify([...f.docs]);
+    assert.throws(() => f.contexto.prepararHomologacaoPagamentos(), { codigo: "HOMOLOGACAO" });
+    assert.equal(JSON.stringify([...f.docs]), antes); assert.equal(f.logs.length, 0);
+    assert.equal(f.chamadas.filter((c) => c.url === `${firestoreBase}:commit`).length, 0);
+  }
+  const { f, id } = homologacaoFixture(); f.contexto.prepararHomologacaoPagamentos();
+  f.docs.get(`lojas/${id}`).homologacaoOrigem.stringValue = "outra";
+  const antes = JSON.stringify([...f.docs]); assert.throws(() => f.contexto.prepararHomologacaoPagamentos(), { codigo: "HOMOLOGACAO" }); assert.equal(JSON.stringify([...f.docs]), antes);
+});
+
+test("homologação só guarda propriedade após commit e não aceita rota web", () => {
+  const { f } = homologacaoFixture(), fetch = f.contexto.UrlFetchApp.fetch;
+  f.contexto.UrlFetchApp.fetch = (url, op) => {
+    if (url === `${firestoreBase}:commit`) throw new Error(`DETALHE-PRIVADO ${googleToken}`);
+    return fetch(url, op);
+  };
+  assert.throws(() => f.contexto.prepararHomologacaoPagamentos(), (e) => e.codigo === "HOMOLOGACAO" && !e.message.includes("DETALHE-PRIVADO"));
+  assert.equal(f.valores.has("HOMOLOGACAO_LOJA_ID"), false); assert.equal(f.logs.length, 0);
+  assert.equal(f.jsonSaida(f.get({ rota: "prepararHomologacao" })).erro.codigo, "VALIDACAO");
+  assert.equal(f.post({ rota: "prepararHomologacao" }).erro.codigo, "VALIDACAO");
+});
+
+test("página QA limita namespace, valor, estado e sessão antes da devolução normal", async () => {
+  const html = await readFile(new URL("../rea/homologar-pagamento.html", import.meta.url), "utf8");
+  const script = html.match(/<script type="module">([\s\S]*?)<\/script>/)[1].replace(/^import .*;$/gm, "");
+  assert.match(html, /name="robots" content="noindex,nofollow"/);
+  function pagina(search) {
+    const elementos = Object.fromEntries(["estado", "conferir", "recusar"].map((id) => [id, { disabled: true, textContent: "", addEventListener(n, fn) { this[n] = fn; } }]));
+    const listeners = new Map(), chamadas = [], auth = { currentUser: null };
+    let recibo = { estado: "aprovado" }, entrada = { total: 500, pagamento: { online: true, pago: true } }, leituras = 0;
+    const snapshot = (dados) => ({ exists: () => !!dados, data: () => dados });
+    const contexto = { URLSearchParams, location: { search }, document: { getElementById: (id) => elementos[id] }, window: { addEventListener() {} }, db: {}, auth,
+      doc: (...args) => args.at(-2), onSnapshot: (ref, fn) => { listeners.set(ref, fn); return () => {}; }, onAuthStateChanged: () => () => {},
+      getDocFromServer: async (ref) => { leituras++; return snapshot(ref === "pagamentosPedidos" ? recibo : entrada); },
+      chamarPagamento: async (...args) => { chamadas.push(args); return {}; } };
+    vm.createContext(contexto); vm.runInContext(script, contexto);
+    return { elementos, chamadas, auth, listeners, leituras: () => leituras,
+      emitir(r = recibo, e = entrada) { recibo = r; entrada = e; listeners.get("pagamentosPedidos")?.(snapshot(r)); listeners.get("pedidosEntrada")?.(snapshot(e)); } };
+  }
+  for (const loja of ["casa-jambu-delivery", "homologacao-XYZ", "homologacao-0123456789abcdef/outro"]) {
+    const p = pagina(`?loja=${encodeURIComponent(loja)}&pedido=pedido_local_1234567890`);
+    assert.equal(p.listeners.size, 0); assert.equal(p.elementos.recusar.disabled, true); assert.equal(p.chamadas.length, 0);
+  }
+  const p = pagina("?loja=homologacao-0123456789abcdef&pedido=pedido_local_1234567890");
+  p.emitir(); assert.equal(p.elementos.recusar.disabled, true);
+  p.auth.currentUser = { uid: "dono" };
+  p.emitir({ estado: "aguardando" }); await p.elementos.recusar.click(); assert.equal(p.chamadas.length, 0);
+  p.emitir({ estado: "aprovado" }, { total: 501, pagamento: { online: true, pago: true } }); await p.elementos.recusar.click(); assert.equal(p.chamadas.length, 0);
+  p.emitir({ estado: "aprovado" }, { total: 500, pagamento: { online: true, pago: true } }); assert.equal(p.elementos.recusar.disabled, false);
+  assert.equal(p.chamadas.length, 0); await p.elementos.recusar.click(); assert.equal(p.leituras(), 2);
+  assert.deepEqual(JSON.parse(JSON.stringify(p.chamadas[0])), ["recusar", { lojaId: "homologacao-0123456789abcdef", pedidoId: "pedido_local_1234567890" }, { autenticado: true }]);
+  assert.doesNotMatch(p.elementos.estado.textContent, /pedido_local|homologacao-|dono/);
+});
+
+test("diagnóstico de homologação resume recusa ou ausência de pagamento sem mutar nem expor dados", () => {
+  for (const comPagamento of [true, false]) {
+    const { f, id } = homologacaoFixture(); f.contexto.prepararHomologacaoPagamentos(); f.logs.length = 0;
+    const pedidoId = "pedido_diagnostico_1234567890", preferenceId = "preferencia-teste", expiresAt = new Date(Date.now() + 600000);
+    const path = `transacoesPagamento/${pedidoId}`;
+    f.seed(path, { lojaId: id, pedidoId, contaId: "123", preferenceId, estado: "aguardando", pedido: { total: 500, cliente: { nome: "NOME-PRIVADO" } }, expiresAt });
+    const antes = JSON.stringify([...f.docs]), propsAntes = JSON.stringify([...f.valores]), fetch = f.contexto.UrlFetchApp.fetch;
+    const referencia = `${id}:${pedidoId}`, chamadas = [];
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      chamadas.push({ url, op });
+      if (url === `${firestoreBase}:runQuery`) {
+        const query = JSON.parse(op.payload).structuredQuery;
+        assert.equal(op.method, "post"); assert.equal(query.limit, 5);
+        assert.equal(query.where.fieldFilter.field.fieldPath, "lojaId"); assert.equal(query.where.fieldFilter.value.stringValue, id);
+        return { getResponseCode: () => 200, getContentText: () => JSON.stringify([{ document: { name: prefixo + path, fields: f.docs.get(path) } }]) };
+      }
+      if (url.startsWith("https://api.mercadopago.com/")) {
+        assert.equal(op.method, "get"); assert.equal(op.followRedirects, false); assert.equal(op.muteHttpExceptions, true); assert.equal(op.validateHttpsCertificates, true);
+        assert.equal(op.headers.Authorization, "Bearer ACESSO-TESTE-PRIVADO"); assert.equal(op.headers["x-goog-user-project"], undefined);
+        const dados = url.includes("/v1/payments/search?") ? { results: comPagamento ? [{ status: "rejected", status_detail: "cc_rejected_other_reason", transaction_amount: 5,
+          collector_id: 123, external_reference: referencia, live_mode: true, payer: { email: "PRIVADO@exemplo.test" }, id: "IDENTIFICADOR-PRIVADO", raw: "CORPO-PRIVADO" }] : [] }
+          : { active: true, expires: true, expiration_date_to: expiresAt.toISOString(), external_reference: referencia, collector_id: 123, items: [{ quantity: 1, unit_price: 5 }], live_mode: true, payer: { name: "NOME-PRIVADO" } };
+        if (url.includes("/v1/payments/search?")) assert.equal(url, `https://api.mercadopago.com/v1/payments/search?external_reference=${encodeURIComponent(referencia)}`);
+        else assert.equal(url, `https://api.mercadopago.com/checkout/preferences/${preferenceId}`);
+        return { getResponseCode: () => 200, getContentText: () => JSON.stringify(dados) };
+      }
+      assert.equal(op.method, "get"); return fetch(url, op);
+    };
+    const resultado = JSON.parse(JSON.stringify(f.contexto.diagnosticarHomologacaoPagamentos()));
+    assert.equal(resultado.count, 1); const pedido = resultado.pedidos[0];
+    assert.equal(pedido.estado, "aguardando"); assert.equal(pedido.expirou, false); assert.equal(pedido.pagamentos.count, comPagamento ? 1 : 0);
+    if (comPagamento) assert.deepEqual(pedido.pagamentos.resultados[0], { status: "rejected", status_detail: "cc_rejected_other_reason", totalCorreto: true, recebedorCorreto: true, referenciaCorreta: true, live_mode: true });
+    assert.deepEqual(pedido.preferencia, { http: 200, active: true, expires: true, expiracaoIgual: true, referenciaCorreta: true, recebedorCorreto: true, totalCorreto: true, live_mode: true });
+    assert.equal(JSON.stringify([...f.docs]), antes); assert.equal(JSON.stringify([...f.valores]), propsAntes);
+    assert.equal(chamadas.filter((c) => c.url.startsWith("https://api.mercadopago.com/")).length, 2);
+    assert.equal(chamadas.some((c) => /:commit|:beginTransaction|oauth\/token/.test(c.url)), false);
+    for (const valor of ["NOME-PRIVADO", "CORPO-PRIVADO", "IDENTIFICADOR-PRIVADO", "PRIVADO@", "ACESSO-TESTE-PRIVADO", "REFRESH-TESTE-PRIVADO", googleToken, chave, pedidoId, id, preferenceId, "https://"]) assert.equal(JSON.stringify([resultado, f.logs]).includes(valor), false);
+  }
+});
+
+test("diagnóstico de homologação restringe destino, erros e rotas sem renovar", () => {
+  const { f, id } = homologacaoFixture(); f.contexto.prepararHomologacaoPagamentos(); f.logs.length = 0;
+  const pedidoId = "pedido_diagnostico_1234567890", path = `transacoesPagamento/${pedidoId}`, fetch = f.contexto.UrlFetchApp.fetch;
+  f.seed(path, { lojaId: id, pedidoId, contaId: "123", preferenceId: "preferencia-teste", estado: "aguardando", pedido: { total: 500 }, expiresAt: new Date(Date.now() + 60000) });
+  let chamadasMP = 0;
+  f.contexto.UrlFetchApp.fetch = (url, op) => {
+    if (url.endsWith(":runQuery")) return { getResponseCode: () => 200, getContentText: () => JSON.stringify([{ document: { name: prefixo + path, fields: f.docs.get(path) } }]) };
+    if (url.startsWith("https://api.mercadopago.com/")) { chamadasMP++; assert.equal(op.method, "get"); return { getResponseCode: () => 403, getContentText: () => '{"error":"forbidden","message":"SEGREDO-NAO-EXIBIR","payer":"PRIVADO"}' }; }
+    return fetch(url, op);
+  };
+  const r = JSON.parse(JSON.stringify(f.contexto.diagnosticarHomologacaoPagamentos()));
+  assert.deepEqual(r.pedidos[0].pagamentos, { http: 403, codigo: "forbidden" }); assert.equal(chamadasMP, 2);
+  assert.doesNotMatch(JSON.stringify([r, f.logs]), /SEGREDO-NAO-EXIBIR|PRIVADO/);
+  f.docs.get(path).preferenceId.stringValue = "../../oauth/token";
+  assert.equal(f.contexto.diagnosticarHomologacaoPagamentos().pedidos[0].codigo, "VALIDACAO"); assert.equal(chamadasMP, 2);
+  f.valores.set("HOMOLOGACAO_LOJA_ID", "casa-jambu-delivery");
+  assert.equal(f.contexto.diagnosticarHomologacaoPagamentos().codigo, "CONFIGURACAO"); assert.equal(chamadasMP, 2);
+  assert.equal(f.jsonSaida(f.get({ rota: "diagnosticarHomologacao" })).erro.codigo, "VALIDACAO");
+  assert.equal(f.post({ rota: "diagnosticarHomologacao" }).erro.codigo, "VALIDACAO");
+});
+
+test("diagnóstico do editor filtra erro Google e não divulga documento nem OAuth", () => {
+  const f = fixture(), chamadas = [];
+  f.contexto.UrlFetchApp.fetch = (url, op) => {
+    chamadas.push(url);
+    assert.equal(op.method, "get"); assert.equal(op.headers.Authorization, `Bearer ${googleToken}`);
+    assert.equal(op.headers["x-goog-user-project"], projeto);
+    assert.equal(op.followRedirects, false); assert.equal(op.muteHttpExceptions, true); assert.equal(op.validateHttpsCertificates, true);
+    const firestore = chamadas.length === 1;
+    assert.equal(url, firestore ? `${firestoreBase}/lojas/casa-jambu-delivery` : `https://identitytoolkit.googleapis.com/admin/v2/projects/${projeto}/config`);
+    return { getResponseCode: () => firestore ? 403 : 200, getContentText: () => JSON.stringify(firestore
+      ? { error: { status: "PERMISSION_DENIED", message: "PAYLOAD-GOOGLE-PRIVADO", details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "SERVICE_DISABLED", metadata: { service: "firestore.googleapis.com", consumer: "projects/projeto-errado", privado: "DADO-NAO-PUBLICAR" } }] } }
+      : { config: "CONFIG-AUTH-PRIVADA", documento: "USUARIO-PRIVADO" }) };
+  };
+  const resultado = f.contexto.diagnosticarPagamentos();
+  assert.deepEqual(JSON.parse(JSON.stringify(resultado)), [
+    { servico: "firestore", http: 403, codigo: "PERMISSION_DENIED", motivo: "SERVICE_DISABLED", api: "firestore.googleapis.com", projetoCorreto: false },
+    { servico: "auth", http: 200 },
+  ]);
+  assert.equal(chamadas.length, 2); assert.equal(f.logs.length, 1);
+  const saida = JSON.stringify([resultado, f.logs]);
+  for (const privado of [googleToken, "PAYLOAD-GOOGLE-PRIVADO", "DADO-NAO-PUBLICAR", "CONFIG-AUTH-PRIVADA", "USUARIO-PRIVADO", "projects/projeto-errado", "https://"]) assert.equal(saida.includes(privado), false);
+});
+
+test("diagnóstico continua após exceção e reconhece projeto correto sem expor metadados", () => {
+  const f = fixture(); let chamadas = 0;
+  f.contexto.UrlFetchApp.fetch = () => {
+    if (++chamadas === 1) throw new Error(`ERRO-PRIVADO ${googleToken}`);
+    return { getResponseCode: () => 403, getContentText: () => JSON.stringify({ error: { status: "PERMISSION_DENIED", details: [
+      { "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "SERVICE_DISABLED", metadata: { consumer: "projects/308771638053", service: "destino-nao-permitido" } },
+    ] } }) };
+  };
+  const resultado = JSON.parse(JSON.stringify(f.contexto.diagnosticarPagamentos()));
+  assert.equal(chamadas, 2);
+  assert.deepEqual(resultado[0], { servico: "firestore", http: 0, codigo: "", motivo: "", api: "", projetoCorreto: false });
+  assert.deepEqual(resultado[1], { servico: "auth", http: 403, codigo: "PERMISSION_DENIED", motivo: "SERVICE_DISABLED", api: "", projetoCorreto: true });
+  assert.doesNotMatch(JSON.stringify(f.logs), /ERRO-PRIVADO|OAUTH-GOOGLE|308771638053|destino-nao-permitido/);
+});
+
+test("diagnóstico com sucesso não lê documentos nem configuração", () => {
+  const f = fixture(); let leituras = 0;
+  f.contexto.UrlFetchApp.fetch = () => ({ getResponseCode: () => 200, getContentText: () => { leituras++; return JSON.stringify({ usuario: "USUARIO-PRIVADO", config: "CONFIG-PRIVADA" }); } });
+  assert.deepEqual(JSON.parse(JSON.stringify(f.contexto.diagnosticarPagamentos())), [{ servico: "firestore", http: 200 }, { servico: "auth", http: 200 }]);
+  assert.equal(leituras, 0); assert.doesNotMatch(JSON.stringify(f.logs), /USUARIO-PRIVADO|CONFIG-PRIVADA|OAUTH-GOOGLE/);
+});
+
+test("diagnóstico não é uma rota web", () => {
+  const f = fixture();
+  assert.equal(f.jsonSaida(f.get({ rota: "diagnosticar" })).erro.codigo, "VALIDACAO");
+  assert.equal(f.post({ rota: "diagnosticar" }).erro.codigo, "VALIDACAO");
+  assert.equal(f.chamadas.length, 0); assert.equal(f.logs.length, 0);
+});
 
 test("bundle carrega sem nativos Node e fornece URL pelo core-js", () => {
   const f = fixture();
@@ -244,6 +463,139 @@ function contaConectada() {
   assert.match(f.get({ rota: "callback", state, code: "codigo-simulado" }).html, /Conta conectada/);
   return f;
 }
+test("ativar valida provedor fora de transação e rejeita corrida de conta ou versão", () => {
+  for (const corrida of ["nenhuma", "conta", "versao", "id-provedor"]) {
+    const f = contaConectada(), fetch = f.contexto.UrlFetchApp.fetch; let transacao = false, validacoes = 0;
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      if (url === `${firestoreBase}:beginTransaction`) transacao = true;
+      if (url === "https://api.mercadopago.com/users/me") {
+        assert.equal(transacao, false); validacoes++;
+        if (corrida === "conta") f.docs.get("integracoesPagamento/loja-teste").contaId.stringValue = "456";
+        if (corrida === "versao") f.docs.get("integracoesPagamento/loja-teste/contas/123").versao.stringValue = "versao-nova";
+        if (corrida === "id-provedor") return { getResponseCode: () => 200, getContentText: () => '{"id":456}' };
+      }
+      const resultado = fetch(url, op);
+      if ([`${firestoreBase}:commit`, `${firestoreBase}:rollback`].includes(url)) transacao = false;
+      return resultado;
+    };
+    const r = f.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT });
+    assert.equal(validacoes, 1);
+    if (corrida === "nenhuma") assert.equal(r.data.ativo, true);
+    else { assert.equal(r.erro.codigo, "RECONECTAR"); assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false); }
+  }
+});
+
+test("credencial revogada exige reconexão; erro transitório preserva conta e troca OAuth", () => {
+  for (const caso of ["401", "invalid_grant", "transitorio", "troca-conta", "troca-versao"]) {
+    const f = contaConectada(), fetch = f.contexto.UrlFetchApp.fetch;
+    f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue = true;
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      if (url !== "https://api.mercadopago.com/users/me") return fetch(url, op);
+      if (caso === "troca-conta") f.docs.get("integracoesPagamento/loja-teste").contaId.stringValue = "456";
+      if (caso === "troca-versao") f.docs.get("integracoesPagamento/loja-teste/contas/123").versao.stringValue = "nova-versao";
+      return { getResponseCode: () => caso === "transitorio" ? 503 : caso === "invalid_grant" ? 400 : 401,
+        getContentText: () => JSON.stringify({ error: caso === "invalid_grant" ? "invalid_grant" : "erro_simulado", message: "NAO-EXIBIR" }) };
+    };
+    const r = f.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT });
+    assert.equal(r.ok, false);
+    const revogado = ["401", "invalid_grant"].includes(caso);
+    assert.equal(f.docs.get("integracoesPagamento/loja-teste/contas/123").reconectar.booleanValue, revogado);
+    assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, !revogado);
+    if (revogado) {
+      assert.equal(f.post({ rota: "status", lojaId: "loja-teste", token: clienteJWT }).data.conectado, false);
+      assert.equal(f.docs.get("lojas/loja-teste").pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
+    }
+    assert.doesNotMatch(JSON.stringify([r, f.logs]), /NAO-EXIBIR|token-vendedor-simulado/);
+  }
+});
+
+test("status renova conta normal ativa; clone vencido é pausado sem renovar", () => {
+  const normal = contaConectada();
+  normal.docs.get("integracoesPagamento/loja-teste/contas/123").expiresAt.timestampValue = new Date(Date.now() - 1000).toISOString();
+  normal.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue = true;
+  const antes = normal.chamadas.filter((c) => c.url.endsWith("/oauth/token")).length;
+  assert.deepEqual(normal.post({ rota: "status", lojaId: "loja-teste", token: clienteJWT }).data, { conectado: true, ativo: true, conta: "123" });
+  assert.equal(normal.chamadas.filter((c) => c.url.endsWith("/oauth/token")).length, antes + 1);
+  assert.equal(normal.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT }).data.ativo, true);
+  assert.equal(normal.chamadas.filter((c) => c.url.endsWith("/oauth/token")).length, antes + 1);
+  const { f, id } = homologacaoFixture(); f.contexto.prepararHomologacaoPagamentos();
+  f.docs.get(`integracoesPagamento/${id}/contas/123`).expiresAt.timestampValue = new Date(Date.now() - 1000).toISOString();
+  assert.deepEqual(f.post({ rota: "status", lojaId: id, token: clienteJWT }).data, { conectado: false, ativo: false, conta: "123" });
+  assert.equal(f.docs.get(`integracoesPagamento/${id}`).ativo.booleanValue, false);
+  assert.equal(f.docs.get(`lojas/${id}`).pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
+  assert.equal(f.post({ rota: "ativar", lojaId: id, token: clienteJWT }).erro.codigo, "RECONECTAR");
+  assert.equal(f.chamadas.some((c) => c.url.startsWith("https://api.mercadopago.com/")), false);
+});
+
+test("status conserva pausa, retorna erro transitório e reflete revogação confirmada", () => {
+  for (const caso of ["pausada", "transitorio", "revogada", "troca-conta"]) {
+    const f = contaConectada(), fetch = f.contexto.UrlFetchApp.fetch;
+    f.docs.get("integracoesPagamento/loja-teste/contas/123").expiresAt.timestampValue = new Date(Date.now() - 1000).toISOString();
+    f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue = caso !== "pausada";
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      if (url !== "https://api.mercadopago.com/oauth/token") return fetch(url, op);
+      if (caso === "troca-conta") f.seed("integracoesPagamento/loja-teste", { contaId: "456", ativo: false });
+      return { getResponseCode: () => caso === "transitorio" ? 503 : 400,
+        getContentText: () => JSON.stringify({ error: caso === "transitorio" ? "temporarily_unavailable" : "invalid_grant" }) };
+    };
+    const antes = f.chamadas.length, r = f.post({ rota: "status", lojaId: "loja-teste", token: clienteJWT });
+    if (caso === "transitorio" || caso === "troca-conta") {
+      assert.equal(r.ok, false); assert.equal(r.erro.codigo, "ERRO_PROVEDOR");
+      assert.equal(f.docs.get("integracoesPagamento/loja-teste/contas/123").reconectar.booleanValue, false);
+      if (caso === "transitorio") assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, true);
+    } else {
+      assert.deepEqual(r.data, { conectado: caso === "pausada", ativo: false, conta: "123" });
+      if (caso === "pausada") assert.equal(f.chamadas.slice(antes).some((c) => c.url.startsWith("https://api.mercadopago.com/")), false);
+      else assert.equal(f.docs.get("integracoesPagamento/loja-teste/contas/123").reconectar.booleanValue, true);
+    }
+  }
+});
+
+test("refresh revogado pausa somente a mesma conexão; falha transitória permite retry", () => {
+  for (const caso of ["401", "invalid_grant", "transitorio", "troca-conta"]) {
+    const f = contaConectada(), fetch = f.contexto.UrlFetchApp.fetch;
+    f.docs.get("integracoesPagamento/loja-teste/contas/123").expiresAt.timestampValue = new Date(Date.now() - 1000).toISOString();
+    f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue = true;
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      if (url !== "https://api.mercadopago.com/oauth/token") return fetch(url, op);
+      if (caso === "troca-conta") f.docs.get("integracoesPagamento/loja-teste").contaId.stringValue = "456";
+      return { getResponseCode: () => caso === "transitorio" ? 503 : caso === "invalid_grant" ? 400 : 401,
+        getContentText: () => JSON.stringify({ error: caso === "invalid_grant" ? "invalid_grant" : "erro_simulado" }) };
+    };
+    assert.equal(f.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT }).ok, false);
+    const revogado = ["401", "invalid_grant"].includes(caso), conta = f.docs.get("integracoesPagamento/loja-teste/contas/123");
+    assert.equal(conta.reconectar.booleanValue, revogado); assert.equal(conta.refreshLease.nullValue, null);
+    assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, !revogado);
+    if (caso === "transitorio") {
+      f.contexto.UrlFetchApp.fetch = fetch;
+      assert.equal(f.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT }).data.ativo, true);
+    }
+  }
+});
+
+test("reuso da homologação protege renovação do clone sem alterar origem ou histórico", () => {
+  const { f, id } = homologacaoFixture(); f.contexto.prepararHomologacaoPagamentos();
+  const path = `integracoesPagamento/${id}/contas/123`;
+  assert.equal(f.docs.get(path).renovacaoBloqueada.booleanValue, true);
+  delete f.docs.get(path).renovacaoBloqueada;
+  f.seed(`lojas/${id}/pedidosEntrada/historico-preservado`, { total: 500 });
+  const antes = new Map([...f.docs].map(([k, v]) => [k, JSON.stringify(v)]));
+  f.contexto.prepararHomologacaoPagamentos();
+  assert.equal(f.docs.get(path).renovacaoBloqueada.booleanValue, true);
+  for (const [k, v] of antes) if (k !== path) assert.equal(JSON.stringify(f.docs.get(k)), v);
+});
+
+test("dono A não ativa loja B nem consulta credencial ou provedor dela", () => {
+  const f = contaConectada();
+  f.seed("lojas/loja-b", { donoId: "dono-b", pagamentoOnline: { ativo: false } });
+  f.seed("integracoesPagamento/loja-b", { contaId: "123", ativo: false });
+  const antes = JSON.stringify([...f.docs]), chamadas = f.chamadas.length;
+  assert.equal(f.post({ rota: "ativar", lojaId: "loja-b", token: clienteJWT }).erro.codigo, "SEM_PERMISSAO");
+  assert.equal(JSON.stringify([...f.docs]), antes);
+  const novas = f.chamadas.slice(chamadas);
+  assert.equal(novas.some((c) => c.url.includes("integracoesPagamento/loja-b") || c.url.startsWith("https://api.mercadopago.com/")), false);
+});
+
 test("ativação explícita exige autenticação/membro, é repetível e pausa preserva a conta", () => {
   const f = contaConectada(), body = { rota: "ativar", lojaId: "loja-teste", token: clienteJWT };
   assert.equal(f.post({ ...body, token: undefined }).erro.codigo, "NAO_AUTENTICADO");

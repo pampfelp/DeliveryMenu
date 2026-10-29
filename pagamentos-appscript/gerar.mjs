@@ -31,7 +31,7 @@ const resultado = await build({ entryPoints: [path.join(raiz, "pagamentos-appscr
     });
   } }],
 });
-const rodape = '\nfunction doGet(e){return DeliveryPagamentos.receberGet(e);}\nfunction doPost(e){return DeliveryPagamentos.receberPost(e);}\nfunction reconciliarPagamentos(){return DeliveryPagamentos.reconciliar();}\nfunction configurarPagamentos(){return DeliveryPagamentos.instalarRotina();}\n';
+const rodape = '\nfunction doGet(e){return DeliveryPagamentos.receberGet(e);}\nfunction doPost(e){return DeliveryPagamentos.receberPost(e);}\nfunction reconciliarPagamentos(){return DeliveryPagamentos.reconciliar();}\nfunction configurarPagamentos(){return DeliveryPagamentos.instalarRotina();}\nfunction diagnosticarPagamentos(){const resultado=DeliveryPagamentos.diagnosticar();console.log(JSON.stringify(resultado));return resultado;}\nfunction prepararHomologacaoPagamentos(){const resultado=DeliveryPagamentos.prepararHomologacao();console.log(JSON.stringify(resultado));return resultado;}\nfunction diagnosticarHomologacaoPagamentos(){const resultado=DeliveryPagamentos.diagnosticarHomologacao();console.log(JSON.stringify(resultado));return resultado;}\n';
 const licencas = await Promise.all(["node-forge", "core-js"].map(async (nome) => `${nome}\n${await readFile(path.join(raiz, "node_modules", nome, "LICENSE"), "utf8")}`));
 const aviso = `/* Backend DeliveryMenu. Gerado de runtime.js e módulos compartilhados.\n${licencas.join("\n\n").replace(/\*\//g, "* /")}\n*/\n`;
 await writeFile(path.join(saida, "Code.gs"), aviso + resultado.outputFiles[0].text + rodape, "utf8");

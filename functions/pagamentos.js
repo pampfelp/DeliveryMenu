@@ -79,15 +79,17 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
       || !Number.isFinite(tokens.expires_in) || tokens.expires_in <= 0 || String(tokens.user_id) !== contaId) falha("OAUTH_INVALIDO", "A conta não pôde ser conectada.", 502);
     return { protegido: cifrar({ access_token: tokens.access_token, refresh_token: tokens.refresh_token }, segredo().tokensKey, lojaId, contaId), expiresAt: new Date(+agora() + tokens.expires_in * 1000), versao: aleatorio(), reconectar: false, refreshAte: new Date(0) };
   }
-  async function tokenDaConta(lojaId, contaId) {
+  async function tokenDaConta(lojaId, contaId, comVersao = false) {
     const ref = contaRef(lojaId, contaId), snap = await ref.get(), conta = snap.data();
     if (!conta?.protegido || conta.reconectar) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 503);
     const tokens = decifrar(conta.protegido, segredo().tokensKey, lojaId, contaId);
-    if (+data(conta.expiresAt) > +agora() + 60000) return tokens.access_token;
+    if (typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.refresh_token !== "string" || !tokens.refresh_token) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 503);
+    if (+data(conta.expiresAt) > +agora() + 60000) return comVersao ? { token: tokens.access_token, versao: conta.versao } : tokens.access_token;
+    if (conta.renovacaoBloqueada === true) falha("RECONECTAR", "A conexão de homologação venceu. Pause o teste e fale com o suporte.", 503);
     const lease = aleatorio();
     await db.runTransaction(async (tx) => {
       const atual = (await tx.get(ref)).data();
-      if (atual.versao !== conta.versao || +data(atual.refreshAte) > +agora()) falha("RENOVANDO_CONEXAO", "A conexão está sendo renovada. Tente em instantes.", 503);
+      if (atual.versao !== conta.versao || atual.renovacaoBloqueada === true || +data(atual.refreshAte) > +agora()) falha("RENOVANDO_CONEXAO", "A conexão está sendo renovada. Tente em instantes.", 503);
       tx.update(ref, { refreshLease: lease, refreshAte: new Date(+agora() + 60000) });
     });
     try {
@@ -98,14 +100,14 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
         if (atual.refreshLease !== lease || atual.versao !== conta.versao) return false;
         tx.update(ref, { ...campos, refreshLease: null }); return true;
       });
-      return salvo ? novos.access_token : tokenDaConta(lojaId, contaId);
+      return salvo ? comVersao ? { token: novos.access_token, versao: campos.versao } : novos.access_token : tokenDaConta(lojaId, contaId, comVersao);
     } catch (err) {
       await db.runTransaction(async (tx) => {
         const atual = (await tx.get(ref)).data();
         const integracao = (await tx.get(integracaoRef(lojaId))).data();
-        const revogado = err.providerStatus === 400 && err.providerCode === "invalid_grant";
+        const revogado = err.providerStatus === 401 || err.providerCode === "invalid_grant";
         if (atual?.refreshLease === lease && atual.versao === conta.versao) {
-          tx.update(ref, { reconectar: revogado, refreshLease: null, refreshAte: new Date(0) });
+          tx.update(ref, { reconectar: atual.reconectar === true || (revogado && integracao?.contaId === contaId), refreshLease: null, refreshAte: new Date(0) });
           if (revogado && integracao?.contaId === contaId) {
             tx.update(integracaoRef(lojaId), { ativo: false });
             tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
@@ -116,10 +118,32 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     }
   }
   async function status(lojaId) {
-    const t = (await integracaoRef(lojaId).get()).data();
-    const conta = t?.contaId ? (await contaRef(lojaId, t.contaId).get()).data() : null;
-    const conectado = !!conta?.protegido && !conta.reconectar;
-    return { conectado, ativo: config.ativos === true && t?.ativo === true && conectado, ...(t?.contaId ? { conta: t.contaId } : {}) };
+    let t = (await integracaoRef(lojaId).get()).data();
+    let conta = t?.contaId ? (await contaRef(lojaId, t.contaId).get()).data() : null;
+    if (config.ativos === true && t?.ativo === true && conta?.protegido && !conta.reconectar && !(+data(conta.expiresAt) > +agora() + 60000)) {
+      const contaId = t.contaId;
+      if (conta.renovacaoBloqueada === true) {
+        const versao = conta.versao;
+        await db.runTransaction(async (tx) => {
+          const atual = (await tx.get(integracaoRef(lojaId))).data(), privada = (await tx.get(contaRef(lojaId, contaId))).data();
+          if (atual?.contaId !== contaId || privada?.versao !== versao || privada.renovacaoBloqueada !== true
+            || +data(privada.expiresAt) > +agora() + 60000) return;
+          tx.update(integracaoRef(lojaId), { ativo: false });
+          tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
+        });
+      } else {
+        try { await tokenDaConta(lojaId, contaId); }
+        catch (err) {
+          const atual = (await integracaoRef(lojaId).get()).data(), privada = (await contaRef(lojaId, contaId).get()).data();
+          if (atual?.contaId !== contaId || privada?.reconectar !== true || atual.ativo !== false) throw err;
+        }
+      }
+      t = (await integracaoRef(lojaId).get()).data();
+      conta = t?.contaId ? (await contaRef(lojaId, t.contaId).get()).data() : null;
+    }
+    const valido = +data(conta?.expiresAt) > +agora() + 60000;
+    const conectado = !!conta?.protegido && !conta.reconectar && (conta.renovacaoBloqueada !== true || valido);
+    return { conectado, ativo: config.ativos === true && t?.ativo === true && conectado && valido, ...(t?.contaId ? { conta: t.contaId } : {}) };
   }
   async function conectar(lojaId, uid) {
     if (!/^\d{1,30}$/.test(config.clientId || "")) falha("CONFIGURACAO", "A conexão de pagamentos ainda não foi configurada.", 503);
@@ -161,13 +185,33 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     return { ativo: false };
   }
   async function ativar(lojaId) {
+    const ref = integracaoRef(lojaId), inicial = (await ref.get()).data();
+    if (!contaValida(inicial?.contaId)) falha("RECONECTAR", "Conecte a conta de pagamento deste restaurante.", 409);
+    const contaId = inicial.contaId;
+    let credencial;
+    try { credencial = await tokenDaConta(lojaId, contaId, true); }
+    catch (err) { if (!err.codigo) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 409); throw err; }
+    if (typeof credencial.versao !== "string" || !credencial.versao || typeof credencial.token !== "string" || !credencial.token) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 409);
+    let eu;
+    try { eu = await mp("/users/me", { token: credencial.token }); }
+    catch (err) {
+      if (err.providerStatus === 401 || err.providerCode === "invalid_grant") {
+        await db.runTransaction(async (tx) => {
+          const integracao = (await tx.get(ref)).data(), conta = (await tx.get(contaRef(lojaId, contaId))).data();
+          if (integracao?.contaId !== contaId || conta?.versao !== credencial.versao) return;
+          tx.update(contaRef(lojaId, contaId), { reconectar: true });
+          tx.update(ref, { ativo: false });
+          tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
+        });
+        falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 409);
+      }
+      throw err;
+    }
+    if (String(eu.id) !== String(contaId)) falha("RECONECTAR", "O provedor não confirmou a conta conectada. Reconecte a conta.", 409);
     await db.runTransaction(async (tx) => {
-      const ref = integracaoRef(lojaId), integracao = (await tx.get(ref)).data();
-      if (!contaValida(integracao?.contaId)) falha("RECONECTAR", "Conecte a conta de pagamento deste restaurante.", 409);
-      const conta = (await tx.get(contaRef(lojaId, integracao.contaId))).data();
-      let tokens;
-      try { tokens = conta?.protegido && !conta.reconectar && decifrar(conta.protegido, segredo().tokensKey, lojaId, integracao.contaId); } catch { /* credencial inválida exige reconexão */ }
-      if (!tokens || typeof tokens.access_token !== "string" || !tokens.access_token || typeof tokens.refresh_token !== "string" || !tokens.refresh_token) falha("RECONECTAR", "Reconecte a conta de pagamento deste restaurante.", 409);
+      const integracao = (await tx.get(ref)).data(), conta = (await tx.get(contaRef(lojaId, contaId))).data();
+      if (integracao?.contaId !== contaId || conta?.versao !== credencial.versao || conta.reconectar || !conta.protegido
+        || !(+data(conta.expiresAt) > +agora() + 60000)) falha("RECONECTAR", "A conexão mudou. Confira a conta antes de ativar.", 409);
       tx.update(ref, { ativo: true, atualizadoEm: carimbo() });
       tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: true, provedor: "mercadopago" } });
     });
