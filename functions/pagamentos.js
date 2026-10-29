@@ -147,8 +147,21 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
   }
   async function conectar(lojaId, uid) {
     if (!/^\d{1,30}$/.test(config.clientId || "")) falha("CONFIGURACAO", "A conexão de pagamentos ainda não foi configurada.", 503);
-    const state = aleatorio(), verifier = aleatorio();
-    await db.doc(`oauthPagamento/${sha256(state)}`).set({ lojaId, uid, verifier, expiresAt: new Date(+agora() + 10 * 60000), consumido: false });
+    const state = aleatorio(), verifier = aleatorio(), oauthVersao = aleatorio();
+    await db.runTransaction(async (tx) => {
+      const ref = integracaoRef(lojaId), integracao = (await tx.get(ref)).data();
+      const conta = contaValida(integracao?.contaId) ? (await tx.get(contaRef(lojaId, integracao.contaId))).data() : null;
+      let conectada = false;
+      if (conta?.protegido && !conta.reconectar && (conta.renovacaoBloqueada !== true || +data(conta.expiresAt) > +agora() + 60000)) {
+        try {
+          const tokens = decifrar(conta.protegido, segredo().tokensKey, lojaId, integracao.contaId);
+          conectada = typeof tokens.access_token === "string" && !!tokens.access_token && typeof tokens.refresh_token === "string" && !!tokens.refresh_token;
+        } catch { /* conexão inválida pode ser refeita */ }
+      }
+      if (conectada) falha("CONFLITO", "Desvincule a conta atual antes de conectar outra.", 409);
+      tx.set(ref, { oauthVersao }, { merge: true });
+      tx.create(db.doc(`oauthPagamento/${sha256(state)}`), { lojaId, uid, verifier, oauthVersao, expiresAt: new Date(+agora() + 10 * 60000), consumido: false });
+    });
     const url = new URL("https://auth.mercadopago.com/authorization");
     url.search = new URLSearchParams({ client_id: config.clientId, response_type: "code", platform_id: "mp", state, redirect_uri: callbackURL(), code_challenge: desafioPKCE(verifier), code_challenge_method: "S256" }).toString();
     return { url: url.href };
@@ -159,9 +172,12 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     const estado = await db.runTransaction(async (tx) => {
       const e = (await tx.get(ref)).data();
       if (!e || e.consumido || +data(e.expiresAt) <= +agora()) falha("OAUTH_INVALIDO", "Essa autorização não é válida ou venceu.");
+      const integracao = (await tx.get(integracaoRef(e.lojaId))).data();
+      if (typeof e.oauthVersao !== "string" || !/^[\w-]{40,80}$/.test(e.oauthVersao) || integracao?.oauthVersao !== e.oauthVersao) falha("OAUTH_INVALIDO", "Inicie a conexão novamente pelo painel.");
       tx.update(ref, { consumido: true, consumidoEm: carimbo() }); return e;
     });
     await membro(estado.lojaId, estado.uid);
+    if ((await integracaoRef(estado.lojaId).get()).data()?.oauthVersao !== estado.oauthVersao) falha("OAUTH_INVALIDO", "Inicie a conexão novamente pelo painel.");
     const tokens = await mp("/oauth/token", { method: "POST", body: { client_id: config.clientId, client_secret: segredo().clientSecret, grant_type: "authorization_code", code: query.code, redirect_uri: callbackURL(), code_verifier: estado.verifier } });
     if (!contaValida(tokens.user_id)) falha("OAUTH_INVALIDO", "A conta não pôde ser conectada.", 502);
     const contaId = String(tokens.user_id), eu = await mp("/users/me", { token: tokens.access_token });
@@ -169,6 +185,8 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     const campos = tokensCifrados(tokens, estado.lojaId, contaId);
     await membro(estado.lojaId, estado.uid);
     await db.runTransaction(async (tx) => {
+      const integracao = (await tx.get(integracaoRef(estado.lojaId))).data();
+      if (integracao?.oauthVersao !== estado.oauthVersao) falha("OAUTH_INVALIDO", "Inicie a conexão novamente pelo painel.");
       // Conectar a conta não libera o checkout; ativação é uma ação separada.
       tx.set(contaRef(estado.lojaId, contaId), campos, { merge: true });
       tx.set(integracaoRef(estado.lojaId), { ativo: false, contaId, atualizadoEm: carimbo() }, { merge: true });
@@ -183,6 +201,17 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
       tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
     });
     return { ativo: false };
+  }
+  async function desvincular(lojaId, contaIdEsperada) {
+    if (typeof contaIdEsperada !== "string" || !contaValida(contaIdEsperada)) falha("VALIDACAO", "Confira a conta antes de desvincular.");
+    await db.runTransaction(async (tx) => {
+      const ref = integracaoRef(lojaId), integracao = (await tx.get(ref)).data();
+      if (integracao?.contaId === null) return;
+      if (integracao?.contaId !== contaIdEsperada) falha("CONFLITO", "A conta conectada mudou. Confira antes de desvincular.", 409);
+      tx.set(ref, { contaId: null, ativo: false, atualizadoEm: carimbo(), oauthVersao: aleatorio() }, { merge: true });
+      tx.update(lojaRef(lojaId), { pagamentoOnline: { ativo: false, provedor: "mercadopago" } });
+    });
+    return { conectado: false, ativo: false };
   }
   async function ativar(lojaId) {
     const ref = integracaoRef(lojaId), inicial = (await ref.get()).data();
@@ -459,17 +488,17 @@ export function criarHandler({ db, auth, appCheck, config, segredos, fetch: busc
     if (req.method === "OPTIONS") return res.status(204).end();
     try {
       const rota = String(req.path || new URL(req.url, "http://local").pathname).replace(/\/$/, "").split("/").at(-1);
-      const esperados = { status: "GET", conectar: "POST", callback: "GET", ativar: "POST", pausar: "POST", checkout: "POST", consultar: "POST", webhook: "POST", recusar: "POST" };
+      const esperados = { status: "GET", conectar: "POST", callback: "GET", ativar: "POST", pausar: "POST", desvincular: "POST", checkout: "POST", consultar: "POST", webhook: "POST", recusar: "POST" };
       if (!esperados[rota]) falha("NAO_ENCONTRADO", "Endereço não encontrado.", 404);
       if (req.method !== esperados[rota]) falha("METODO_INVALIDO", "Método não permitido.", 405);
       if (req.rawBody?.length > 100000 || (typeof req.body === "string" && req.body.length > 100000)) falha("VALIDACAO", "Pedido muito grande.", 413);
       if (typeof req.body === "string") { try { req.body = JSON.parse(req.body); } catch { falha("VALIDACAO", "Pedido inválido."); } }
       const body = req.body || {}, query = req.query || {}, lojaId = rota === "status" ? query.lojaId : body.lojaId;
       if (rota !== "status" && config.ativos !== true) falha("PAGAMENTO_DESATIVADO", "O pagamento online ainda não está disponível.", 503);
-      if (["status", "conectar", "ativar", "pausar", "recusar"].includes(rota)) {
+      if (["status", "conectar", "ativar", "pausar", "desvincular", "recusar"].includes(rota)) {
         validarIds(lojaId, rota === "recusar" ? body.pedidoId : undefined);
         const user = await autenticar(req, lojaId);
-        const resultado = rota === "status" ? await status(lojaId) : rota === "conectar" ? await conectar(lojaId, user.uid) : rota === "ativar" ? await ativar(lojaId) : rota === "pausar" ? await pausar(lojaId) : await recusar(lojaId, body.pedidoId);
+        const resultado = rota === "status" ? await status(lojaId) : rota === "conectar" ? await conectar(lojaId, user.uid) : rota === "ativar" ? await ativar(lojaId) : rota === "pausar" ? await pausar(lojaId) : rota === "desvincular" ? await desvincular(lojaId, body.contaIdEsperada) : await recusar(lojaId, body.pedidoId);
         return res.status(200).json({ ok: true, data: resultado });
       }
       if (rota === "callback") return res.redirect(303, await callback(query));

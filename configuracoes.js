@@ -14,7 +14,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { regraDe } from "./conta-entrega.js?v=1";
 import { ORDEM, NOMES, situacao, horaValida } from "./horario.js?v=1";
 import { linkCardapio, linkPublico } from "./links-cardapio.js?v=1";
-import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=3";
+import { pagamentoDisponivel, chamarPagamento, urlMercadoPago } from "./pagamentos.js?v=4";
 
 const $ = (id) => document.getElementById(id);
 const CORES = ["#991b1b", "#c2410c", "#15803d", "#1d4ed8", "#6d28d9", "#1f2937"];
@@ -23,7 +23,7 @@ const fmtFone = (d) => (d.length > 10 ? `(${d.slice(0, 2)}) ${d.slice(2, 7)}-${d
   : d.length > 6 ? `(${d.slice(0, 2)}) ${d.slice(2, 6)}-${d.slice(6)}` : d.length > 2 ? `(${d.slice(0, 2)}) ${d.slice(2)}` : d);
 const fmtHora = (t) => { const d = soDigitos(t).slice(0, 4); return d.length > 2 ? `${d.slice(0, 2)}:${d.slice(2)}` : d; };
 
-const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false, pagamento: null, pagamentoOcupado: false, pagamentoErro: "", pagamentoConsulta: null, pagamentoSessao: null };
+const C = { loja: null, exemplo: false, rasc: null, sujo: false, parar: [], salvando: false, pagamento: null, pagamentoOcupado: false, pagamentoErro: "", pagamentoConsulta: null, pagamentoSessao: null, pagamentoDesvincular: null };
 
 const horarioPadrao = () => Object.fromEntries(ORDEM.map((d) => [d, { aberto: true, abre: "18:00", fecha: "23:00" }]));
 function rascunhoDe(l) {
@@ -69,6 +69,7 @@ function htmlPagamento() {
     : C.pagamentoErro || (!conhecido ? "Conferindo a conexão da sua empresa…"
       : conectado ? (ativo ? "Conta conectada. Pagamento online ativo. Acompanhe os pedidos no painel." : "Conta conectada. Pagamento online pausado. Confira a conta abaixo e ative quando estiver pronto.")
         : "Conta não conectada. Comece pelo passo 1 para conectar ou reconectar a conta da sua empresa.");
+  const desvinculando = C.pagamentoDesvincular != null;
   const acao = C.pagamentoErro ? "consultar" : conectado ? ativo ? "pausar" : "ativar" : "conectar";
   return `<section class="cf-cartao cf-pagamento-cartao"><div class="cf-cab"><h2>Pagamento online</h2></div><div class="cf-corpo cf-pagamento">
     <b>Mercado Pago</b><p>Sua empresa recebe diretamente na própria conta. A senha é informada somente no Mercado Pago.</p>
@@ -78,9 +79,11 @@ function htmlPagamento() {
       <li><b>Ativar recebimentos</b><p>De volta ao painel, confira a conta conectada e clique em Ativar pagamento online. Conectar a conta mantém os recebimentos pausados até essa ativação.</p></li>
     </ol>
     <p class="cf-pagamento-estado" role="status">${esc(mensagem)}</p>
-    ${conectado && conhecido ? `<p>Conta conectada: <b>${esc(C.pagamento.conta ?? "Identificação não disponível")}</b></p>` : ""}
-    <button type="button" class="btn" data-cf-pagamento="${acao}" ${C.exemplo || !disponivel || C.pagamentoOcupado || C.pagamentoConsulta || (!conhecido && !C.pagamentoErro) ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : C.pagamentoErro ? "Tentar novamente" : conectado && ativo ? "Pausar pagamento online" : conectado ? "Ativar pagamento online" : "Conectar conta Mercado Pago"}</button>
-    <p>Pausar impede novos pagamentos online. Continue acompanhando os pedidos já pagos ou em processamento. Se precisar trocar uma conta conectada, fale com o suporte antes.</p>
+    ${(conectado || C.pagamento?.conta) && conhecido ? `<p>Conta ${conectado ? "conectada" : "vinculada"}: <b>${esc(C.pagamento.conta ?? "Identificação não disponível")}</b></p>` : ""}
+    <button type="button" class="btn" data-cf-pagamento="${acao}" ${C.exemplo || !disponivel || C.pagamentoOcupado || C.pagamentoConsulta || desvinculando || (!conhecido && !C.pagamentoErro) ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : C.pagamentoErro ? "Tentar novamente" : conectado && ativo ? "Pausar pagamento online" : conectado ? "Ativar pagamento online" : "Conectar conta Mercado Pago"}</button>
+    ${C.pagamento?.conta && conhecido && !C.exemplo ? `<button type="button" class="btn fantasma" data-cf-pagamento="desvincular" ${!disponivel || C.pagamentoOcupado || desvinculando ? "disabled" : ""}>Desvincular conta</button>` : ""}
+    ${desvinculando ? `<div class="cf-pagamento-estado cf-pagamento-confirmacao" role="group" aria-label="Confirmar desvinculação"><b>Desvincular esta conta?</b><p>Novos pagamentos ficam pausados. Os pagamentos anteriores seguem pela conta que recebeu, para conferência e devolução.</p><button type="button" class="btn fantasma" data-cf-pagamento="cancelar-desvinculacao" ${C.pagamentoOcupado ? "disabled" : ""}>Cancelar</button><button type="button" class="btn" data-cf-pagamento="confirmar-desvinculacao" ${!disponivel || !conhecido || C.pagamentoOcupado || C.exemplo ? "disabled" : ""}>${C.pagamentoOcupado ? "Aguarde..." : "Confirmar desvinculação"}</button></div>` : ""}
+    <p>Pausar impede novos pagamentos online. Para trocar de conta, desvincule a atual e depois clique em Conectar conta Mercado Pago. Escolha o login da outra conta e confira antes de autorizar. Os recebimentos ficam pausados até você ativar.</p>
     <p><a href="./pagamento-online.html" target="_blank" rel="noopener">Ver o passo a passo completo</a></p>
   </div></section>`;
 }
@@ -91,7 +94,7 @@ function atualizarPagamento() {
 async function consultarPagamento() {
   if (!pagamentoDisponivel() || C.exemplo || C.pagamentoConsulta || C.pagamentoOcupado) return;
   const lojaId = C.loja.id, consulta = {};
-  C.pagamentoConsulta = consulta; C.pagamentoErro = ""; C.pagamento = null;
+  C.pagamentoConsulta = consulta; C.pagamentoErro = ""; C.pagamento = null; C.pagamentoDesvincular = null;
   atualizarPagamento();
   try {
     const estado = await chamarPagamento("status", { lojaId }, { autenticado: true });
@@ -108,22 +111,37 @@ async function mudarPagamento(acao) {
   if (acao === "consultar") { await consultarPagamento(); return; }
   if (C.pagamentoOcupado || C.pagamentoConsulta || !pagamentoDisponivel()) return;
   if (C.exemplo) { toast("Exemplo: nenhuma conta foi conectada.", "info", 3500); return; }
-  if (!C.pagamento || C.pagamentoErro || !["conectar", "ativar", "pausar"].includes(acao)) return;
-  if ((acao === "conectar" && C.pagamento.conectado) || (acao !== "conectar" && !C.pagamento.conectado)) return;
+  if (!C.pagamento || C.pagamentoErro) return;
+  if (acao === "cancelar-desvinculacao") { C.pagamentoDesvincular = null; atualizarPagamento(); return; }
+  if (acao === "desvincular") {
+    if (!C.pagamento.conta || C.pagamentoDesvincular != null) return;
+    C.pagamentoDesvincular = C.pagamento.conta; atualizarPagamento(); return;
+  }
+  const desvincular = acao === "confirmar-desvinculacao", contaIdEsperada = C.pagamentoDesvincular;
+  if (desvincular) {
+    if (contaIdEsperada == null || contaIdEsperada !== C.pagamento.conta) return;
+  } else {
+    if (contaIdEsperada != null || !["conectar", "ativar", "pausar"].includes(acao)) return;
+    if ((acao === "conectar" && C.pagamento.conectado) || (acao !== "conectar" && !C.pagamento.conectado)) return;
+  }
   if (C.sujo && acao === "conectar") { toast("Salve as alterações antes de conectar a conta.", "info", 4000); return; }
   const lojaId = C.loja.id, sessao = C.pagamentoSessao;
   C.pagamentoOcupado = true;
   atualizarPagamento();
   try {
-    const dados = await chamarPagamento(acao, { lojaId }, { autenticado: true });
+    const dados = await chamarPagamento(desvincular ? "desvincular" : acao, desvincular ? { lojaId, contaIdEsperada } : { lojaId }, { autenticado: true });
     if (C.loja?.id !== lojaId || C.pagamentoSessao !== sessao) return;
-    if (acao === "conectar") location.assign(urlMercadoPago(dados.url));
+    if (desvincular) {
+      if (dados.conectado !== false || dados.ativo !== false) throw new Error("Desvinculação não confirmada.");
+      C.pagamento = { conectado: false, ativo: false }; C.pagamentoDesvincular = null;
+      toast("Conta desvinculada. Conecte a outra conta quando estiver pronto.", "sucesso", 4500);
+    } else if (acao === "conectar") location.assign(urlMercadoPago(dados.url));
     else {
       if (typeof dados.ativo !== "boolean") throw new Error("Situação do pagamento não confirmada.");
       C.pagamento = { ...C.pagamento, ativo: dados.ativo }; toast(dados.ativo ? "Pagamento online ativado." : "Pagamento online pausado. Os pedidos já pagos continuam disponíveis.", "sucesso", 4500);
     }
   } catch {
-    if (C.loja?.id === lojaId && C.pagamentoSessao === sessao) { C.pagamento = null; C.pagamentoErro = "Não foi possível confirmar a ação. Tente novamente para conferir a situação da conta."; }
+    if (C.loja?.id === lojaId && C.pagamentoSessao === sessao) { C.pagamento = null; C.pagamentoDesvincular = null; C.pagamentoErro = "Não foi possível confirmar a ação. Tente novamente para conferir a situação da conta."; }
   } finally {
     if (C.loja?.id === lojaId && C.pagamentoSessao === sessao) { C.pagamentoOcupado = false; atualizarPagamento(); }
   }
@@ -283,6 +301,7 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
   C.pagamentoErro = "";
   C.pagamentoConsulta = null;
   C.pagamentoSessao = {};
+  C.pagamentoDesvincular = null;
   document.addEventListener("click", aoClicar);
   document.addEventListener("input", aoDigitar);
   document.addEventListener("change", aoMudar);
@@ -307,6 +326,7 @@ export function iniciarConfiguracoes(loja, { exemplo = null } = {}) {
 export function pararConfiguracoes() {
   C.pagamentoConsulta = null;
   C.pagamentoSessao = null;
+  C.pagamentoDesvincular = null;
   C.parar.forEach((f) => f());
   C.parar = [];
   document.removeEventListener("click", aoClicar);

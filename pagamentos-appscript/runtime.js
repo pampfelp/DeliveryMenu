@@ -112,7 +112,7 @@ export function receberPost(e) {
     if (!v || typeof v !== "object" || Array.isArray(v)) throw erro("VALIDACAO", "Pedido inválido.");
     const { rota: fornecida, token, appCheckToken, ...body } = v;
     const rota = q.rota === "webhook" ? "webhook" : fornecida;
-    if (!["status", "conectar", "ativar", "pausar", "checkout", "consultar", "recusar", "webhook"].includes(rota)) throw erro("VALIDACAO", "Operação inválida.");
+    if (!["status", "conectar", "ativar", "pausar", "desvincular", "checkout", "consultar", "recusar", "webhook"].includes(rota)) throw erro("VALIDACAO", "Operação inválida.");
     if (rota === "webhook" && q.rota !== "webhook") throw erro("VALIDACAO", "Notificação inválida.");
     const res = resposta();
     criarServico()({ path: `/${rota}`, method: rota === "status" ? "GET" : "POST", rawBody: raw,

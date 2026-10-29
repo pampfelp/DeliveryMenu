@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
-import { createHmac, createCipheriv, createDecipheriv } from "node:crypto";
+import { createHmac, createCipheriv, createDecipheriv, generateKeyPairSync, sign } from "node:crypto";
 import vm from "node:vm";
 
 const bundle = await readFile(new URL("./publicar/Code.gs", import.meta.url), "utf8");
@@ -594,6 +594,110 @@ test("dono A não ativa loja B nem consulta credencial ou provedor dela", () => 
   assert.equal(JSON.stringify([...f.docs]), antes);
   const novas = f.chamadas.slice(chamadas);
   assert.equal(novas.some((c) => c.url.includes("integracoesPagamento/loja-b") || c.url.startsWith("https://api.mercadopago.com/")), false);
+});
+
+test("desvincular exige membro/conta esperada, é idempotente e conserva credenciais e histórico", () => {
+  const f = contaConectada(), body = { rota: "desvincular", lojaId: "loja-teste", contaIdEsperada: "123", token: clienteJWT };
+  f.seed("transacoesPagamento/historico_preservado_123", { lojaId: "loja-teste", contaId: "123", estado: "aguardando" });
+  const credenciais = JSON.stringify(f.docs.get("integracoesPagamento/loja-teste/contas/123"));
+  const historico = JSON.stringify(f.docs.get("transacoesPagamento/historico_preservado_123"));
+  assert.equal(f.post({ ...body, token: undefined }).erro.codigo, "NAO_AUTENTICADO");
+  assert.equal(f.post({ ...body, contaIdEsperada: "456" }).erro.codigo, "CONFLITO");
+  assert.equal(f.post({ ...body, contaIdEsperada: "../123" }).erro.codigo, "VALIDACAO");
+  f.seed("lojas/loja-b", { donoId: "dono-b" }); f.seed("integracoesPagamento/loja-b", { contaId: "123", ativo: true });
+  assert.equal(f.post({ ...body, lojaId: "loja-b" }).erro.codigo, "SEM_PERMISSAO");
+  assert.equal(f.docs.get("integracoesPagamento/loja-b").ativo.booleanValue, true);
+  assert.deepEqual(f.post(body), { ok: true, data: { conectado: false, ativo: false } });
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").contaId.nullValue, null);
+  assert.equal(f.docs.get("lojas/loja-teste").pagamentoOnline.mapValue.fields.ativo.booleanValue, false);
+  const depois = JSON.stringify([...f.docs]); assert.deepEqual(f.post(body).data, { conectado: false, ativo: false });
+  assert.equal(JSON.stringify([...f.docs]), depois);
+  assert.equal(JSON.stringify(f.docs.get("integracoesPagamento/loja-teste/contas/123")), credenciais);
+  assert.equal(JSON.stringify(f.docs.get("transacoesPagamento/historico_preservado_123")), historico);
+  assert.equal(f.jsonSaida(f.get({ rota: "desvincular" })).erro.codigo, "VALIDACAO");
+});
+
+test("conectar conta válida exige desvincular; autorização nova sobrevive retry antigo", () => {
+  const f = contaConectada(), body = { lojaId: "loja-teste", token: clienteJWT }, antes = f.chamadas.length;
+  assert.equal(f.post({ ...body, rota: "conectar" }).erro.codigo, "CONFLITO");
+  assert.equal(f.chamadas.slice(antes).some((c) => c.url.startsWith("https://api.mercadopago.com/")), false);
+  f.post({ ...body, rota: "desvincular", contaIdEsperada: "123" });
+  const inicio = f.post({ ...body, rota: "conectar" }), state = new URL(inicio.data.url).searchParams.get("state");
+  const nonce = f.docs.get("integracoesPagamento/loja-teste").oauthVersao.stringValue;
+  assert.equal(f.post({ ...body, rota: "desvincular", contaIdEsperada: "123" }).ok, true);
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").oauthVersao.stringValue, nonce);
+  assert.match(f.get({ rota: "callback", state, code: "codigo-novo" }).html, /Conta conectada/);
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false);
+});
+
+test("callback antigo, sem nonce ou concorrente com unlink nunca restaura conexão", () => {
+  for (const caso of ["antes", "troca-durante", "novo-link", "legacy"]) {
+    const f = fixture({ propriedades: ativo, permitirMP: true }), body = { lojaId: "loja-teste", token: clienteJWT };
+    const inicio = f.post({ ...body, rota: "conectar" }), state = new URL(inicio.data.url).searchParams.get("state");
+    if (caso === "legacy") {
+      const doc = [...f.docs].find(([k]) => k.startsWith("oauthPagamento/"))[1]; delete doc.oauthVersao;
+    }
+    if (caso === "antes") f.post({ ...body, rota: "desvincular", contaIdEsperada: "123" });
+    if (caso === "novo-link") f.post({ ...body, rota: "conectar" });
+    const fetch = f.contexto.UrlFetchApp.fetch; let trocas = 0;
+    f.contexto.UrlFetchApp.fetch = (url, op) => {
+      if (url === "https://api.mercadopago.com/oauth/token") {
+        trocas++;
+        if (caso === "troca-durante") assert.equal(f.post({ ...body, rota: "desvincular", contaIdEsperada: "123" }).ok, true);
+      }
+      return fetch(url, op);
+    };
+    assert.match(f.get({ rota: "callback", state, code: "codigo-atrasado" }).html, /Não foi possível/);
+    assert.equal(trocas, caso === "troca-durante" ? 1 : 0);
+    assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, caso === "legacy" || caso === "novo-link");
+    if (caso === "antes" || caso === "troca-durante") assert.equal(f.docs.get("integracoesPagamento/loja-teste").contaId.nullValue, null);
+  }
+});
+
+test("unlink durante validação no provedor impede ativação", () => {
+  const f = contaConectada(), fetch = f.contexto.UrlFetchApp.fetch;
+  f.contexto.UrlFetchApp.fetch = (url, op) => {
+    if (url === "https://api.mercadopago.com/users/me") assert.equal(f.post({ rota: "desvincular", lojaId: "loja-teste", contaIdEsperada: "123", token: clienteJWT }).ok, true);
+    return fetch(url, op);
+  };
+  assert.equal(f.post({ rota: "ativar", lojaId: "loja-teste", token: clienteJWT }).erro.codigo, "RECONECTAR");
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false);
+});
+
+test("consulta e devolução antigas usam conta original após unlink e conexão de outra", () => {
+  const f = contaConectada(), body = { lojaId: "loja-teste", token: clienteJWT }, pedidoId = "pedido_antigo_1234567890";
+  const pedido = { total: 500, subtotal: 500, taxa: 0, tipo: "retirada", status: "novo", itens: [{ nome: "Teste", qtd: 1 }], cliente: { nome: "Pessoa de teste" } };
+  f.seed(`transacoesPagamento/${pedidoId}`, { lojaId: "loja-teste", pedidoId, contaId: "123", pedido, estado: "aguardando", expiresAt: new Date(Date.now() + 600000), criadoEm: new Date(), reservaAtiva: false });
+  assert.equal(f.post({ ...body, rota: "desvincular", contaIdEsperada: "123" }).ok, true);
+  const rsa = generateKeyPairSync("rsa", { modulusLength: 2048 }), jwk = { ...rsa.publicKey.export({ format: "jwk" }), kid: "teste", alg: "RS256", use: "sig" };
+  const enc = (v) => Buffer.from(JSON.stringify(v)).toString("base64url"), agora = Math.floor(Date.now() / 1000);
+  const assinavel = `${enc({ alg: "RS256", typ: "JWT", kid: "teste" })}.${enc({ iss: "https://firebaseappcheck.googleapis.com/308771638053", aud: ["projects/308771638053"], sub: "1:308771638053:web:b2076912a86188fbff68cc", iat: agora, exp: agora + 3600 })}`;
+  const appCheckToken = `${assinavel}.${sign("RSA-SHA256", Buffer.from(assinavel), rsa.privateKey).toString("base64url")}`;
+  const fetch = f.contexto.UrlFetchApp.fetch, chamadasAntigas = [], responder = (v) => ({ getResponseCode: () => 200, getContentText: () => JSON.stringify(v) });
+  f.contexto.UrlFetchApp.fetch = (url, op) => {
+    if (url === "https://firebaseappcheck.googleapis.com/v1/jwks") return responder({ keys: [jwk] });
+    if (url === "https://api.mercadopago.com/oauth/token") return responder({ access_token: "TOKEN-NOVA-CONTA", refresh_token: "REFRESH-NOVA-CONTA", expires_in: 3600, user_id: 456 });
+    if (url === "https://api.mercadopago.com/users/me") return responder({ id: 456 });
+    if (url.startsWith("https://api.mercadopago.com/v1/payments/")) {
+      chamadasAntigas.push({ url, op }); assert.equal(op.headers.Authorization, "Bearer token-vendedor-simulado");
+      if (url.includes("/search?")) return responder({ results: [] });
+      if (url.endsWith("/refunds")) return responder({ status: "approved", payment_id: 987, amount: 5 });
+      return responder({ id: 987, status: "approved", collector_id: 123, currency_id: "BRL", transaction_amount: 5, external_reference: `loja-teste:${pedidoId}`, metadata: { loja_id: "loja-teste", pedido_id: pedidoId } });
+    }
+    return fetch(url, op);
+  };
+  const inicio = f.post({ ...body, rota: "conectar" }), state = new URL(inicio.data.url).searchParams.get("state");
+  assert.match(f.get({ rota: "callback", state, code: "codigo-nova-conta" }).html, /Conta conectada/);
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").contaId.stringValue, "456");
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").ativo.booleanValue, false);
+  assert.equal(f.post({ rota: "checkout", lojaId: "loja-teste", pedidoId: "outro_pedido_1234567890", pedido, appCheckToken }).erro.codigo, "PAGAMENTO_DESATIVADO");
+  assert.equal(f.post({ rota: "consultar", lojaId: "loja-teste", pedidoId, appCheckToken }).data.estado, "aguardando");
+  f.seed(`transacoesPagamento/${pedidoId}`, { lojaId: "loja-teste", pedidoId, contaId: "123", pedido, estado: "aprovado", paymentId: "987", criadoEm: new Date(), reservaAtiva: false });
+  f.seed(`lojas/loja-teste/pedidosEntrada/${pedidoId}`, { ...pedido, criadoEm: new Date(), pagamento: { online: true, pago: true } });
+  assert.equal(f.post({ ...body, rota: "recusar", pedidoId }).data.estado, "reembolsado");
+  assert.equal(chamadasAntigas.length, 3);
+  assert.equal(f.docs.get("integracoesPagamento/loja-teste").contaId.stringValue, "456");
+  assert.equal(JSON.stringify(f.logs).includes("TOKEN-NOVA-CONTA"), false);
 });
 
 test("ativação explícita exige autenticação/membro, é repetível e pausa preserva a conta", () => {

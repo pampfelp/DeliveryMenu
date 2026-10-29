@@ -29,8 +29,8 @@ analisado) fica fora deste repositório, em `C:\rea-alvos\` e
 HTML, CSS e JavaScript puros, sem build step, Firebase/Firestore e GitHub
 Pages, a partir do `boilerplate/` do segundo cérebro.
 
-O serviço de pagamento está publicado na versão 6 do Apps Script, em
-29/10/2026 às 13h29, com URL preservada e health `ativo:true`. O projeto de cota
+O serviço de pagamento está publicado na versão 7 do Apps Script, em
+29/10/2026 às 14h15, com URL preservada. O projeto de cota
 dos acessos privados ao Google foi corrigido; diagnóstico real Firestore/Auth
 retornou HTTP 200. Credenciais privadas, rotina de cinco
 minutos e registro do App Check Enterprise foram configurados. Firebase Auth
@@ -38,8 +38,11 @@ e Firestore continuam no Spark; o adiantamento de R$150 foi recusado.
 O OAuth da Casa Jambu foi concluído na interface de produção e o painel
 confirmou conta conectada, com recebimentos pausados. Cada empresa conecta
 a própria conta no painel, sem criar aplicação ou copiar chaves; o guia está
-em [Conectar sua conta](pagamento-online.html). O frontend `abccd2f` foi
-publicado no Pages (run 40908990535); dez assets HTTP 200 iguais à fonte.
+em [Conectar sua conta](pagamento-online.html). O painel também permite
+desvincular e conectar outra conta, com confirmação dentro do cartão.
+A troca pausa novos pagamentos; pagamentos anteriores e suas credenciais
+permanecem ligados à conta original para consulta e devolução. Autorizações
+antigas não conseguem restaurar um vínculo já desfeito.
 Um checkout real de R$5 abriu no Mercado Pago em uma loja de homologação
 isolada; pagamento, confirmação e devolução ainda não foram concluídos.
 A sessão do vendedor apareceu como comprador ("Eu mesmo"), com pagamento

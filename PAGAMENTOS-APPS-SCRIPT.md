@@ -9,7 +9,7 @@ As tarifas das transações do Mercado Pago continuam sendo as do vendedor.
 
 Projeto: [DeliveryMenu - Pagamentos](https://script.google.com/home/projects/1SN3JkKZrgOD60f-DTwj66a8hArsf48DOeLxAIrOMvJ_rGZ0Hokg0s1DJ/edit).
 Identificação da versão e endereço público em `pagamentos-appscript/projeto.json`.
-Em 29/10/2026 às 13h29, a versão 6 foi publicada na implantação existente,
+Em 29/10/2026 às 14h15, a versão 7 foi publicada na implantação existente,
 com endereço preservado. A fonte foi comparada ao pacote local por cópia
 do editor, normalizando as quebras de linha. Health `ativo:true` e rejeição
 `NAO_AUTENTICADO` em `ativar` sem Firebase ID token já foram conferidos.
@@ -63,6 +63,22 @@ pausa somente a conta ainda atual; falha transitória preserva a autorização.
 O status renova uma autorização ativa vencida antes de responder, evitando
 anunciar pausa quando o checkout continuaria ativo. A cópia de homologação
 tem `renovacaoBloqueada:true`, confirmado em produção; nunca renova tokens.
+
+## Desvincular e conectar outra conta
+
+O painel pede confirmação dentro do cartão antes de enviar `desvincular`.
+A rota POST exige sessão e vínculo com a loja e confere a conta esperada;
+se outra conta foi conectada enquanto a tela estava aberta, recusa a ação.
+Uma transação remove a conta dos novos recebimentos e pausa loja e integração.
+Não apaga credenciais, transações nem pedidos e não revoga a autorização no
+Mercado Pago: consultas e devoluções anteriores usam a conta gravada no
+pagamento, mesmo que a loja já tenha outra conta conectada.
+
+Cada tentativa de conexão usa `oauthVersao` privado, conferido antes da troca
+de código e no commit do callback. Desvincular ou iniciar uma tentativa nova
+invalida links antigos. Repetir a desvinculação já concluída não invalida uma
+conexão nova pendente. Reconectar mantém a loja pausada até ativação explícita.
+O fluxo não transfere pagamentos anteriores para a nova conta.
 
 ## Segurança e confirmação
 
@@ -147,8 +163,8 @@ node --test pagamentos-appscript/*.test.js
 node rea/verificar-pagamentos-cliente.mjs
 ```
 
-Na conferência de 29/10/2026, a lógica de pagamentos teve 45 testes aprovados
-e 26 ignorados; Apps Script teve 100 aprovados e um ignorado. Os seis grupos
+Na conferência de 29/10/2026, a lógica de pagamentos teve 46 testes aprovados
+e 26 ignorados; Apps Script teve 105 aprovados e um ignorado. Os seis grupos
 do cliente passaram, incluindo conectar sem ativar a loja e ativação/pausa
 explícitas autenticadas. O teste do serviço desligado injeta `ativo:false`,
 independente da configuração de produção, e os transportes são simulados.

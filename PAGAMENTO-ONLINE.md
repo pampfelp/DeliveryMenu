@@ -4,7 +4,8 @@ Cada empresa conecta a própria conta pelo painel. Você não precisa programar,
 criar chaves de integração nem entrar na área de desenvolvedores.
 
 Tenha uma conta Mercado Pago liberada para receber pagamentos. Para oferecer
-Pix, cadastre uma chave Pix nessa conta. [Como ativar o Pix](https://www.mercadopago.com.br/blog/como-ativar-pix-mercado-pago).
+Pix, cadastre uma chave Pix na própria conta que vai receber. Essa chave não é
+um código nem uma chave de integração. [Como ativar o Pix](https://www.mercadopago.com.br/blog/como-ativar-pix-mercado-pago).
 
 1. Entre no painel da sua empresa e abra **Configurações → Pagamento online**.
 2. Clique em **Conectar conta Mercado Pago**. Entre na conta que deve receber
@@ -20,7 +21,7 @@ Pix, cadastre uma chave Pix nessa conta. [Como ativar o Pix](https://www.mercado
 Os meios de pagamento disponíveis aparecem no checkout do Mercado Pago.
 Não compartilhe senha, códigos de segurança ou chaves com o suporte.
 
-## Pausar ou reconectar
+## Pausar, reconectar ou trocar de conta
 
 Para impedir novos pagamentos online, clique em **Pausar pagamento online**.
 Continue acompanhando os pedidos já pagos ou em processamento: pausar não
@@ -28,9 +29,19 @@ cancela esses pedidos nem faz uma devolução automática. Antes de enviar um
 pedido ou tentar cobrar novamente, confira a situação do pagamento no painel.
 
 Se aparecer **Conta não conectada**, use **Conectar conta Mercado Pago** e
-repita a autorização. Se a conta já está conectada e você precisa trocar por
-outra, fale com o suporte antes, principalmente se houver pagamentos em
-processamento. Não desconecte a conta pelo Mercado Pago durante essa conferência.
+repita a autorização.
+
+Para trocar de conta, clique em **Desvincular conta** e leia a confirmação no
+cartão. **Cancelar** mantém a conta atual; **Confirmar desvinculação** pausa os
+novos pagamentos e libera a conexão de outra conta. Depois, clique em
+**Conectar conta Mercado Pago**, escolha o login da outra conta e confira a
+identificação antes de autorizar. Ao voltar, confira a conta conectada e clique
+em **Ativar pagamento online** quando estiver pronto.
+
+Os pagamentos anteriores continuam ligados à conta que recebeu, para
+conferência e devolução. Desvincular não apaga esses pagamentos nem faz
+uma devolução automática. Não revogue a autorização pelo Mercado Pago antes
+de concluir a conferência e as devoluções dos pagamentos anteriores.
 
 ## Se não conseguir continuar
 

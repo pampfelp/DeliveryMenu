@@ -50,6 +50,13 @@ const emulador = process.env.FIRESTORE_EMULATOR_HOST;
 if (emulador && !/^(127\.0\.0\.1|localhost):8080$/.test(emulador)) throw new Error("Os testes só aceitam o emulador local do Firestore.");
 const integracao = (nome, fn) => test(nome, { skip: !emulador }, fn);
 
+test("desvincular aceita somente POST antes de consultar autenticação ou banco", async () => {
+  const handler = criarHandler({ db: {}, auth: {}, appCheck: {}, config: { ativos: true, frontend: "https://pampfelp.github.io/DeliveryMenu/" }, segredos });
+  const res = { http: 200, set() { return this; }, status(v) { this.http = v; return this; }, json(v) { this.body = v; return this; } };
+  await handler({ path: "/desvincular", method: "GET", headers: {}, body: {} }, res);
+  assert.equal(res.http, 405); assert.equal(res.body.erro.codigo, "METODO_INVALIDO");
+});
+
 async function fixture(t, opcoes = {}) {
   const sufixo = randomUUID().replaceAll("-", "").slice(0, 15), lojaId = `pag-test-${sufixo}`, pedidoId = randomUUID();
   const app = initializeApp({ projectId: "cardapio-delivery-ae048" }, `pagamentos-${sufixo}`), db = getFirestore(app);
@@ -133,6 +140,7 @@ integracao("status e conexão exigem membro da loja e origem autorizada", async 
 });
 integracao("OAuth usa PKCE, estado de uso único e tokens ficam cifrados", async (t) => {
   const f = await fixture(t);
+  assert.equal((await f.chamar("desvincular", { body: { lojaId: f.lojaId, contaIdEsperada: "123" }, headers: { authorization: "Bearer dono" } })).http, 200);
   const r = await f.chamar("conectar", { body: { lojaId: f.lojaId }, headers: { authorization: "Bearer dono" } });
   assert.equal(r.http, 200); const url = new URL(r.body.data.url), state = url.searchParams.get("state");
   assert.equal(url.searchParams.get("code_challenge_method"), "S256");
@@ -166,6 +174,7 @@ integracao("ativar exige membro e conta cifrada atual; repetir e pausar preserva
 });
 integracao("OAuth vencido ou acesso removido não faz troca de token", async (t) => {
   const f = await fixture(t);
+  assert.equal((await f.chamar("desvincular", { body: { lojaId: f.lojaId, contaIdEsperada: "123" }, headers: { authorization: "Bearer dono" } })).http, 200);
   const r = await f.chamar("conectar", { body: { lojaId: f.lojaId }, headers: { authorization: "Bearer dono" } });
   const state = new URL(r.body.data.url).searchParams.get("state");
   f.agora(new Date(+instante + 11 * 60000));
@@ -336,6 +345,7 @@ integracao("refresh comprovadamente revogado pede reconexão", async (t) => {
 integracao("OAuth revalida vínculo removido antes de trocar a autorização", async (t) => {
   const f = await fixture(t), acesso = f.db.doc("acessos/equipe@exemplo.test");
   await acesso.set({ lojaId: f.lojaId });
+  assert.equal((await f.chamar("desvincular", { body: { lojaId: f.lojaId, contaIdEsperada: "123" }, headers: { authorization: "Bearer equipe" } })).http, 200);
   const r = await f.chamar("conectar", { body: { lojaId: f.lojaId }, headers: { authorization: "Bearer equipe" } });
   assert.equal(r.http, 200); const state = new URL(r.body.data.url).searchParams.get("state"); await acesso.delete();
   assert.equal((await f.chamar("callback", { method: "GET", query: { state, code: "codigo" } })).http, 403);
