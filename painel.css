@@ -123,6 +123,16 @@ body:not([data-tela="cadastro"]) .lema-cadastro { display: none !important; }
 .chave.desligada .trilho::after { right: 19px; }
 
 /* indicadores */
+.periodo-pedidos { display: flex; flex-wrap: wrap; align-items: end; gap: 10px; margin-top: 16px; }
+.periodos-rapidos { display: flex; flex-wrap: wrap; gap: 6px; }
+.periodos-rapidos button { min-height: 40px; padding: 0 12px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text-strong); font: inherit; font-size: 14px; }
+.periodos-rapidos button[aria-pressed="true"] { background: var(--text-strong); color: var(--surface); }
+.periodo-pedidos label { display: grid; gap: 4px; font-size: 12px; color: var(--text-muted); }
+.periodo-pedidos input { min-height: 40px; min-width: 0; max-width: 100%; padding: 6px 8px; border: 1px solid var(--border); border-radius: var(--r-md); background: var(--surface); color: var(--text-strong); font: inherit; }
+.periodo-pedidos > .btn { height: 40px; padding: 0 14px; }
+.periodo-aviso { flex-basis: 100%; font-size: 13px; color: var(--text-muted); }
+.periodo-aviso.erro { color: var(--danger); }
+@media (max-width: 1023px) { .periodo-pedidos { margin: 14px 16px 0; } .periodos-rapidos { flex-basis: 100%; } }
 .kpi { background: var(--surface); border-radius: var(--r-md); box-shadow: var(--shadow-card); padding: 14px 16px; }
 .kpi small { display: block; font-size: 13px; line-height: 18px; color: var(--text-muted); }
 .kpi b { display: block; margin-top: 4px; font-weight: 600; font-size: 22px; line-height: 28px; color: var(--text-strong); }

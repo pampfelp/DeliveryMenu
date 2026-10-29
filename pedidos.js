@@ -20,6 +20,7 @@ import { pintarIcones } from "./icones.js?v=3";
 import { regraDe, minutosKm } from "./conta-entrega.js?v=1";
 import { textoAgendamento } from "./agendamento.js?v=1";
 import { chamarPagamento } from "./pagamentos.js?v=2";
+import { periodoPedidos, noPeriodo, pedidoVisivel } from "./periodo-pedidos.js?v=1";
 
 const reais = (c) => fmtMoeda((c || 0) / 100);
 const $ = (id) => document.getElementById(id);
@@ -32,7 +33,8 @@ const COLUNAS = [
 ];
 const TIPOS = { entrega: ["entrega", "Entrega"], retirada: ["loja", "Retirada"], local: ["mesa", "No local"] };
 
-const P = { loja: null, entrada: [], pedidos: [], aba: "novo", verTodos: false, parar: [], agora: () => new Date(), exemplo: false, aberto: null };
+const P = { loja: null, entrada: [], pedidos: [], aba: "novo", verTodos: false, parar: [], agora: () => new Date(), exemplo: false, aberto: null,
+  periodo: null, pararPeriodo: null, versao: 0, sessao: 0, carregando: false, erroPeriodo: "", erroEntrada: "" };
 
 /* ===== tempo ===== */
 const data = (t) => (t instanceof Date ? t : t?.toDate ? t.toDate() : null);
@@ -50,6 +52,57 @@ const inicioDoDia = (deslocamento = 0) => {
   const d = new Date(P.agora().getTime() - 3 * 3600000);
   return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate() + deslocamento, 3));
 };
+const dataHistorica = (t) => { const d = data(t); return d ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Belem", day: "2-digit", month: "2-digit", year: "numeric" }).format(d) : ""; };
+const quando = (t) => `${P.periodo.tipo === "hoje" ? "" : `${dataHistorica(t)} · `}${hhmm(t)}`;
+
+function avisoPeriodo(texto = "", erro = false) {
+  $("periodo-aviso").textContent = texto;
+  $("periodo-aviso").classList.toggle("erro", erro);
+}
+function renderPeriodo() {
+  document.querySelectorAll("[data-periodo]").forEach((el) => el.setAttribute("aria-pressed", String(el.dataset.periodo === P.periodo.tipo)));
+  $("periodo-de").value = P.periodo.de;
+  $("periodo-ate").value = P.periodo.ate;
+  $("k-qtd-rotulo").textContent = P.periodo.tipo === "hoje" ? "Pedidos hoje" : "Pedidos no período";
+}
+function atualizarPedidos() {
+  renderQuadro(); renderIndicadores();
+  if (P.aberto) {
+    if (todos().some((p) => p.id === P.aberto)) abrirDetalhe(P.aberto);
+    else fecharDetalhe();
+  }
+}
+function consultarPeriodo() {
+  const versao = ++P.versao;
+  P.pararPeriodo?.(); P.pararPeriodo = null;
+  P.erroPeriodo = "";
+  if (P.exemplo) { P.carregando = false; avisoPeriodo(); atualizarPedidos(); return; }
+  P.pedidos = []; P.carregando = true;
+  avisoPeriodo("Carregando pedidos do período…"); atualizarPedidos();
+  P.pararPeriodo = onSnapshot(query(collection(db, "lojas", P.loja.id, "pedidos"),
+    where("criadoEm", ">=", Timestamp.fromDate(P.periodo.consultaInicio)),
+    where("criadoEm", "<", Timestamp.fromDate(P.periodo.fim)), orderBy("criadoEm", "desc")), (snap) => {
+    if (versao !== P.versao) return;
+    P.pedidos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+    P.carregando = false; P.erroPeriodo = "";
+    avisoPeriodo(P.erroEntrada, !!P.erroEntrada); atualizarPedidos();
+  }, () => {
+    if (versao !== P.versao) return;
+    P.carregando = false; P.erroPeriodo = "Não foi possível carregar os pedidos deste período. Selecione o período para tentar novamente.";
+    avisoPeriodo(P.erroPeriodo, true); atualizarPedidos();
+  });
+}
+function escolherPeriodo(tipo, de = "", ate = "") {
+  let periodo;
+  try { periodo = periodoPedidos(tipo, P.agora(), de, ate); }
+  catch (erro) { avisoPeriodo(erro.message, true); return; }
+  P.periodo = periodo; P.verTodos = false; fecharDetalhe();
+  renderPeriodo(); consultarPeriodo();
+}
+function aoFiltrar(e) {
+  if (e.target.id !== "filtro-periodo") return;
+  e.preventDefault(); escolherPeriodo("personalizado", $("periodo-de").value, $("periodo-ate").value);
+}
 
 /* ===== situação de cada pedido ===== */
 const coluna = (p) => (p.status === "novo" ? "novo" : p.status === "preparo" ? "preparo" : p.status === "saiu" ? "saiu" : "fim");
@@ -73,17 +126,21 @@ function rotuloPagamento(p) {
   return ["receber", `${g.forma || "Pagamento"} ${onde}`];
 }
 
-/* ===== indicadores do dia (regra 7: seguem o filtro "Hoje") ===== */
+/* ===== indicadores do período por data de criação ===== */
 function renderIndicadores() {
+  if (P.carregando || P.erroPeriodo) {
+    ["k-qtd", "k-fat", "k-ticket", "k-tempo"].forEach((id) => { $(id).textContent = "—"; });
+    $("k-qtd-ontem").textContent = ""; return;
+  }
   const hoje = inicioDoDia(0), ontem = inicioDoDia(-1);
   const doDia = (d0, d1) => P.pedidos.filter((p) => { const d = data(p.criadoEm); return d && d >= d0 && (!d1 || d < d1) && p.status !== "cancelado"; });
-  const hojeP = doDia(hoje), ontemP = doDia(ontem, hoje);
-  const qtd = hojeP.length + P.entrada.length;
+  const hojeP = P.pedidos.filter((p) => noPeriodo(p.criadoEm, P.periodo) && p.status !== "cancelado"), ontemP = doDia(ontem, hoje);
+  const qtd = hojeP.length + P.entrada.filter((p) => noPeriodo(p.criadoEm, P.periodo)).length;
   const fat = hojeP.reduce((s, p) => s + (p.subtotal || 0) - (p.desconto || 0), 0);
   const saidas = hojeP.filter((p) => p.saiuEm).map((p) => (data(p.saiuEm) - data(p.criadoEm)) / 60000);
   $("k-qtd").textContent = qtd;
   const dif = qtd - ontemP.length;
-  $("k-qtd-ontem").textContent = ontemP.length ? (dif === 0 ? "igual a ontem" : `${Math.abs(dif)} a ${dif > 0 ? "mais" : "menos"} que ontem`) : "";
+  $("k-qtd-ontem").textContent = P.periodo.tipo === "hoje" && ontemP.length ? (dif === 0 ? "igual a ontem" : `${Math.abs(dif)} a ${dif > 0 ? "mais" : "menos"} que ontem`) : "";
   $("k-fat").textContent = reais(fat);
   $("k-ticket").textContent = reais(hojeP.length ? Math.round(fat / hojeP.length) : 0);
   $("k-tempo").textContent = saidas.length ? `${Math.round(saidas.reduce((s, m) => s + m, 0) / saidas.length)} min` : "-";
@@ -101,7 +158,7 @@ function cartao(p) {
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${esc(i.nome)}`).join(", ");
   return `
     <article class="ped${p.status === "novo" ? " novo" : ""}" data-abrir="${esc(p.id)}" tabindex="0">
-      <div class="l1"><span class="num">${numero(p)}</span><span class="hora">${hhmm(p.criadoEm)}</span><span class="tipo"><i data-ic="${ic}"></i>${tipo}</span></div>
+      <div class="l1"><span class="num">${numero(p)}</span><span class="hora">${quando(p.criadoEm)}</span><span class="tipo"><i data-ic="${ic}"></i>${tipo}</span></div>
       <div class="cli">${esc(p.cliente?.nome || "")}${lugar}</div>
       <div class="itens">${itens}</div>
       ${p.agendadoPara ? `<div class="agenda-pedido"><i data-ic="agenda"></i>Agendado para ${esc(textoAgendamento(p.agendadoPara))}</div>` : ""}
@@ -113,11 +170,16 @@ function linhaConcluido(p) {
   const fim = p.status === "cancelado" ? `<span class="pag cancelado">Cancelado</span>`
     : `<span>${p.tipo === "retirada" ? "Retirado" : "Entregue"} ${hhmm(p.concluidoEm)}</span>`;
   const resumo = p.agendadoPara ? `<span>${fim}<small class="agenda-mini">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</small></span>` : fim;
-  return `<button type="button" class="mini" data-abrir="${esc(p.id)}"><b>${numero(p)}</b>${resumo}<span>${reais(p.total)}</span></button>`;
+  return `<button type="button" class="mini" data-abrir="${esc(p.id)}"><b>${numero(p)}${P.periodo.tipo !== "hoje" ? `<small class="agenda-mini">${dataHistorica(p.criadoEm)}</small>` : ""}</b>${resumo}<span>${reais(p.total)}</span></button>`;
 }
 
-function todos() { return [...P.entrada, ...P.pedidos.filter((p) => data(p.criadoEm) >= inicioDoDia(0) || data(p.agendadoPara) >= inicioDoDia(0))]; }
+function todos() { return [...P.entrada, ...P.pedidos].filter((p) => pedidoVisivel(p, P.periodo)); }
 function renderQuadro() {
+  if (P.carregando || P.erroPeriodo) {
+    $("abas").innerHTML = "";
+    $("quadro").innerHTML = `<p class="vazio">${P.erroPeriodo ? "Pedidos indisponíveis. Tente carregar o período novamente." : "Carregando pedidos…"}</p>`;
+    return;
+  }
   const lista = todos();
   const por = (col) => lista.filter((p) => coluna(p) === col)
     .sort((a, b) => (col === "fim" ? data(b.concluidoEm || b.criadoEm) - data(a.concluidoEm || a.criadoEm) : data(b.criadoEm) - data(a.criadoEm)));
@@ -133,7 +195,7 @@ function renderQuadro() {
     const itens = por(c.id);
     const visiveis = c.id === "fim" && !P.verTodos ? itens.slice(0, 4) : itens;
     const corpo = c.id === "fim" ? visiveis.map(linhaConcluido).join("") : visiveis.map(cartao).join("");
-    const mais = c.id === "fim" && itens.length > 4 && !P.verTodos ? `<button type="button" class="mais" data-ver-todos>Ver os ${itens.length} de hoje</button>` : "";
+    const mais = c.id === "fim" && itens.length > 4 && !P.verTodos ? `<button type="button" class="mais" data-ver-todos>Ver os ${itens.length} ${P.periodo.tipo === "hoje" ? "de hoje" : "do período"}</button>` : "";
     const vazio = !itens.length ? `<p class="vazio">${c.id === "novo" ? "Nenhum pedido novo agora." : "Nada aqui."}</p>` : "";
     return `<section class="coluna${P.aba === c.id ? " ativa" : ""}" data-coluna="${c.id}">
       <h2>${c.nome}<span class="cont${c.id === "novo" && itens.length ? " forte" : ""}">${itens.length}</span></h2>${corpo}${mais}${vazio}</section>`;
@@ -155,7 +217,7 @@ function abrirDetalhe(id) {
   const estados = { novo: "Novo", preparo: "Em preparo", saiu: "Saiu para entrega", entregue: p.tipo === "retirada" ? "Retirado" : "Entregue", cancelado: "Cancelado" };
   $("d-titulo").textContent = p.numero ? `Pedido #${p.numero}` : "Pedido novo";
   $("d-estado").textContent = estados[p.status] || "";
-  $("d-hora").innerHTML = `<span class="so-pc">Recebido às ${hhmm(p.criadoEm)}, há ${minutosDesde(p.criadoEm)} min</span><span class="so-cel">${hhmm(p.criadoEm)}</span>`;
+  $("d-hora").innerHTML = `<span class="so-pc">Recebido ${P.periodo.tipo === "hoje" ? "às" : "em"} ${quando(p.criadoEm)}, há ${minutosDesde(p.criadoEm)} min</span><span class="so-cel">${quando(p.criadoEm)}</span>`;
   // no celular o pagamento não tem caixa própria: vai embaixo do total (P11)
   const textoPag = g.reembolsado ? `Pagamento devolvido${g.estornoEm ? ` às ${hhmm(g.estornoEm)}` : ""}` : g.estornoPendente ? "Conferindo a devolução do pagamento" : g.pago ? `Pago às ${hhmm(g.pagoEm || p.criadoEm)}` : g.troco ? `Levar troco para ${reais(g.troco)}` : p.tipo === "retirada" ? "Receber na retirada" : "Receber na entrega";
   const km = e.km != null ? `${String(e.km.toFixed(1)).replace(".", ",")} km` : "";
@@ -322,6 +384,8 @@ function tocar() {
 
 /* ===== cliques ===== */
 function aoClicar(e) {
+  const periodo = e.target.closest("[data-periodo]");
+  if (periodo) { escolherPeriodo(periodo.dataset.periodo); return; }
   const acao = e.target.closest("[data-acao]");
   if (acao) { e.stopPropagation(); const p = todos().find((x) => x.id === acao.dataset.acao); const a = p && proximaAcao(p); if (a) a.fazer(); return; }
   const recusarBtn = e.target.closest("[data-recusar]");
@@ -345,46 +409,59 @@ function aoTeclar(e) {
 export function iniciarPedidos(loja, { exemplo = null } = {}) {
   pararPedidos();
   P.loja = loja;
+  const sessao = P.sessao;
+  P.exemplo = !!exemplo;
+  P.agora = exemplo ? () => new Date(exemplo.agora) : () => new Date();
+  P.periodo = periodoPedidos("hoje", P.agora());
+  P.entrada = []; P.pedidos = []; P.verTodos = false; P.aba = "novo";
+  P.erroEntrada = ""; P.erroPeriodo = ""; P.carregando = false;
+  renderPeriodo(); avisoPeriodo();
   document.querySelectorAll(".nome-loja").forEach((el) => (el.textContent = loja.nome));
   document.addEventListener("click", aoClicar);
   document.addEventListener("keydown", aoTeclar);
+  document.addEventListener("submit", aoFiltrar);
   renderChave();
-  const relogio = setInterval(() => { renderQuadro(); renderIndicadores(); }, 30000);
+  const relogio = setInterval(() => {
+    const atual = periodoPedidos(P.periodo.tipo, P.agora(), P.periodo.de, P.periodo.ate);
+    if (atual.de !== P.periodo.de || atual.ate !== P.periodo.ate) {
+      P.periodo = atual; renderPeriodo(); consultarPeriodo();
+    } else { renderQuadro(); renderIndicadores(); }
+  }, 30000);
   P.parar.push(() => clearInterval(relogio));
 
   if (exemplo) {
-    P.exemplo = true;
-    P.agora = () => new Date(exemplo.agora);
     P.entrada = exemplo.entrada;
     P.pedidos = exemplo.pedidos;
     renderQuadro(); renderIndicadores();
     return;
   }
-  P.exemplo = false;
-  P.agora = () => new Date();
   let primeira = true;
   P.parar.push(onSnapshot(collection(db, "lojas", loja.id, "pedidosEntrada"), (snap) => {
+    if (sessao !== P.sessao) return;
     const antes = P.entrada.length;
     P.entrada = snap.docs.map((d) => ({ id: d.id, ...d.data(), status: "novo" }));
     if (!primeira && P.entrada.length > antes) tocar();
     primeira = false;
-    renderQuadro(); renderIndicadores();
-    if (P.aberto) abrirDetalhe(P.aberto);
-  }, () => toast("Não deu para ler os pedidos novos.", "erro", 5000)));
-  // A antecedência máxima é 72 h: quatro dias incluem agendados criados antes de hoje.
-  P.parar.push(onSnapshot(query(collection(db, "lojas", loja.id, "pedidos"),
-    where("criadoEm", ">=", Timestamp.fromDate(inicioDoDia(-4))), orderBy("criadoEm", "desc")), (snap) => {
-    P.pedidos = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
-    renderQuadro(); renderIndicadores();
-    if (P.aberto) abrirDetalhe(P.aberto);
-  }, () => toast("Não deu para ler os pedidos.", "erro", 5000)));
-  P.parar.push(onSnapshot(doc(db, "lojas", loja.id), (snap) => { if (snap.exists()) { P.loja = { id: snap.id, ...snap.data() }; renderChave(); } }));
+    P.erroEntrada = "";
+    if (!P.erroPeriodo && !P.carregando) avisoPeriodo();
+    atualizarPedidos();
+  }, () => {
+    if (sessao !== P.sessao) return;
+    P.erroEntrada = "Não foi possível atualizar os pedidos novos. Confira a conexão e reabra o painel.";
+    avisoPeriodo(P.erroEntrada, true);
+  }));
+  consultarPeriodo();
+  P.parar.push(onSnapshot(doc(db, "lojas", loja.id), (snap) => { if (sessao === P.sessao && snap.exists()) { P.loja = { id: snap.id, ...snap.data() }; renderChave(); } }));
   fichasDosAntigos();
 }
 export function abrirPedido(id) { abrirDetalhe(id); }
 export function pararPedidos() {
+  ++P.sessao; ++P.versao;
+  P.pararPeriodo?.(); P.pararPeriodo = null;
   P.parar.forEach((f) => f());
   P.parar = [];
   document.removeEventListener("click", aoClicar);
   document.removeEventListener("keydown", aoTeclar);
+  document.removeEventListener("submit", aoFiltrar);
+  fecharDetalhe();
 }

@@ -9,7 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Rubik:wght@300;400;500;600&display=swap" />
 <link rel="stylesheet" href="./tokens.css?v=1" />
-<link rel="stylesheet" href="./painel.css?v=24" />
+<link rel="stylesheet" href="./painel.css?v=25" />
 <link rel="stylesheet" href="./clientes.css?v=2" />
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
 </head>
@@ -122,12 +122,23 @@
     <div class="barra-topo so-cel" data-c="T topo"><b class="nome-loja"></b><button type="button" class="chave" data-chave aria-pressed="true"><span class="trilho"></span><span class="chave-txt">Aberto</span></button></div>
     <div class="cab so-pc" data-c="T cabeçalho">
       <h1>Pedidos</h1>
-      <div class="sel"><i data-ic="agenda"></i>Hoje<i data-ic="baixo"></i></div>
       <button type="button" class="chave" data-chave aria-pressed="true"><span class="trilho"></span><span class="chave-txt">Recebendo pedidos</span></button>
     </div>
 
+    <form class="periodo-pedidos" id="filtro-periodo" novalidate aria-label="Período dos pedidos">
+      <div class="periodos-rapidos" aria-label="Períodos rápidos">
+        <button type="button" data-periodo="hoje" aria-pressed="true">Hoje</button>
+        <button type="button" data-periodo="mes" aria-pressed="false">Este mês</button>
+        <button type="button" data-periodo="passado" aria-pressed="false">Mês passado</button>
+        <button type="button" data-periodo="90dias" aria-pressed="false">90 dias</button>
+      </div>
+      <label>De<input type="date" id="periodo-de" required></label>
+      <label>Até<input type="date" id="periodo-ate" required></label>
+      <button type="submit" class="btn fantasma">Aplicar</button>
+      <span class="periodo-aviso" id="periodo-aviso" role="status" aria-live="polite"></span>
+    </form>
     <div class="kpis" data-c="K indicadores">
-      <div class="kpi"><small>Pedidos hoje</small><b id="k-qtd">0</b><em class="so-pc" id="k-qtd-ontem"></em></div>
+      <div class="kpi"><small id="k-qtd-rotulo">Pedidos hoje</small><b id="k-qtd">0</b><em class="so-pc" id="k-qtd-ontem"></em></div>
       <div class="kpi"><small>Faturamento</small><b id="k-fat">R$ 0,00</b><em class="so-pc">sem as taxas de entrega</em></div>
       <div class="kpi"><small>Ticket médio</small><b id="k-ticket">R$ 0,00</b></div>
       <div class="kpi so-pc"><small>Tempo médio até sair</small><b id="k-tempo">-</b></div>
@@ -266,6 +277,6 @@
   </section>
 </div>
 
-<script type="module" src="./painel.js?v=28"></script>
+<script type="module" src="./painel.js?v=29"></script>
 </body>
 </html>
