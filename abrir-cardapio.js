@@ -16,7 +16,7 @@
     aviso.appendChild(tentar);
   }
   const espera = setTimeout(function () { mostrarFalha(false); }, 20000);
-  import("./app.js?v=31").then(function (app) {
+  import("./app.js?v=32").then(function (app) {
     return app.pronto;
   }).then(function () {
     clearTimeout(espera);

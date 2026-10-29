@@ -189,7 +189,7 @@ function irParaHash() {
   if (tela === "dados") preencherDados();
   if (tela === "pagamento") renderPagamento();
   if (tela === "revisar") renderRevisar();
-  if (tela === "pedido") acompanhar(param);
+  if (tela === "pedido") { if (param === "resumo") acompanharResumo(uid); else acompanhar(param); }
   if (tela !== "produto") window.scrollTo(0, 0);
   pintarIcones();
   sincronizarVideos();
@@ -1037,6 +1037,41 @@ async function acompanhar(id) {
   };
 }
 
+function mensagemResumo(texto) {
+  document.getElementById("acompanhar").innerHTML = `<div class="ok"><h1>Resumo do pedido</h1><p>${esc(texto)}</p></div><div class="pg-acoes"><a class="btn fantasma" href="#pedidos">Voltar aos pedidos</a></div>`;
+}
+function renderResumoPedido(p) {
+  const [, situacao] = SITUACAO[p.status] || ["novo", "Situação não informada"];
+  const estado = p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || situacao : situacao;
+  const criado = quando(p.criadoEm);
+  const dataCriacao = criado && Number.isFinite(criado.getTime()) ? new Intl.DateTimeFormat("pt-BR", { timeZone: "America/Belem", dateStyle: "short", timeStyle: "short" }).format(criado) : "Não informada";
+  const tipo = { entrega: "Entrega", retirada: "Retirada", local: "No local" }[p.tipo] || "Não informado";
+  const caixa = document.getElementById("acompanhar");
+  caixa.innerHTML = `<div class="ok"><div class="selo-ok ${p.status === "cancelado" ? "nao" : p.status === "novo" ? "espera" : ""}"><i data-ic="${p.status === "cancelado" ? "x" : p.status === "novo" ? "relogio" : "check"}"></i></div><h1>${esc(estado)}</h1><p>Resumo do pedido</p></div>
+    <div class="num"><div><small>Pedido</small><b${p.numero ? "" : ' class="espera"'}>${p.numero ? `#${esc(p.numero)}` : "Sem número"}</b></div><div><small>Tipo</small><b>${tipo}</b></div></div>
+    <div class="resumo-pedido"><p><small>Criado em</small>${esc(dataCriacao)}</p><ul>${(p.itens || []).map((i) => `<li>${esc(i.qtd)}x ${esc(i.nome)}</li>`).join("")}</ul><p class="resumo-total"><span>Total</span><strong>${reais(p.total || 0)}</strong></p></div>
+    <div class="pg-acoes"><a class="btn fantasma" href="#pedidos">Voltar aos pedidos</a></div>`;
+  pintarIcones(caixa);
+}
+async function acompanharResumo(chave) {
+  pararAcompanhar();
+  const versao = versaoAcomp, telefone = STATE.cliente?.telefone;
+  const ativo = () => versao === versaoAcomp && location.hash === `#pedido/resumo/${chave}` && STATE.cliente?.telefone === telefone;
+  if (!/^[a-f0-9]{16}$/.test(chave || "")) { mensagemResumo("Este resumo de pedido não é válido."); return; }
+  if (!/^\d{10,11}$/.test(telefone || "")) { mensagemResumo("Salve seu WhatsApp no Perfil para consultar o resumo deste pedido."); return; }
+  if (!SLUG) { mensagemResumo("Este resumo não está disponível nesta loja."); return; }
+  mensagemResumo("Buscando a situação do pedido…");
+  try {
+    const { db } = await import("./firebase-init.js?v=3");
+    const { doc, onSnapshot } = await import(FIRESTORE);
+    if (!ativo()) return;
+    pararAcomp = onSnapshot(doc(db, "lojas", LOJA.id, "clientes", telefone), (snap) => {
+      if (!ativo()) return;
+      const p = snap.exists() ? snap.data().pedidos?.[chave] : null;
+      if (p) renderResumoPedido(p); else mensagemResumo("Não encontramos o resumo deste pedido para o WhatsApp salvo.");
+    }, () => { if (ativo()) mensagemResumo("Não foi possível atualizar o resumo. Confira a conexão e abra o pedido novamente."); });
+  } catch { if (ativo()) mensagemResumo("Não foi possível carregar o resumo. Confira a conexão e abra o pedido novamente."); }
+}
 function renderPagamentoPendente(p) {
   const estados = {
     gerando: ["Preparando pagamento", "Estamos preparando o link do Mercado Pago. Confira novamente em instantes."],
@@ -1202,10 +1237,10 @@ function cartaoPedido(p) {
   const rotulo = p.pagamentoPendente ? ({ aprovado: "Confirmando pedido", reembolsado: "Pagamento devolvido", erro: "Pagamento não concluído", cancelado: "Pagamento cancelado", expirado: "Pagamento expirado", reconciliar: "Conferindo pagamento" }[p.estado] || "Aguardando pagamento") : p.status === "entregue" ? { retirada: "Retirado", local: "Servido" }[p.tipo] || texto : texto;
   const num = p.numero ? `<b>#${p.numero}</b>` : `<b class="espera">${p.pagamentoPendente ? "Pagamento online" : p.status === "cancelado" ? "Sem número" : "Aguardando aceite"}</b>`;
   const itens = (p.itens || []).map((i) => `${i.qtd}x ${i.nome}`).join(", ");
-  const corpo = `<div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span>${p.id ? '<i data-ic="direita"></i>' : ""}</div>
+  const destino = p.id ? `#pedido/${esc(p.id)}` : /^[a-f0-9]{16}$/.test(p.resumoChave || "") ? `#pedido/resumo/${p.resumoChave}` : "";
+  const corpo = `<div class="l1">${num}<span class="quando">${quandoFoi(quando(p.criadoEm) || new Date())}</span>${destino ? '<i data-ic="direita"></i>' : ""}</div>
     <p>${esc(itens)}</p>${p.agendadoPara ? `<p class="ag-resumo">Agendado para ${esc(textoAgendamento(p.agendadoPara))}</p>` : ""}<div class="l3"><span class="st ${classe}">${rotulo}</span><strong>${p.pagamentoPendente && p.total == null ? "Ver pagamento" : reais(p.total || 0)}</strong></div>`;
-  // pedido feito em outro aparelho vem só da ficha, sem o acompanhamento
-  return p.id ? `<a class="ped-c" href="#pedido/${esc(p.id)}">${corpo}</a>` : `<div class="ped-c">${corpo}</div>`;
+  return destino ? `<a class="ped-c" href="${destino}">${corpo}</a>` : `<div class="ped-c">${corpo}</div>`;
 }
 // pedidos de exemplo das imagens S22 e D22
 function pedidosExemplo() {
@@ -1244,7 +1279,7 @@ async function lerPedidos() {
   ]);
   const daqui = lidos.filter(Boolean);
   const chaves = new Set(await Promise.all(daqui.map((x) => chavePedido(x.id))));
-  const deFora = Object.entries(ficha?.pedidos || {}).filter(([k, r]) => !chaves.has(k) && r.status).map(([, r]) => r);
+  const deFora = Object.entries(ficha?.pedidos || {}).filter(([k, r]) => !chaves.has(k) && r.status).map(([resumoChave, r]) => ({ ...r, resumoChave }));
   return [...daqui, ...deFora].sort((a, b) => (quando(b.criadoEm)?.getTime() || 0) - (quando(a.criadoEm)?.getTime() || 0));
 }
 async function renderPedidos() {
